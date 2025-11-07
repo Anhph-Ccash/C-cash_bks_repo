@@ -1,0 +1,38 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Flask App",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "app.py",
+            "cwd": "${workspaceFolder}",
+            "jinja": true,
+            "env": {
+                "FLASK_ENV": "development",
+                "FLASK_APP": "app.py",
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "args": [
+                "run",
+                "--no-debugger",
+                "--no-reload"
+            ],
+            "autoStartBrowser": false
+        },
+        {
+            "name": "Debug via app.py",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/app.py",
+            "cwd": "${workspaceFolder}",
+            "jinja": true,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "FLASK_ENV": "development"
+            },
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+    ]
+}

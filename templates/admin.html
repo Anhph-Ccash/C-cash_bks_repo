@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Trang quản trị</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">👑 Admin Panel</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link active" href="{{ url_for('admin.admin') }}">👥 Quản lý Users</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('upload.upload_file') }}">📂 Upload File</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('upload.view_logs') }}">📋 Xem Logs</a>
+                </li>
+            </ul>
+            {% if companies %}
+            <div class="dropdown me-3">
+                <button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    🏢 {% if company_name %}{{ company_name }}{% else %}Chọn công ty{% endif %}
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">{%- for c in companies %}
+                    <li>
+                        <a class="dropdown-item d-flex justify-content-between align-items-center {% if current_company_id == c.id %}active{% endif %}"
+                           href="{{ url_for('auth.switch_company', company_id=c.id) }}">
+                            <span>{{ c.name }}</span>
+                            {% if current_company_id == c.id %}
+                            <span class="badge bg-primary">Đang chọn</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    {%- endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            <span class="navbar-text text-white me-3">
+                Xin chào, {{ username }}
+            </span>
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-light">Đăng xuất</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    {% if companies %}
+    <div class="col-12 mb-3">
+        <div class="card border-dark">
+            <div class="card-body py-2">
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <span class="text-muted me-2">Danh sách công ty:</span>
+                    {% for c in companies %}
+                    <a href="{{ url_for('auth.switch_company', company_id=c.id) }}"
+                       class="badge rounded-pill {% if current_company_id == c.id %}text-bg-dark{% else %}text-bg-secondary{% endif %}">
+                        {{ c.name }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Tabs Navigation -->
+    <ul class="nav nav-tabs mb-4" id="adminTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button" role="tab">
+                👥 Quản lý Users
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="companies-tab" data-bs-toggle="tab" data-bs-target="#companies" type="button" role="tab">
+                🏢 Quản lý Companies
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="configs-tab" data-bs-toggle="tab" data-bs-target="#configs" type="button" role="tab">
+                ⚙️ Cấu hình Ngân hàng
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="adminTabsContent">
+        <!-- Users Tab -->
+        <div class="tab-pane fade show active" id="users" role="tabpanel">
+            <h3>👥 Quản lý Users</h3>
+
+            <!-- Form thêm user -->
+            <form action="{{ url_for('admin.add_user') }}" method="POST" class="row g-3 mb-4 border p-3 rounded">
+                <div class="col-md-2">
+                    <input name="username" type="text" class="form-control" placeholder="Username" required>
+                </div>
+                <div class="col-md-3">
+                    <input name="email" type="email" class="form-control" placeholder="Email" required>
+                </div>
+                <div class="col-md-2">
+                    <input name="password" type="password" class="form-control" placeholder="Password" required>
+                </div>
+                <div class="col-md-2">
+                    <select name="role" class="form-select" required>
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="company_ids[]" class="form-select" multiple size="1" required>
+                        {% for c in companies %}
+                        <option value="{{ c.id }}">{{ c.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <small class="text-muted">Giữ Ctrl để chọn nhiều</small>
+                </div>
+                <div class="col-md-1">
+                    <button type="submit" class="btn btn-success w-100">Thêm</button>
+                </div>
+            </form>
+
+            <!-- Bảng user -->
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Companies</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <form action="{{ url_for('admin.update_user', user_id=user.id) }}" method="POST">
+                            <td>{{ user.id }}</td>
+                            <td><input name="username" class="form-control form-control-sm" value="{{ user.username }}"></td>
+                            <td><input name="email" class="form-control form-control-sm" value="{{ user.email }}"></td>
+                            <td><input name="role" class="form-control form-control-sm" value="{{ user.role }}"></td>
+                            <td>
+                                {% set user_companies = user.get_companies() %}
+                                {% for c in user_companies %}
+                                <span class="badge bg-info">{{ c.name }}</span>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                <button type="submit" class="btn btn-primary btn-sm">💾</button>
+                                <a href="{{ url_for('admin.delete_user', user_id=user.id) }}" class="btn btn-danger btn-sm" onclick="return confirm('Xóa user này?')">🗑️</a>
+                            </td>
+                        </form>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Configs Tab -->
+        <div class="tab-pane fade" id="configs" role="tabpanel">
+            <h3>⚙️ Cấu hình Ngân hàng</h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card mb-3">
+                        <div class="card-header">Bank Configs (A-Z)</div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-sm mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Mã NH</th>
+                                            <th>Tên</th>
+                                            <th>Từ khóa</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for cfg in bank_configs %}
+                                        <tr>
+                                            <td><span class="badge bg-primary">{{ cfg.bank_code }}</span></td>
+                                            <td>{{ cfg.bank_name or '-' }}</td>
+                                            <td>
+                                                {% for kw in cfg.keywords %}
+                                                <span class="badge bg-info me-1">{{ kw }}</span>
+                                                {% endfor %}
+                                            </td>
+                                        </tr>
+                                        {% else %}
+                                        <tr><td colspan="3" class="text-center">Chưa có cấu hình</td></tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card mb-3">
+                        <div class="card-header">Statement Configs (A-Z)</div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-sm mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Bank Code</th>
+                                            <th>Từ khóa</th>
+                                            <th>Identify</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for sc in statement_configs %}
+                                        <tr>
+                                            <td><span class="badge bg-primary">{{ sc.bank_code }}</span></td>
+                                            <td>
+                                                {% for kw in sc.keywords %}
+                                                <span class="badge bg-info me-1">{{ kw }}</span>
+                                                {% endfor %}
+                                            </td>
+                                            <td>{{ sc.identify_info }}</td>
+                                        </tr>
+                                        {% else %}
+                                        <tr><td colspan="3" class="text-center">Chưa có cấu hình</td></tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Companies Tab -->
+        <div class="tab-pane fade" id="companies" role="tabpanel">
+            <h3>🏢 Quản lý Companies</h3>
+
+            <!-- Form thêm company -->
+            <form action="{{ url_for('admin.add_company') }}" method="POST" class="row g-3 mb-4 border p-3 rounded">
+                <div class="col-md-3">
+                    <input name="name" type="text" class="form-control" placeholder="Tên công ty" required>
+                </div>
+                <div class="col-md-4">
+                    <input name="address" type="text" class="form-control" placeholder="Địa chỉ">
+                </div>
+                <div class="col-md-3">
+                    <input name="tax_code" type="text" class="form-control" placeholder="Mã số thuế">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-success w-100">Thêm</button>
+                </div>
+            </form>
+
+            <!-- Bảng companies -->
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Tên công ty</th>
+                        <th>Địa chỉ</th>
+                        <th>Mã số thuế</th>
+                        <th>Trạng thái</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for company in companies %}
+                    <tr>
+                        <form action="{{ url_for('admin.update_company', company_id=company.id) }}" method="POST">
+                            <td>{{ company.id }}</td>
+                            <td><input name="name" class="form-control form-control-sm" value="{{ company.name }}" required></td>
+                            <td><input name="address" class="form-control form-control-sm" value="{{ company.address or '' }}"></td>
+                            <td><input name="tax_code" class="form-control form-control-sm" value="{{ company.tax_code or '' }}"></td>
+                            <td>
+                                {% if company.is_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button type="submit" class="btn btn-primary btn-sm">💾</button>
+                                <a href="{{ url_for('admin.delete_company', company_id=company.id) }}" class="btn btn-danger btn-sm" onclick="return confirm('Xóa công ty này? Tất cả dữ liệu liên quan sẽ bị xóa!')">🗑️</a>
+                            </td>
+                        </form>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

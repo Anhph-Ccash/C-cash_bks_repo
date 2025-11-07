@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Cấu hình Sổ phụ Ngân hàng</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-success">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">👤 User Panel</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" title="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('main.user_dashboard') }}">🏠 Trang chủ</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('main.user_bank_configs') }}">⚙️ Cấu hình Ngân hàng</a></li>
+                <li class="nav-item"><a class="nav-link active" href="#">📋 Cấu hình Sổ phụ</a></li>
+            </ul>
+            <div class="navbar-text text-white me-3">Xin chào, {{ username }}</div>
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-light">Đăng xuất</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">📋 Cấu hình nhận diện Sổ phụ Ngân hàng</h5>
+                    <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#addStatementConfigModal">➕ Thêm mới</button>
+                </div>
+                <div class="card-body">
+                    {% if not current_company_id %}
+                        <div class="alert alert-warning mb-0">Vui lòng chọn công ty để xem cấu hình</div>
+                    {% elif statement_configs %}
+                        <div class="table-responsive scroll-400">
+                            <table class="table table-sm table-hover align-middle mb-0">
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        <th>bank_code</th>
+                                        <th>keywords</th>
+                                        <th>col_keyword</th>
+                                        <th>col_value</th>
+                                        <th>row_start</th>
+                                        <th>row_end</th>
+                                        <th>identify_info</th>
+                                        <th>cell_format</th>
+                                        <th>created_at</th>
+                                        <th width="120">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for config in statement_configs %}
+                                    <tr>
+                                        <td><span class="badge bg-primary">{{ config.bank_code }}</span></td>
+                                        <td>
+                                            {% for kw in config.keywords %}
+                                            <span class="badge bg-info me-1">{{ kw }}</span>
+                                            {% endfor %}
+                                        </td>
+                                        <td>{{ config.col_keyword or '-' }}</td>
+                                        <td>{{ config.col_value or '-' }}</td>
+                                        <td>{{ config.row_start or '-' }}</td>
+                                        <td>{{ config.row_end or '-' }}</td>
+                                        <td>{{ config.identify_info }}</td>
+                                        <td>{{ config.cell_format or '-' }}</td>
+                                        <td><small class="text-muted">{{ config.created_at.strftime('%d/%m/%Y %H:%M') if config.created_at else '-' }}</small></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-warning btn-edit-statement-config"
+                                                    data-id="{{ config.id }}"
+                                                    data-bank-code="{{ config.bank_code }}"
+                                                    data-keywords="{{ (config.keywords|join(', '))|e }}"
+                                                    data-col-keyword="{{ config.col_keyword or '' }}"
+                                                    data-col-value="{{ config.col_value or '' }}"
+                                                    data-row-start="{{ config.row_start or '' }}"
+                                                    data-row-end="{{ config.row_end or '' }}"
+                                                    data-identify-info="{{ config.identify_info|e }}"
+                                                    data-cell-format="{{ config.cell_format or '' }}">✏️</button>
+                                            <a href="{{ url_for('main.delete_statement_config', config_id=config.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('Xóa cấu hình sổ phụ {{ config.bank_code }}?')">🗑️</a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="text-center mt-2"><small class="text-muted">Tổng số: {{ statement_configs|length }} cấu hình</small></div>
+                    {% else %}
+                        <div class="alert alert-info mb-0">Chưa có cấu hình nhận diện sổ phụ. Click "➕ Thêm mới" để tạo.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modals (reuse add/edit from original users.html) -->
+<div class="modal fade" id="addStatementConfigModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form action="{{ url_for('main.add_statement_config') }}" method="POST">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title">➕ Thêm Cấu hình nhận diện Sổ phụ</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="add_stmt_bank_code">Mã Ngân hàng <span class="text-danger">*</span></label>
+                            <input type="text" id="add_stmt_bank_code" name="bank_code" class="form-control" placeholder="VD: VCB" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="add_stmt_keywords">Từ khóa <span class="text-danger">*</span></label>
+                            <input type="text" id="add_stmt_keywords" name="keywords" class="form-control" placeholder="Ngăn cách bằng dấu phẩy" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="add_stmt_col_keyword">Cột Keyword</label>
+                            <input type="text" id="add_stmt_col_keyword" name="col_keyword" class="form-control" placeholder="VD: A">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="add_stmt_col_value">Cột Giá trị</label>
+                            <input type="text" id="add_stmt_col_value" name="col_value" class="form-control" placeholder="VD: B">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="add_stmt_row_start">Dòng bắt đầu</label>
+                            <input type="number" id="add_stmt_row_start" name="row_start" class="form-control" placeholder="VD: 1">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="add_stmt_row_end">Dòng kết thúc</label>
+                            <input type="number" id="add_stmt_row_end" name="row_end" class="form-control" placeholder="VD: 100">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="add_stmt_identify_info">Định danh <span class="text-danger">*</span></label>
+                        <textarea id="add_stmt_identify_info" name="identify_info" class="form-control" rows="2" placeholder="VD: Số tài khoản, tiêu đề, định dạng..." required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="add_stmt_cell_format">Cell Format</label>
+                        <input type="text" id="add_stmt_cell_format" name="cell_format" class="form-control" placeholder="VD: General">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-info">Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Edit statement config buttons
+// (minimal handler; reuse original page's JS if needed)
+document.querySelectorAll('.btn-edit-statement-config').forEach(btn => {
+    btn.addEventListener('click', () => {
+        alert('Chức năng sửa sẽ mở modal (chưa triển khai ở trang này).');
+    });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+/* Utility scroll containers extracted from inline styles */
+.scroll-300 { max-height: 300px; overflow-y: auto; }
+.scroll-400 { max-height: 400px; overflow-y: auto; }
+

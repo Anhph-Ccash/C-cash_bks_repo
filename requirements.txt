@@ -1,0 +1,7 @@
+Flask >=2.3
+Flask-SQLAlchemy
+Flask-Login
+pandas
+openpyxl
+xlrd
+psycopg2-binary
