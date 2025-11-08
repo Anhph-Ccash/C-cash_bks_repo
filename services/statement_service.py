@@ -288,6 +288,29 @@ def parse_and_store_statement(session, file_path, original_filename, ext, compan
 
                 return {"status": "INVALID", "message": msg}
 
+        # Normalize account number and other header fields: treat pandas NaN, empty strings,
+        # and common null tokens as missing (store as None) so downstream logic can detect missing accounts.
+        def _normalize_field(v):
+            try:
+                # pandas NA/NaN
+                if pd.isna(v):
+                    return None
+            except Exception:
+                pass
+            if v is None:
+                return None
+            s = str(v).strip()
+            if s == '':
+                return None
+            if s.lower() in ('nan', 'nat', 'none', 'null'):
+                return None
+            return s
+
+        account_norm = _normalize_field(header.get('accountno'))
+        currency_norm = _normalize_field(header.get('currency'))
+        opening_norm = _normalize_field(header.get('openingbalance'))
+        closing_norm = _normalize_field(header.get('closingbalance'))
+
         # create StatementLog
         stmt_log = StatementLog(
             user_id=user_id,
@@ -297,10 +320,10 @@ def parse_and_store_statement(session, file_path, original_filename, ext, compan
             original_filename=original_filename,
             status='SUCCESS',
             message='Parsed statement',
-            accountno=header.get('accountno'),
-            currency=header.get('currency'),
-            opening_balance=header.get('openingbalance'),
-            closing_balance=header.get('closingbalance'),
+            accountno=account_norm,
+            currency=currency_norm,
+            opening_balance=opening_norm,
+            closing_balance=closing_norm,
             details=details if details else None,
         )
         session.add(stmt_log)

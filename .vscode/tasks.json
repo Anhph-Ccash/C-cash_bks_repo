@@ -3,7 +3,7 @@
 	"tasks": [
 		{
 			"type": "Live Preview",
-			"workspacePath": "e:\\Visual Source\\flask_user_mgmt",
+			"workspacePath": "e:\\C-cash_bks_repo",
 			"problemMatcher": [],
 			"label": "Live Preview: Run Server",
 			"group": "build"

@@ -40,7 +40,20 @@
         <div class="card-body">
             <h6>Thông tin Header</h6>
             <div class="row mb-3">
-                <div class="col-md-3"><strong>Số tài khoản</strong><div>{{ stmt.accountno or '-' }}</div></div>
+                <div class="col-md-3">
+                    <strong>Số tài khoản</strong>
+                    <div>
+                        {{ stmt.accountno or '-' }}
+                    </div>
+                    {% if not stmt.accountno or not stmt.mt940_filename %}
+                    <form action="{{ url_for('main.update_statement_account', log_id=stmt.id) }}" method="POST" class="mt-2">
+                        <div class="input-group input-group-sm">
+                            <input type="text" name="accountno" class="form-control" placeholder="Nhập số tài khoản" value="{{ stmt.accountno or '' }}">
+                            <button class="btn btn-sm btn-primary" type="submit">Cập nhật &amp; Sinh MT940</button>
+                        </div>
+                    </form>
+                    {% endif %}
+                </div>
                 <div class="col-md-2"><strong>Tiền tệ</strong><div>{{ stmt.currency or '-' }}</div></div>
                 <div class="col-md-3"><strong>Số dư đầu kỳ</strong><div>{{ stmt.opening_balance or '-' }}</div></div>
                 <div class="col-md-3"><strong>Số dư cuối kỳ</strong><div>{{ stmt.closing_balance or '-' }}</div></div>

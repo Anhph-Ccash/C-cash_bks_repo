@@ -183,6 +183,9 @@ def user_upload():
     saved_name = f"{uuid.uuid4().hex}.{ext}"
     saved_path = os.path.join(current_app.config["UPLOAD_FOLDER"], saved_name)
     f.save(saved_path)
+    # track first parsed statement that is missing an account number so we can redirect
+    missing_statement_log_id = None
+
     try:
         user_id = session.get('user_id')
 
@@ -208,6 +211,15 @@ def user_upload():
                         parse_result = parse_and_store_statement(db.session, ef, orig_inner, inner_ext, company_id, result.get('bank_code'), user_id)
                         if parse_result.get('status') == 'SUCCESS':
                             successes += 1
+                            # if the parsed statement was created but account is missing, remember it
+                            sid = parse_result.get('statement_log_id')
+                            if sid and missing_statement_log_id is None:
+                                try:
+                                    stmt = StatementLog.query.filter_by(id=sid).first()
+                                    if stmt and not (stmt.accountno and str(stmt.accountno).strip()):
+                                        missing_statement_log_id = sid
+                                except Exception:
+                                    pass
                         else:
                             failures.append((orig_inner, parse_result.get('message')))
                     else:
@@ -240,6 +252,18 @@ def user_upload():
                     parse_result = parse_and_store_statement(db.session, saved_path, orig_name, ext_for_parse, company_id, result.get('bank_code'), user_id)
                     if parse_result.get('status') == 'SUCCESS':
                         flash('Sổ phụ đã được phân tích và MT940 sẵn sàng để tải xuống.', 'success')
+                        # if account missing on the created StatementLog, redirect user to edit it
+                        sid = parse_result.get('statement_log_id')
+                        if sid:
+                            try:
+                                stmt = StatementLog.query.filter_by(id=sid).first()
+                                if stmt and not (stmt.accountno and str(stmt.accountno).strip()):
+                                    # cleanup saved file before redirect
+                                    cleanup_file(saved_path)
+                                    return redirect(url_for('main.view_statement_detail', log_id=sid))
+                            except Exception:
+                                # ignore and continue
+                                pass
                     else:
                         flash(f"Phân tích sổ phụ thất bại: {parse_result.get('message')}", 'warning')
                 except Exception as e:
@@ -251,6 +275,10 @@ def user_upload():
     finally:
         cleanup_file(saved_path)
     
+    # If any parsed statement was missing account number, redirect the user to the first such statement
+    if missing_statement_log_id:
+        return redirect(url_for('main.view_statement_detail', log_id=missing_statement_log_id))
+
     return redirect(url_for('main.user_dashboard'))
 
 @main_bp.route('/user/logs')
@@ -393,6 +421,69 @@ def view_statement_detail(log_id):
     details = stmt.details or []
 
     return render_template('statement_detail.html', stmt=stmt, details=details, username=session.get('username'), company_name=session.get('company_name'))
+
+
+@main_bp.route('/user/statement-log/<int:log_id>/update-account', methods=['POST'])
+@user_required
+def update_statement_account(log_id):
+    """Allow user to update account number for a parsed statement and (re)generate MT940."""
+    from services.statement_service import build_mt940_strict
+    stmt = StatementLog.query.filter_by(id=log_id).first()
+    if not stmt:
+        flash('Không tìm thấy bản ghi.', 'danger')
+        return redirect(url_for('main.user_dashboard'))
+
+    # permission: owner, company, or admin
+    allowed = False
+    if session.get('role') == 'admin':
+        allowed = True
+    elif stmt.user_id and stmt.user_id == session.get('user_id'):
+        allowed = True
+    elif stmt.company_id and stmt.company_id == session.get('company_id'):
+        allowed = True
+
+    if not allowed:
+        flash('Bạn không có quyền cập nhật.', 'danger')
+        return redirect(url_for('main.user_dashboard'))
+
+    new_acc = request.form.get('accountno', '').strip()
+    if not new_acc:
+        flash('Vui lòng nhập số tài khoản hợp lệ.', 'warning')
+        return redirect(url_for('main.view_statement_detail', log_id=log_id))
+
+    try:
+        stmt.accountno = new_acc
+        # remove old mt940 file if exists
+        if stmt.mt940_filename:
+            try:
+                old_path = os.path.join(current_app.config.get('UPLOAD_FOLDER', 'uploads'), stmt.mt940_filename)
+                if os.path.exists(old_path):
+                    os.remove(old_path)
+            except Exception:
+                pass
+
+        # regenerate mt940 and write file
+        mt_text = build_mt940_strict(stmt)
+        mt_dir = os.path.join(current_app.config.get('UPLOAD_FOLDER', 'uploads'), 'mt940')
+        os.makedirs(mt_dir, exist_ok=True)
+        ts = datetime.utcnow().strftime('%Y%m%d%H%M%S')
+        safe_name = (stmt.original_filename or 'statement').rsplit('.', 1)[0]
+        mt_filename = f"{safe_name}_{stmt.bank_code}_{ts}.mt940.txt"
+        mt_path = os.path.join(mt_dir, mt_filename)
+        with open(mt_path, 'w', encoding='utf-8') as f:
+            f.write(mt_text)
+
+        rel_path = os.path.relpath(mt_path, current_app.config.get('UPLOAD_FOLDER', 'uploads'))
+        stmt.mt940_filename = rel_path.replace('\\', '/')
+        stmt.status = 'SUCCESS'
+        stmt.message = 'MT940 generated after account update'
+        db.session.commit()
+        flash('Đã cập nhật số tài khoản và sinh MT940 thành công.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Lỗi khi cập nhật: {e}', 'danger')
+
+    return redirect(url_for('main.view_statement_detail', log_id=log_id))
 
 
 @main_bp.route('/user/statement-log/delete/<int:log_id>')
