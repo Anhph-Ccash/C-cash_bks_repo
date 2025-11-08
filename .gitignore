@@ -6,3 +6,6 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+
+# Ignore nested repository folder that was accidentally copied into repo root
+C-cash_bks_repo/
