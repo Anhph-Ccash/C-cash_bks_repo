@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: C-cash_BKS_CMS
+    env: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn app:app"
