@@ -6,7 +6,7 @@ class Config:
     # Use DATABASE_URL if provided, otherwise fall back to local dev DB
     SQLALCHEMY_DATABASE_URI = os.environ.get(
         'DATABASE_URL',
-        'postgresql://postgres:11223344@localhost:5432/FlaskWebPostgreSQL'
+        postgresql://flaskwebpostgresql_user:nrDeXdaJQ2GA9Bv04ISC2rdNpI7EKhYr@dpg-d47l9824d50c7388ofsg-a/flaskwebpostgresql'
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), "uploads")
