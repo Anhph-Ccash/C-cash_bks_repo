@@ -1,0 +1,207 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Cấu hình Ngân hàng - Admin Panel{% endblock %}
+{% block nav_bank_configs %}active{% endblock %}
+
+{% block content %}
+<h3>⚙️ Cấu hình Ngân hàng</h3>
+
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<!-- Filter Form -->
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('admin.manage_bank_configs') }}" class="row g-2">
+            <div class="col-md-4">
+                <input type="text" name="bank_code" class="form-control" placeholder="Tìm kiếm theo mã ngân hàng..." value="{{ bank_code_filter or '' }}">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">🔍 Tìm kiếm</button>
+            </div>
+            {% if bank_code_filter %}
+            <div class="col-md-2">
+                <a href="{{ url_for('admin.manage_bank_configs') }}" class="btn btn-secondary w-100">✖ Xóa bộ lọc</a>
+            </div>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center bg-success text-white">
+        <span>Bank Configs (A-Z) - Tổng: {{ bank_pagination.total }}</span>
+        <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#addBankConfigModal">➕ Thêm mới</button>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0" id="bankConfigsTable">
+                <thead class="table-light">
+                    <tr>
+                        <th>Mã NH</th>
+                        <th>Tên Ngân hàng</th>
+                        <th>Từ khóa</th>
+                        <th>Trạng thái</th>
+                        <th>Cập nhật</th>
+                        <th width="120">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cfg in bank_configs %}
+                    <tr>
+                        <td><span class="badge bg-primary">{{ cfg.bank_code }}</span></td>
+                        <td>{{ cfg.bank_name or '-' }}</td>
+                        <td>
+                            {% for kw in cfg.keywords %}
+                            <span class="badge bg-info me-1">{{ kw }}</span>
+                            {% endfor %}
+                        </td>
+                        <td>
+                            {% if cfg.is_active %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td><small class="text-muted">{{ cfg.updated_at.strftime('%d/%m/%Y %H:%M') if cfg.updated_at else '-' }}</small></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-warning btn-inline-edit-bank"
+                                    data-id="{{ cfg.id }}"
+                                    data-bank-code="{{ cfg.bank_code }}"
+                                    data-bank-name="{{ cfg.bank_name or '' }}"
+                                    data-keywords="{{ (cfg.keywords|join(', '))|e }}" title="Sửa nhanh">✏️</button>
+                            <a href="{{ url_for('main.delete_bank_config', config_id=cfg.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('Xóa cấu hình {{ cfg.bank_code }}?')">🗑️</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" class="text-center text-muted">Chưa có cấu hình ngân hàng</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Bank Config Pagination -->
+    {% if bank_pagination.total > 0 %}
+    <div class="card-footer d-flex justify-content-between align-items-center">
+        <div>
+            Hiển thị {{ ((bank_pagination.page - 1) * bank_pagination.per_page) + 1 }} - {{ [bank_pagination.page * bank_pagination.per_page, bank_pagination.total]|min }} / {{ bank_pagination.total }} mục
+        </div>
+        <div class="btn-group">
+            {% if bank_pagination.has_prev %}
+                <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin.manage_bank_configs', page=bank_pagination.page - 1, per_page=bank_pagination.per_page, bank_code=bank_code_filter) }}">« Trước</a>
+            {% else %}
+                <a class="btn btn-sm btn-outline-secondary disabled">« Trước</a>
+            {% endif %}
+            <span class="btn btn-sm btn-outline-secondary disabled">Trang {{ bank_pagination.page }}/{{ bank_pagination.total_pages }}</span>
+            {% if bank_pagination.has_next %}
+                <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin.manage_bank_configs', page=bank_pagination.page + 1, per_page=bank_pagination.per_page, bank_code=bank_code_filter) }}">Sau »</a>
+            {% else %}
+                <a class="btn btn-sm btn-outline-secondary disabled">Sau »</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Add Bank Config Modal -->
+<div class="modal fade" id="addBankConfigModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">➕ Thêm Cấu hình Ngân hàng</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <form action="{{ url_for('main.add_bank_config') }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Mã Ngân hàng</label>
+                        <input type="text" name="bank_code" class="form-control" placeholder="VD: VCB, TCB" title="Mã ngân hàng" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tên Ngân hàng</label>
+                        <input type="text" name="bank_name" class="form-control" placeholder="VD: Vietcombank, Techcombank" title="Tên đầy đủ của ngân hàng">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Từ khóa (phân cách bằng dấu phẩy)</label>
+                        <input type="text" name="keywords" class="form-control" placeholder="keyword1, keyword2, keyword3" title="Từ khóa để nhận diện ngân hàng">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-success">Thêm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Bank Config Modal -->
+<div class="modal fade" id="editBankConfigModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title">✏️ Sửa Cấu hình Ngân hàng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <form id="editBankConfigForm" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Mã Ngân hàng</label>
+                        <input type="text" id="edit_bank_code" name="bank_code" class="form-control" placeholder="VD: VCB, TCB" title="Mã ngân hàng" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tên Ngân hàng</label>
+                        <input type="text" id="edit_bank_name" name="bank_name" class="form-control" placeholder="VD: Vietcombank, Techcombank" title="Tên đầy đủ của ngân hàng">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Từ khóa (phân cách bằng dấu phẩy)</label>
+                        <input type="text" id="edit_keywords" name="keywords" class="form-control" placeholder="keyword1, keyword2, keyword3" title="Từ khóa để nhận diện ngân hàng">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-warning">Cập nhật</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Inline edit buttons
+    document.querySelectorAll('.btn-inline-edit-bank').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const configId = this.dataset.id;
+            const bankCode = this.dataset.bankCode;
+            const bankName = this.dataset.bankName;
+            const keywords = this.dataset.keywords;
+            
+            document.getElementById('edit_bank_code').value = bankCode;
+            document.getElementById('edit_bank_name').value = bankName;
+            document.getElementById('edit_keywords').value = keywords;
+            document.getElementById('editBankConfigForm').action = `/user/bank-config/update/${configId}`;
+            
+            new bootstrap.Modal(document.getElementById('editBankConfigModal')).show();
+        });
+    });
+});
+</script>
+{% endblock %}
+

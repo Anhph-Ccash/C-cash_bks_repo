@@ -1,0 +1,12 @@
+bank_code,keywords,col_keyword,col_value,row_start,row_end,identify_info,cell_format
+VCB3,Số tài khoản,Account Number,Account No,A,B,1,5,accountno,
+VCB3,Loại tiền,Currency,A,B,2,5,currency,
+VCB3,Số dư đầu kỳ,Opening Balance,A,B,3,5,openingbalance,
+VCB3,Số dư cuối kỳ,Closing Balance,A,B,4,5,closingbalance,
+VCB3,Diễn giải,Narrative,Description,A,B,10,,narrative,
+VCB3,Ngày GD,Transaction Date,Date,A,B,10,,transactiondate,
+VCB3,Số tiền ghi nợ,Debit,Dr,A,B,10,,debit,
+VCB3,Số tiền ghi có,Credit,Cr,A,B,10,,credit,
+VCB3,Mã luồng,Flow Code,A,B,10,,flowcode,
+VCB3,Phí giao dịch,Transaction Fee,Fee,A,B,10,,transactionfee,
+VCB3,VAT,Transaction VAT,A,B,10,,transactionvat,

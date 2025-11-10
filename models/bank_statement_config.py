@@ -20,5 +20,5 @@ class BankStatementConfig(db.Model):
     company = db.relationship('Company', backref='statement_configs')
     
     __table_args__ = (
-        db.UniqueConstraint('company_id', 'bank_code', name='unique_company_statement_config'),
+        db.UniqueConstraint('company_id', 'bank_code', 'identify_info', name='unique_company_statement_config_field'),
     )

@@ -2,20 +2,31 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trang quản trị</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+<nav class="navbar navbar-expand-lg navbar-dark bg-success">
     <div class="container-fluid">
         <a class="navbar-brand" href="#">👑 Admin Panel</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" title="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
-                    <a class="nav-link active" href="{{ url_for('admin.admin') }}">👥 Quản lý Users</a>
+                    <a class="nav-link" href="{{ url_for('admin.manage_users') }}">👥 Quản lý Users</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('admin.manage_companies') }}">🏢 Quản lý Companies</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('admin.manage_bank_configs') }}">⚙️ Cấu hình Ngân hàng</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('admin.manage_statement_configs') }}">📋 Cấu hình Sổ phụ</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('upload.upload_file') }}">📂 Upload File</a>
@@ -52,6 +63,23 @@
 </nav>
 
 <div class="container mt-4">
+    <!-- Hiển thị công ty đang chọn -->
+    <div class="alert alert-success d-flex justify-content-between align-items-center mb-3" role="alert">
+        <div>
+            <strong>🏢 Công ty đang quản lý:</strong> 
+            {% if company_name %}
+                <span class="badge bg-success fs-6">{{ company_name }}</span>
+            {% else %}
+                <span class="text-muted">Chưa chọn công ty</span>
+            {% endif %}
+        </div>
+        {% if companies %}
+        <button class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#companySelectorModal">
+            🔄 Đổi công ty
+        </button>
+        {% endif %}
+    </div>
+
     {% if companies %}
     <div class="col-12 mb-3">
         <div class="card border-dark">
@@ -70,25 +98,6 @@
     </div>
     {% endif %}
     
-    <!-- Tabs Navigation -->
-    <ul class="nav nav-tabs mb-4" id="adminTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button" role="tab">
-                👥 Quản lý Users
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="companies-tab" data-bs-toggle="tab" data-bs-target="#companies" type="button" role="tab">
-                🏢 Quản lý Companies
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="configs-tab" data-bs-toggle="tab" data-bs-target="#configs" type="button" role="tab">
-                ⚙️ Cấu hình Ngân hàng
-            </button>
-        </li>
-    </ul>
-
     <!-- Tab Content -->
     <div class="tab-content" id="adminTabsContent">
         <!-- Users Tab -->
@@ -97,6 +106,7 @@
 
             <!-- Form thêm user -->
             <form action="{{ url_for('admin.add_user') }}" method="POST" class="row g-3 mb-4 border p-3 rounded">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
                 <div class="col-md-2">
                     <input name="username" type="text" class="form-control" placeholder="Username" required>
                 </div>
@@ -141,10 +151,11 @@
                     {% for user in users %}
                     <tr>
                         <form action="{{ url_for('admin.update_user', user_id=user.id) }}" method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
                             <td>{{ user.id }}</td>
-                            <td><input name="username" class="form-control form-control-sm" value="{{ user.username }}"></td>
-                            <td><input name="email" class="form-control form-control-sm" value="{{ user.email }}"></td>
-                            <td><input name="role" class="form-control form-control-sm" value="{{ user.role }}"></td>
+                            <td><input name="username" class="form-control form-control-sm" value="{{ user.username }}" title="Tên đăng nhập" placeholder="Username"></td>
+                            <td><input name="email" class="form-control form-control-sm" value="{{ user.email }}" title="Email" placeholder="user@example.com"></td>
+                            <td><input name="role" class="form-control form-control-sm" value="{{ user.role }}" title="Vai trò (user/admin)" placeholder="user hoặc admin"></td>
                             <td>
                                 {% set user_companies = user.get_companies() %}
                                 {% for c in user_companies %}
@@ -161,85 +172,193 @@
                 </tbody>
             </table>
         </div>
+        
+        <!-- Pagination for Users -->
+        {% if user_pagination %}
+        <div class="d-flex justify-content-between align-items-center mt-3 px-3 pb-3">
+            <div class="text-muted">
+                Hiển thị {{ ((user_pagination.page - 1) * user_pagination.per_page) + 1 }} - {{ [user_pagination.page * user_pagination.per_page, user_pagination.total]|min }} / {{ user_pagination.total }} users
+            </div>
+            <div class="text-muted">
+                Trang {{ user_pagination.page }} / {{ user_pagination.total_pages }}
+            </div>
+            <div class="btn-group">
+                {% if user_pagination.has_prev %}
+                    <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin.admin', per_page=user_pagination.per_page, page=user_pagination.page - 1) }}">« Trước</a>
+                {% else %}
+                    <a class="btn btn-sm btn-outline-secondary disabled">« Trước</a>
+                {% endif %}
+                {% if user_pagination.has_next %}
+                    <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin.admin', per_page=user_pagination.per_page, page=user_pagination.page + 1) }}">Sau »</a>
+                {% else %}
+                    <a class="btn btn-sm btn-outline-secondary disabled">Sau »</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
 
-        <!-- Configs Tab -->
-        <div class="tab-pane fade" id="configs" role="tabpanel">
+        <!-- Bank Configs Tab -->
+        <div class="tab-pane fade" id="bank-configs" role="tabpanel">
             <h3>⚙️ Cấu hình Ngân hàng</h3>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="card mb-3">
-                        <div class="card-header">Bank Configs (A-Z)</div>
-                        <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table table-sm mb-0">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Mã NH</th>
-                                            <th>Tên</th>
-                                            <th>Từ khóa</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for cfg in bank_configs %}
-                                        <tr>
-                                            <td><span class="badge bg-primary">{{ cfg.bank_code }}</span></td>
-                                            <td>{{ cfg.bank_name or '-' }}</td>
-                                            <td>
-                                                {% for kw in cfg.keywords %}
-                                                <span class="badge bg-info me-1">{{ kw }}</span>
-                                                {% endfor %}
-                                            </td>
-                                        </tr>
-                                        {% else %}
-                                        <tr><td colspan="3" class="text-center">Chưa có cấu hình</td></tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+            
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center bg-success text-white">
+                    <span>Bank Configs (A-Z) - Tổng: {{ bank_pagination.total }}</span>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#addBankConfigModal">➕ Thêm mới</button>
+                        <button class="btn btn-sm btn-warning" id="openEditBankConfigModal" disabled>✏️ Sửa</button>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <div class="card mb-3">
-                        <div class="card-header">Statement Configs (A-Z)</div>
-                        <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table table-sm mb-0">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Bank Code</th>
-                                            <th>Từ khóa</th>
-                                            <th>Identify</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for sc in statement_configs %}
-                                        <tr>
-                                            <td><span class="badge bg-primary">{{ sc.bank_code }}</span></td>
-                                            <td>
-                                                {% for kw in sc.keywords %}
-                                                <span class="badge bg-info me-1">{{ kw }}</span>
-                                                {% endfor %}
-                                            </td>
-                                            <td>{{ sc.identify_info }}</td>
-                                        </tr>
-                                        {% else %}
-                                        <tr><td colspan="3" class="text-center">Chưa có cấu hình</td></tr>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0" id="bankConfigsTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="col-select"><input type="checkbox" id="selectOneBankConfig" title="Chọn tất cả" disabled></th>
+                                    <th>Mã NH</th>
+                                    <th>Tên Ngân hàng</th>
+                                    <th>Từ khóa</th>
+                                    <th>Trạng thái</th>
+                                    <th>Cập nhật</th>
+                                    <th width="120">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for cfg in bank_configs %}
+                                <tr>
+                                    <td><input type="radio" name="edit_bank_config_id" value="{{ cfg.id }}" class="select-edit-bank-config" aria-label="Chọn cấu hình {{ cfg.bank_code }}" data-bank-code="{{ cfg.bank_code }}" data-bank-name="{{ cfg.bank_name or '' }}" data-keywords="{{ (cfg.keywords|join(', '))|e }}"></td>
+                                    <td><span class="badge bg-primary">{{ cfg.bank_code }}</span></td>
+                                    <td>{{ cfg.bank_name or '-' }}</td>
+                                    <td>
+                                        {% for kw in cfg.keywords %}
+                                        <span class="badge bg-info me-1">{{ kw }}</span>
                                         {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+                                    </td>
+                                    <td>
+                                        {% if cfg.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td><small class="text-muted">{{ cfg.updated_at.strftime('%d/%m/%Y %H:%M') if cfg.updated_at else '-' }}</small></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-warning btn-inline-edit-bank"
+                                                data-id="{{ cfg.id }}"
+                                                data-bank-code="{{ cfg.bank_code }}"
+                                                data-bank-name="{{ cfg.bank_name or '' }}"
+                                                data-keywords="{{ (cfg.keywords|join(', '))|e }}" title="Sửa nhanh">✏️</button>
+                                        <a href="{{ url_for('main.delete_bank_config', config_id=cfg.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('Xóa cấu hình {{ cfg.bank_code }}?')">🗑️</a>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr><td colspan="7" class="text-center text-muted">Chưa có cấu hình ngân hàng</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Bank Config Pagination -->
+                {% if bank_pagination.total > 0 %}
+                <div class="card-footer d-flex justify-content-between align-items-center">
+                    <div>
+                        Hiển thị {{ ((bank_pagination.page - 1) * bank_pagination.per_page) + 1 }} - {{ [bank_pagination.page * bank_pagination.per_page, bank_pagination.total]|min }} / {{ bank_pagination.total }} mục
+                    </div>
+                    <div class="btn-group">
+                        {% if bank_pagination.has_prev %}
+                            <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin.admin', page=user_pagination.page, per_page=user_pagination.per_page, bank_page=bank_pagination.page - 1, bank_per_page=bank_pagination.per_page) }}#bank-configs">« Trước</a>
+                        {% else %}
+                            <a class="btn btn-sm btn-outline-secondary disabled">« Trước</a>
+                        {% endif %}
+                        <span class="btn btn-sm btn-outline-secondary disabled">Trang {{ bank_pagination.page }}/{{ bank_pagination.total_pages }}</span>
+                        {% if bank_pagination.has_next %}
+                            <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin.admin', page=user_pagination.page, per_page=user_pagination.per_page, bank_page=bank_pagination.page + 1, bank_per_page=bank_pagination.per_page) }}#bank-configs">Sau »</a>
+                        {% else %}
+                            <a class="btn btn-sm btn-outline-secondary disabled">Sau »</a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Statement Configs Tab -->
+        <div class="tab-pane fade" id="statement-configs" role="tabpanel">
+            <h3>📋 Cấu hình Sổ phụ Ngân hàng</h3>
+            
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center bg-info text-white">
+                    <span>Statement Configs (A-Z) - Tổng: {{ statement_configs|length }}</span>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#addStatementConfigModal">➕ Thêm mới</button>
+                        <a href="{{ url_for('main.user_statement_configs') }}" class="btn btn-sm btn-success">📤 Upload theo lô</a>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive admin-table-scroll">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="table-light sticky-top">
+                                <tr>
+                                    <th>Bank Code</th>
+                                    <th>Từ khóa</th>
+                                    <th>col_keyword</th>
+                                    <th>col_value</th>
+                                    <th>row_start</th>
+                                    <th>row_end</th>
+                                    <th>Identify Info</th>
+                                    <th>Cell Format</th>
+                                    <th>Ngày tạo</th>
+                                    <th width="120">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sc in statement_configs %}
+                                <tr>
+                                    <td><span class="badge bg-primary">{{ sc.bank_code }}</span></td>
+                                    <td>
+                                        {% for kw in sc.keywords %}
+                                        <span class="badge bg-info me-1">{{ kw }}</span>
+                                        {% endfor %}
+                                    </td>
+                                    <td>{{ sc.col_keyword or '-' }}</td>
+                                    <td>{{ sc.col_value or '-' }}</td>
+                                    <td>{{ sc.row_start or '-' }}</td>
+                                    <td>{{ sc.row_end or '-' }}</td>
+                                    <td><span class="badge bg-warning text-dark">{{ sc.identify_info }}</span></td>
+                                    <td>{{ sc.cell_format or '-' }}</td>
+                                    <td><small class="text-muted">{{ sc.created_at.strftime('%d/%m/%Y %H:%M') if sc.created_at else '-' }}</small></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-warning btn-edit-statement-config"
+                                                data-id="{{ sc.id }}"
+                                                data-bank-code="{{ sc.bank_code }}"
+                                                data-keywords="{{ (sc.keywords|join(', '))|e }}"
+                                                data-col-keyword="{{ sc.col_keyword or '' }}"
+                                                data-col-value="{{ sc.col_value or '' }}"
+                                                data-row-start="{{ sc.row_start or '' }}"
+                                                data-row-end="{{ sc.row_end or '' }}"
+                                                data-identify-info="{{ sc.identify_info|e }}"
+                                                data-cell-format="{{ sc.cell_format or '' }}">✏️</button>
+                                        <a href="{{ url_for('main.delete_statement_config', config_id=sc.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('Xóa cấu hình sổ phụ {{ sc.bank_code }}?')">🗑️</a>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr><td colspan="10" class="text-center text-muted">Chưa có cấu hình sổ phụ</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
+
         <!-- Companies Tab -->
         <div class="tab-pane fade" id="companies" role="tabpanel">
             <h3>🏢 Quản lý Companies</h3>
 
             <!-- Form thêm company -->
             <form action="{{ url_for('admin.add_company') }}" method="POST" class="row g-3 mb-4 border p-3 rounded">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
                 <div class="col-md-3">
                     <input name="name" type="text" class="form-control" placeholder="Tên công ty" required>
                 </div>
@@ -270,10 +389,11 @@
                     {% for company in companies %}
                     <tr>
                         <form action="{{ url_for('admin.update_company', company_id=company.id) }}" method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
                             <td>{{ company.id }}</td>
-                            <td><input name="name" class="form-control form-control-sm" value="{{ company.name }}" required></td>
-                            <td><input name="address" class="form-control form-control-sm" value="{{ company.address or '' }}"></td>
-                            <td><input name="tax_code" class="form-control form-control-sm" value="{{ company.tax_code or '' }}"></td>
+                            <td><input name="name" class="form-control form-control-sm" value="{{ company.name }}" title="Tên công ty" placeholder="Tên công ty" required></td>
+                            <td><input name="address" class="form-control form-control-sm" value="{{ company.address or '' }}" title="Địa chỉ công ty" placeholder="Địa chỉ"></td>
+                            <td><input name="tax_code" class="form-control form-control-sm" value="{{ company.tax_code or '' }}" title="Mã số thuế" placeholder="MST"></td>
                             <td>
                                 {% if company.is_active %}
                                 <span class="badge bg-success">Active</span>
@@ -283,7 +403,7 @@
                             </td>
                             <td>
                                 <button type="submit" class="btn btn-primary btn-sm">💾</button>
-                                <a href="{{ url_for('admin.delete_company', company_id=company.id) }}" class="btn btn-danger btn-sm" onclick="return confirm('Xóa công ty này? Tất cả dữ liệu liên quan sẽ bị xóa!')">🗑️</a>
+                                                                <a href="{{ url_for('admin.delete_company', company_id=company.id) }}" class="btn btn-danger btn-sm" onclick="return confirm('Xóa công ty này? Tất cả dữ liệu liên quan sẽ bị xóa!')">🗑️</a>
                             </td>
                         </form>
                     </tr>
@@ -293,6 +413,342 @@
         </div>
     </div>
 </div>
+
+<!-- Modals for Bank Config -->
+<div class="modal fade" id="addBankConfigModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{{ url_for('main.add_bank_config') }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">➕ Thêm Cấu hình nhận diện Ngân hàng</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="add_bank_code" class="form-label">Mã Ngân hàng <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="add_bank_code" name="bank_code" required placeholder="VD: VCB, TCB">
+                    </div>
+                    <div class="mb-3">
+                        <label for="add_bank_name" class="form-label">Tên Ngân hàng</label>
+                        <input type="text" class="form-control" id="add_bank_name" name="bank_name" placeholder="VD: Vietcombank">
+                    </div>
+                    <div class="mb-3">
+                        <label for="add_keywords" class="form-label">Từ khóa <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="add_keywords" name="keywords" rows="3" required placeholder="Nhập các từ khóa, cách nhau bởi dấu phẩy. VD: ngân hàng tmcp ngoại thương việt nam, vietcombank"></textarea>
+                        <small class="text-muted">Các từ khóa giúp hệ thống nhận diện ngân hàng trong file</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-success">➕ Thêm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editBankConfigModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="editBankConfigForm" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title">✏️ Sửa Cấu hình Ngân hàng</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="edit_bank_code" class="form-label">Mã Ngân hàng <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="edit_bank_code" name="bank_code" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_bank_name" class="form-label">Tên Ngân hàng</label>
+                        <input type="text" class="form-control" id="edit_bank_name" name="bank_name">
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_keywords" class="form-label">Từ khóa <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="edit_keywords" name="keywords" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-warning">💾 Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modals for Statement Config -->
+<div class="modal fade" id="addStatementConfigModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form action="{{ url_for('main.add_statement_config') }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title">➕ Thêm Cấu hình Sổ phụ Ngân hàng</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="add_stmt_bank_code" class="form-label">Mã Ngân hàng <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="add_stmt_bank_code" name="bank_code" required placeholder="VD: VCB">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="add_stmt_identify_info" class="form-label">Identify Info <span class="text-danger">*</span></label>
+                            <select class="form-select" id="add_stmt_identify_info" name="identify_info" required>
+                                <option value="">-- Chọn loại --</option>
+                                <option value="accountno">accountno</option>
+                                <option value="currency">currency</option>
+                                <option value="openingbalance">openingbalance</option>
+                                <option value="closingbalance">closingbalance</option>
+                                <option value="narrative">narrative</option>
+                                <option value="transactiondate">transactiondate</option>
+                                <option value="debit">debit</option>
+                                <option value="credit">credit</option>
+                                <option value="flowcode">flowcode</option>
+                                <option value="transactionfee">transactionfee</option>
+                                <option value="transactionvat">transactionvat</option>
+                                <option value="identify_info">identify_info</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="add_stmt_keywords" class="form-label">Từ khóa <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="add_stmt_keywords" name="keywords" rows="2" required placeholder="Nhập từ khóa, cách nhau bởi dấu phẩy"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label for="add_stmt_col_keyword" class="form-label">Col Keyword</label>
+                            <input type="text" class="form-control" id="add_stmt_col_keyword" name="col_keyword" placeholder="VD: A">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="add_stmt_col_value" class="form-label">Col Value</label>
+                            <input type="text" class="form-control" id="add_stmt_col_value" name="col_value" placeholder="VD: B">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="add_stmt_row_start" class="form-label">Row Start</label>
+                            <input type="number" class="form-control" id="add_stmt_row_start" name="row_start" placeholder="VD: 1">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="add_stmt_row_end" class="form-label">Row End</label>
+                            <input type="number" class="form-control" id="add_stmt_row_end" name="row_end" placeholder="VD: 100">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="add_stmt_cell_format" class="form-label">Cell Format</label>
+                        <input type="text" class="form-control" id="add_stmt_cell_format" name="cell_format" placeholder="VD: Text, Number, Date">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-info">➕ Thêm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editStatementConfigModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form id="editStatementConfigForm" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title">✏️ Sửa Cấu hình Sổ phụ</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_stmt_bank_code" class="form-label">Mã Ngân hàng <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="edit_stmt_bank_code" name="bank_code" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_stmt_identify_info" class="form-label">Identify Info <span class="text-danger">*</span></label>
+                            <select class="form-select" id="edit_stmt_identify_info" name="identify_info" required>
+                                <option value="accountno">accountno</option>
+                                <option value="currency">currency</option>
+                                <option value="openingbalance">openingbalance</option>
+                                <option value="closingbalance">closingbalance</option>
+                                <option value="narrative">narrative</option>
+                                <option value="transactiondate">transactiondate</option>
+                                <option value="debit">debit</option>
+                                <option value="credit">credit</option>
+                                <option value="flowcode">flowcode</option>
+                                <option value="transactionfee">transactionfee</option>
+                                <option value="transactionvat">transactionvat</option>
+                                <option value="identify_info">identify_info</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_stmt_keywords" class="form-label">Từ khóa <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="edit_stmt_keywords" name="keywords" rows="2" required></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label for="edit_stmt_col_keyword" class="form-label">Col Keyword</label>
+                            <input type="text" class="form-control" id="edit_stmt_col_keyword" name="col_keyword">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="edit_stmt_col_value" class="form-label">Col Value</label>
+                            <input type="text" class="form-control" id="edit_stmt_col_value" name="col_value">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="edit_stmt_row_start" class="form-label">Row Start</label>
+                            <input type="number" class="form-control" id="edit_stmt_row_start" name="row_start">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="edit_stmt_row_end" class="form-label">Row End</label>
+                            <input type="number" class="form-control" id="edit_stmt_row_end" name="row_end">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_stmt_cell_format" class="form-label">Cell Format</label>
+                        <input type="text" class="form-control" id="edit_stmt_cell_format" name="cell_format">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-warning">💾 Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Bank Config Edit functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle radio selection for bank configs
+    const editBankRadios = document.querySelectorAll('.select-edit-bank-config');
+    const openEditBankBtn = document.getElementById('openEditBankConfigModal');
+    
+    if (editBankRadios.length > 0 && openEditBankBtn) {
+        editBankRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                openEditBankBtn.disabled = false;
+            });
+        });
+        
+        openEditBankBtn.addEventListener('click', function() {
+            const selected = document.querySelector('.select-edit-bank-config:checked');
+            if (selected) {
+                const configId = selected.value;
+                const bankCode = selected.dataset.bankCode;
+                const bankName = selected.dataset.bankName;
+                const keywords = selected.dataset.keywords;
+                
+                // Populate edit modal
+                document.getElementById('edit_bank_code').value = bankCode;
+                document.getElementById('edit_bank_name').value = bankName;
+                document.getElementById('edit_keywords').value = keywords;
+                
+                // Set form action
+                document.getElementById('editBankConfigForm').action = `/user/bank-config/update/${configId}`;
+                
+                // Show modal
+                new bootstrap.Modal(document.getElementById('editBankConfigModal')).show();
+            }
+        });
+    }
+    
+    // Handle inline edit buttons for bank configs
+    const inlineEditBankBtns = document.querySelectorAll('.btn-inline-edit-bank');
+    inlineEditBankBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const configId = this.dataset.id;
+            const bankCode = this.dataset.bankCode;
+            const bankName = this.dataset.bankName;
+            const keywords = this.dataset.keywords;
+            
+            // Populate edit modal
+            document.getElementById('edit_bank_code').value = bankCode;
+            document.getElementById('edit_bank_name').value = bankName;
+            document.getElementById('edit_keywords').value = keywords;
+            
+            // Set form action
+            document.getElementById('editBankConfigForm').action = `/user/bank-config/update/${configId}`;
+            
+            // Show modal
+            new bootstrap.Modal(document.getElementById('editBankConfigModal')).show();
+        });
+    });
+    
+    // Statement Config Edit functionality
+    const editStatementBtns = document.querySelectorAll('.btn-edit-statement-config');
+    editStatementBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const configId = this.dataset.id;
+            const bankCode = this.dataset.bankCode;
+            const keywords = this.dataset.keywords;
+            const colKeyword = this.dataset.colKeyword;
+            const colValue = this.dataset.colValue;
+            const rowStart = this.dataset.rowStart;
+            const rowEnd = this.dataset.rowEnd;
+            const identifyInfo = this.dataset.identifyInfo;
+            const cellFormat = this.dataset.cellFormat;
+            
+            // Populate edit modal
+            document.getElementById('edit_stmt_bank_code').value = bankCode;
+            document.getElementById('edit_stmt_keywords').value = keywords;
+            document.getElementById('edit_stmt_col_keyword').value = colKeyword;
+            document.getElementById('edit_stmt_col_value').value = colValue;
+            document.getElementById('edit_stmt_row_start').value = rowStart;
+            document.getElementById('edit_stmt_row_end').value = rowEnd;
+            document.getElementById('edit_stmt_identify_info').value = identifyInfo;
+            document.getElementById('edit_stmt_cell_format').value = cellFormat;
+            
+            // Set form action
+            document.getElementById('editStatementConfigForm').action = `/user/statement-config/update/${configId}`;
+            
+            // Show modal
+            new bootstrap.Modal(document.getElementById('editStatementConfigModal')).show();
+        });
+    });
+});
+</script>
+
+<!-- Modal đổi công ty -->
+<div class="modal fade" id="companySelectorModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">🏢 Chọn công ty để quản lý</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                {% if companies %}
+                <div class="list-group">
+                    {% for c in companies %}
+                    <a href="{{ url_for('auth.switch_company', company_id=c.id) }}" 
+                       class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% if current_company_id == c.id %}active{% endif %}">
+                        <div>
+                            <strong>{{ c.name }}</strong>
+                            {% if c.address %}
+                            <br><small class="{% if current_company_id == c.id %}text-white-50{% else %}text-muted{% endif %}">{{ c.address }}</small>
+                            {% endif %}
+                        </div>
+                        {% if current_company_id == c.id %}
+                        <span class="badge bg-light text-success">✓ Đang chọn</span>
+                        {% endif %}
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">Chưa có công ty nào.</p>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>

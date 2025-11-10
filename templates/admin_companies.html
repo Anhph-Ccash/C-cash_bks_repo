@@ -1,0 +1,153 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Quản lý Công ty - Admin Panel{% endblock %}
+{% block nav_companies %}active{% endblock %}
+
+{% block content %}
+<h3>🏢 Quản lý Công ty</h3>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center bg-info text-white">
+        <span>Danh sách Công ty - Tổng: {{ companies|length }}</span>
+        <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#addCompanyModal">➕ Thêm mới</button>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+                <thead class="table-light sticky-top">
+                    <tr>
+                        <th>ID</th>
+                        <th>Tên công ty</th>
+                        <th>Địa chỉ</th>
+                        <th>Mã số thuế</th>
+                        <th>Trạng thái</th>
+                        <th width="120">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for company in companies %}
+                    <tr>
+                        <td>{{ company.id }}</td>
+                        <td>{{ company.name }}</td>
+                        <td>{{ company.address or '-' }}</td>
+                        <td>{{ company.tax_code or '-' }}</td>
+                        <td>
+                            {% if company.is_active %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-warning" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#editCompanyModal"
+                                    data-id="{{ company.id }}"
+                                    data-name="{{ company.name }}"
+                                    data-address="{{ company.address or '' }}"
+                                    data-tax-code="{{ company.tax_code or '' }}"
+                                    data-is-active="{{ company.is_active }}">✏️</button>
+                            <a href="{{ url_for('admin.delete_company', company_id=company.id) }}" 
+                               class="btn btn-sm btn-danger" 
+                               onclick="return confirm('Xóa công ty {{ company.name }}?')">🗑️</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" class="text-center text-muted">Chưa có công ty nào</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add Company Modal -->
+<div class="modal fade" id="addCompanyModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">➕ Thêm Công ty mới</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <form action="{{ url_for('admin.add_company') }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Tên công ty <span class="text-danger">*</span></label>
+                        <input name="name" type="text" class="form-control" placeholder="Tên công ty" title="Tên công ty" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Địa chỉ</label>
+                        <input name="address" type="text" class="form-control" placeholder="Địa chỉ công ty" title="Địa chỉ">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Mã số thuế</label>
+                        <input name="tax_code" type="text" class="form-control" placeholder="MST" title="Mã số thuế">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-info text-white">Thêm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Company Modal -->
+<div class="modal fade" id="editCompanyModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title">✏️ Sửa Công ty</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <form id="editCompanyForm" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Tên công ty <span class="text-danger">*</span></label>
+                        <input id="edit_name" name="name" type="text" class="form-control" placeholder="Tên công ty" title="Tên công ty" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Địa chỉ</label>
+                        <input id="edit_address" name="address" type="text" class="form-control" placeholder="Địa chỉ công ty" title="Địa chỉ">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Mã số thuế</label>
+                        <input id="edit_tax_code" name="tax_code" type="text" class="form-control" placeholder="MST" title="Mã số thuế">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-warning">Cập nhật</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle edit company modal
+    const editModal = document.getElementById('editCompanyModal');
+    editModal.addEventListener('show.bs.modal', function(event) {
+        const button = event.relatedTarget;
+        const companyId = button.getAttribute('data-id');
+        const name = button.getAttribute('data-name');
+        const address = button.getAttribute('data-address');
+        const taxCode = button.getAttribute('data-tax-code');
+        
+        // Populate modal
+        document.getElementById('edit_name').value = name;
+        document.getElementById('edit_address').value = address;
+        document.getElementById('edit_tax_code').value = taxCode;
+        
+        // Set form action
+        document.getElementById('editCompanyForm').action = `/admin/company/update/${companyId}`;
+    });
+});
+</script>
+{% endblock %}

@@ -14,6 +14,7 @@ from models.statement_log import StatementLog
 from flask import send_file, abort
 from datetime import datetime, timedelta
 from flask import current_app
+from sqlalchemy import and_
 
 main_bp = Blueprint('main', __name__)
 
@@ -130,25 +131,23 @@ def user_dashboard():
 
 
 @main_bp.route('/bank-configs')
-@user_required
+@login_required
 def user_bank_configs():
-    from models.bank_config import BankConfig
-    company_id = session.get('company_id')
-    bank_configs = []
-    if company_id:
-        bank_configs = BankConfig.query.filter_by(company_id=company_id).order_by(BankConfig.bank_code.asc()).all()
-    return render_template('bank_configs_page.html', username=session.get('username'), companies=None, current_company_id=company_id, bank_configs=bank_configs)
+    """Redirect to admin bank configs page"""
+    if session.get('role') != 'admin':
+        flash('Chỉ Admin mới có quyền truy cập trang này!', 'danger')
+        return redirect(url_for('main.user_dashboard'))
+    
+    # Redirect to admin route
+    return redirect(url_for('admin.manage_bank_configs'))
 
 
 @main_bp.route('/statement-configs')
-@user_required
+@login_required
 def user_statement_configs():
-    from models.bank_statement_config import BankStatementConfig
-    company_id = session.get('company_id')
-    statement_configs = []
-    if company_id:
-        statement_configs = BankStatementConfig.query.filter_by(company_id=company_id).order_by(BankStatementConfig.bank_code.asc()).all()
-    return render_template('statement_configs_page.html', username=session.get('username'), companies=None, current_company_id=company_id, statement_configs=statement_configs)
+    """Redirect to admin statement configs page - Allow both user and admin"""
+    # Cho phép cả user và admin truy cập
+    return redirect(url_for('admin.manage_statement_configs'))
 
 @main_bp.route('/user/upload', methods=['POST'])
 @user_required
@@ -286,10 +285,17 @@ def user_upload():
 def user_logs():
     """View logs for regular users"""
     from models import User
-    
+    import math
+
     bank_code = request.args.get('bank_code')
     status = request.args.get('status')
     days = request.args.get('days', type=int, default=7)
+    page = request.args.get('page', type=int, default=1)
+    per_page = request.args.get('per_page', type=int, default=10)
+    if not per_page or per_page < 1:
+        per_page = 10
+    if not page or page < 1:
+        page = 1
     
     # Get user's companies
     user = User.query.get(session['user_id'])
@@ -311,14 +317,72 @@ def user_logs():
         cutoff = datetime.now() - timedelta(days=days)
         query = query.filter(BankLog.processed_at >= cutoff)
         
-    logs = query.order_by(BankLog.processed_at.desc()).all()
+    total = query.count()
+    total_pages = max(1, math.ceil(total / per_page))
+    if page > total_pages:
+        page = total_pages
+    offset = (page - 1) * per_page
+    logs = query.order_by(BankLog.processed_at.desc()).offset(offset).limit(per_page).all()
+
+    pagination = {
+        'page': page,
+        'per_page': per_page,
+        'total': total,
+        'total_pages': total_pages,
+        'has_prev': page > 1,
+        'has_next': page < total_pages,
+    }
     
     return render_template('user_logs.html', 
                          logs=logs,
                          username=session.get('username'),
                          company_name=session.get('company_name'),
                          companies=companies,
-                         current_company_id=company_id)
+                         current_company_id=company_id,
+                         pagination=pagination)
+
+
+@main_bp.route('/user/logs/bulk-delete', methods=['POST'])
+@user_required
+def user_logs_bulk_delete():
+    """Bulk delete selected BankLog entries for the current user (and company if selected)."""
+    ids = request.form.getlist('ids')
+    if not ids:
+        flash('Vui lòng chọn ít nhất một bản ghi để xóa.', 'warning')
+        return redirect(url_for('main.user_logs'))
+
+    try:
+        # sanitize ids to integers
+        id_list = []
+        for _id in ids:
+            try:
+                id_list.append(int(_id))
+            except Exception:
+                continue
+        if not id_list:
+            flash('Danh sách lựa chọn không hợp lệ.', 'warning')
+            return redirect(url_for('main.user_logs'))
+
+        # enforce ownership: only delete logs created by this user (and current company if any)
+        q = BankLog.query.filter(BankLog.user_id == session['user_id'], BankLog.id.in_(id_list))
+        if session.get('company_id'):
+            q = q.filter(BankLog.company_id == session.get('company_id'))
+
+        to_delete = q.all()
+        count = len(to_delete)
+        if count == 0:
+            flash('Không tìm thấy bản ghi hợp lệ để xóa.', 'warning')
+            return redirect(url_for('main.user_logs'))
+
+        for item in to_delete:
+            db.session.delete(item)
+        db.session.commit()
+        flash(f'Đã xóa {count} bản ghi lịch sử tải lên.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Xóa thất bại: {e}', 'danger')
+
+    return redirect(url_for('main.user_logs'))
 
 
 @main_bp.route('/user/statement-logs')
@@ -530,28 +594,51 @@ def delete_statement_log(log_id):
     return redirect(url_for('main.user_dashboard'))
 
 @main_bp.route('/user/bank-config/add', methods=['POST'])
-@user_required
+@login_required
 def add_bank_config():
-    """Add bank config for user's company"""
+    """Admin-only: Add bank config for company"""
+    if session.get('role') != 'admin':
+        flash('Chỉ Admin mới có quyền thực hiện thao tác này!', 'danger')
+        return redirect(url_for('admin.manage_bank_configs'))
+    
     from models.bank_config import BankConfig
     
     company_id = session.get('company_id')
     if not company_id:
-        flash("Vui lòng chọn công ty trước!", 'danger')
-        return redirect(url_for('main.user_bank_configs'))
-    
-    bank_code = request.form.get('bank_code', '').strip().upper()
-    bank_name = request.form.get('bank_name', '').strip()
-    keywords = request.form.get('keywords', '').strip()
-    
-    if not bank_code or not keywords:
-        flash("Mã ngân hàng và từ khóa không được để trống!", 'danger')
-        return redirect(url_for('main.user_bank_configs'))
-    
-    # Convert keywords string to array
-    keywords_array = [kw.strip() for kw in keywords.split(',') if kw.strip()]
+        flash("⚠️ Vui lòng chọn công ty trước khi thêm cấu hình ngân hàng!", 'warning')
+        return redirect(url_for('admin.manage_bank_configs'))
     
     try:
+        bank_code = request.form.get('bank_code', '').strip().upper()
+        bank_name = request.form.get('bank_name', '').strip()
+        keywords = request.form.get('keywords', '').strip()
+        
+        # Validation
+        if not bank_code:
+            flash("❌ Mã ngân hàng không được để trống!", 'danger')
+            return redirect(url_for('admin.manage_bank_configs'))
+        
+        if not keywords:
+            flash("❌ Từ khóa không được để trống!", 'danger')
+            return redirect(url_for('admin.manage_bank_configs'))
+        
+        # Check if bank_code already exists for this company
+        existing = BankConfig.query.filter_by(
+            company_id=company_id,
+            bank_code=bank_code
+        ).first()
+        
+        if existing:
+            flash(f"❌ Mã ngân hàng '{bank_code}' đã tồn tại trong công ty này!", 'danger')
+            return redirect(url_for('admin.manage_bank_configs'))
+        
+        # Convert keywords string to array
+        keywords_array = [kw.strip() for kw in keywords.split(',') if kw.strip()]
+        
+        if not keywords_array:
+            flash("❌ Vui lòng nhập ít nhất một từ khóa hợp lệ!", 'danger')
+            return redirect(url_for('admin.manage_bank_configs'))
+        
         config = BankConfig(
             company_id=company_id,
             bank_code=bank_code,
@@ -562,78 +649,100 @@ def add_bank_config():
         )
         db.session.add(config)
         db.session.commit()
-        flash(f"Đã thêm cấu hình ngân hàng {bank_code} thành công!", 'success')
+        flash(f"✅ Đã thêm cấu hình ngân hàng {bank_code} thành công!", 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f"Lỗi khi thêm cấu hình: {str(e)}", 'danger')
+        flash(f"❌ Lỗi khi thêm cấu hình: {str(e)}", 'danger')
     
-    return redirect(url_for('main.user_bank_configs'))
+    return redirect(url_for('admin.manage_bank_configs'))
 
 @main_bp.route('/user/bank-config/update/<int:config_id>', methods=['POST'])
-@user_required
+@login_required
 def update_bank_config(config_id):
-    """Update bank config"""
+    """Admin-only: Update bank config"""
+    if session.get('role') != 'admin':
+        flash('Chỉ Admin mới có quyền thực hiện thao tác này!', 'danger')
+        return redirect(url_for('admin.manage_bank_configs'))
+    
     from models.bank_config import BankConfig
     
     company_id = session.get('company_id')
     config = BankConfig.query.filter_by(id=config_id, company_id=company_id).first()
     
     if not config:
-        flash("Không tìm thấy cấu hình hoặc bạn không có quyền!", 'danger')
-        return redirect(url_for('main.user_bank_configs'))
-    
-    bank_code = request.form.get('bank_code', '').strip().upper()
-    bank_name = request.form.get('bank_name', '').strip()
-    keywords = request.form.get('keywords', '').strip()
-    
-    if not bank_code or not keywords:
-        flash("Mã ngân hàng và từ khóa không được để trống!", 'danger')
-        return redirect(url_for('main.user_dashboard'))
-    
-    # Convert keywords string to array
-    keywords_array = [kw.strip() for kw in keywords.split(',') if kw.strip()]
+        flash("❌ Không tìm thấy cấu hình hoặc bạn không có quyền!", 'danger')
+        return redirect(url_for('admin.manage_bank_configs'))
     
     try:
+        bank_code = request.form.get('bank_code', '').strip().upper()
+        bank_name = request.form.get('bank_name', '').strip()
+        keywords = request.form.get('keywords', '').strip()
+        
+        # Validation
+        if not bank_code:
+            flash("❌ Mã ngân hàng không được để trống!", 'danger')
+            return redirect(url_for('admin.manage_bank_configs'))
+        
+        if not keywords:
+            flash("❌ Từ khóa không được để trống!", 'danger')
+            return redirect(url_for('admin.manage_bank_configs'))
+        
+        # Convert keywords string to array
+        keywords_array = [kw.strip() for kw in keywords.split(',') if kw.strip()]
+        
+        if not keywords_array:
+            flash("❌ Vui lòng nhập ít nhất một từ khóa hợp lệ!", 'danger')
+            return redirect(url_for('admin.manage_bank_configs'))
+        
         config.bank_code = bank_code
         config.bank_name = bank_name if bank_name else None
         config.keywords = keywords_array
         db.session.commit()
-        flash(f"Đã cập nhật cấu hình {bank_code} thành công!", 'success')
+        flash(f"✅ Đã cập nhật cấu hình {bank_code} thành công!", 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f"Lỗi khi cập nhật: {str(e)}", 'danger')
+        flash(f"❌ Lỗi khi cập nhật: {str(e)}", 'danger')
     
-    return redirect(url_for('main.user_bank_configs'))
+    return redirect(url_for('admin.manage_bank_configs'))
 
 @main_bp.route('/user/bank-config/delete/<int:config_id>')
-@user_required
+@login_required
 def delete_bank_config(config_id):
-    """Delete bank config"""
+    """Admin-only: Delete bank config"""
+    if session.get('role') != 'admin':
+        flash('Chỉ Admin mới có quyền thực hiện thao tác này!', 'danger')
+        return redirect(url_for('admin.manage_bank_configs'))
+    
     from models.bank_config import BankConfig
     
     company_id = session.get('company_id')
     config = BankConfig.query.filter_by(id=config_id, company_id=company_id).first()
     
     if not config:
-        flash("Không tìm thấy cấu hình hoặc bạn không có quyền!", 'danger')
-        return redirect(url_for('main.user_bank_configs'))
+        flash("❌ Không tìm thấy cấu hình hoặc bạn không có quyền!", 'danger')
+        return redirect(url_for('admin.manage_bank_configs'))
     
     try:
+        bank_code = config.bank_code
         db.session.delete(config)
         db.session.commit()
-        flash(f"Đã xóa cấu hình {config.bank_code} thành công!", 'success')
+        flash(f"✅ Đã xóa cấu hình {bank_code} thành công!", 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f"Lỗi khi xóa: {str(e)}", 'danger')
+        flash(f"❌ Lỗi khi xóa: {str(e)}", 'danger')
     
-    return redirect(url_for('main.user_bank_configs'))
+    return redirect(url_for('admin.manage_bank_configs'))
 
 # ============= Statement Config Routes =============
 
 @main_bp.route('/user/statement-config/add', methods=['POST'])
-@user_required
+@login_required
 def add_statement_config():
-    """Add statement config for user's company"""
+    """Admin-only: Add statement config for company"""
+    if session.get('role') != 'admin':
+        flash('⚠️ Chỉ Admin mới có quyền thêm cấu hình sổ phụ!', 'danger')
+        return redirect(url_for('admin.manage_statement_configs'))
+    
     from models.bank_statement_config import BankStatementConfig
     
     company_id = session.get('company_id')
@@ -676,12 +785,16 @@ def add_statement_config():
         db.session.rollback()
         flash(f"Lỗi khi thêm cấu hình: {str(e)}", 'danger')
     
-    return redirect(url_for('main.user_statement_configs'))
+    return redirect(url_for('admin.manage_statement_configs'))
 
 @main_bp.route('/user/statement-config/update/<int:config_id>', methods=['POST'])
-@user_required
+@login_required
 def update_statement_config(config_id):
-    """Update statement config"""
+    """Admin-only: Update statement config"""
+    if session.get('role') != 'admin':
+        flash('⚠️ Chỉ Admin mới có quyền sửa cấu hình sổ phụ!', 'danger')
+        return redirect(url_for('admin.manage_statement_configs'))
+    
     from models.bank_statement_config import BankStatementConfig
     
     company_id = session.get('company_id')
@@ -689,7 +802,7 @@ def update_statement_config(config_id):
     
     if not config:
         flash("Không tìm thấy cấu hình hoặc bạn không có quyền!", 'danger')
-        return redirect(url_for('main.user_statement_configs'))
+        return redirect(url_for('admin.manage_statement_configs'))
     
     bank_code = request.form.get('bank_code', '').strip().upper()
     keywords = request.form.get('keywords', '').strip()
@@ -722,12 +835,245 @@ def update_statement_config(config_id):
         db.session.rollback()
         flash(f"Lỗi khi cập nhật: {str(e)}", 'danger')
     
-    return redirect(url_for('main.user_statement_configs'))
+    return redirect(url_for('admin.manage_statement_configs'))
+
+@main_bp.route('/user/statement-config/bulk-upload', methods=['POST'])
+@login_required
+def bulk_upload_statement_configs():
+    """Admin only: Bulk upload statement configs from Excel/CSV file"""
+    import logging
+    # Chỉ cho phép admin upload
+    if session.get('role') != 'admin':
+        flash('⚠️ Chỉ Admin mới có quyền upload cấu hình sổ phụ theo lô!', 'danger')
+        logging.warning(f"[UPLOAD BULK] User không phải admin: {session.get('username')}")
+        return redirect(url_for('admin.manage_statement_configs'))
+    
+    from models.bank_statement_config import BankStatementConfig
+    import pandas as pd
+    import uuid
+    import os
+    from flask import current_app
+
+    company_id = session.get('company_id')
+    logging.info(f"[UPLOAD BULK] Start upload, user={session.get('username')}, company_id={company_id}")
+    if not company_id:
+        flash("Vui lòng chọn công ty trước!", 'danger')
+        logging.warning(f"[UPLOAD BULK] Chưa chọn công ty")
+        return redirect(url_for('admin.manage_statement_configs'))
+    
+    file = request.files.get('file')
+    if not file or file.filename == '':
+        flash("Vui lòng chọn file để upload!", 'danger')
+        logging.warning(f"[UPLOAD BULK] Không có file upload")
+        return redirect(url_for('admin.manage_statement_configs'))
+    
+    filename = secure_filename(file.filename)
+    ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
+    logging.info(f"[UPLOAD BULK] File nhận: {filename}, ext={ext}")
+    
+    if ext not in ['xlsx', 'xls', 'csv']:
+        flash("Chỉ hỗ trợ file Excel (.xlsx, .xls) hoặc CSV!", 'danger')
+        logging.warning(f"[UPLOAD BULK] Định dạng file không hợp lệ: {ext}")
+        return redirect(url_for('admin.manage_statement_configs'))
+    
+    temp_path = os.path.join(current_app.config.get('UPLOAD_FOLDER', 'uploads'), 'tmp', f"{uuid.uuid4().hex}.{ext}")
+    os.makedirs(os.path.dirname(temp_path), exist_ok=True)
+    file.save(temp_path)
+    logging.info(f"[UPLOAD BULK] File lưu tạm: {temp_path}")
+    
+    try:
+        if ext == 'csv':
+            df = pd.read_csv(temp_path)
+        else:
+            df = pd.read_excel(temp_path)
+        logging.info(f"[UPLOAD BULK] Đọc file thành công, shape={df.shape}")
+        required_cols = ['bank_code', 'keywords', 'identify_info']
+        missing_cols = [col for col in required_cols if col not in df.columns]
+        if missing_cols:
+            flash(f"File thiếu các cột bắt buộc: {', '.join(missing_cols)}", 'danger')
+            logging.error(f"[UPLOAD BULK] Thiếu cột: {missing_cols}")
+            return redirect(url_for('admin.manage_statement_configs'))
+        success_count = 0
+        error_count = 0
+        errors = []
+        for idx, row in df.iterrows():
+            try:
+                bank_code = str(row.get('bank_code', '')).strip().upper()
+                if not bank_code or bank_code == 'NAN':
+                    errors.append(f"Dòng {idx + 2}: Thiếu bank_code")
+                    error_count += 1
+                    logging.warning(f"[UPLOAD BULK] Dòng {idx+2} thiếu bank_code")
+                    continue
+                keywords_str = str(row.get('keywords', '')).strip()
+                if not keywords_str or keywords_str == 'nan':
+                    errors.append(f"Dòng {idx + 2}: Thiếu keywords")
+                    error_count += 1
+                    logging.warning(f"[UPLOAD BULK] Dòng {idx+2} thiếu keywords")
+                    continue
+                keywords_array = [kw.strip() for kw in keywords_str.split(',') if kw.strip()]
+                if not keywords_array:
+                    errors.append(f"Dòng {idx + 2}: Keywords không hợp lệ")
+                    error_count += 1
+                    logging.warning(f"[UPLOAD BULK] Dòng {idx+2} keywords không hợp lệ")
+                    continue
+                identify_info = str(row.get('identify_info', '')).strip()
+                identify_info = identify_info if identify_info != 'nan' else None
+                col_keyword = str(row.get('col_keyword', '')).strip()
+                col_keyword = col_keyword if col_keyword != 'nan' else None
+                col_value = str(row.get('col_value', '')).strip()
+                col_value = col_value if col_value != 'nan' else None
+                row_start = row.get('row_start')
+                row_start = int(row_start) if pd.notna(row_start) else None
+                row_end = row.get('row_end')
+                row_end = int(row_end) if pd.notna(row_end) else None
+                cell_format = str(row.get('cell_format', '')).strip().lower()
+                cell_format = cell_format if cell_format != 'nan' else None
+                
+                # Kiểm tra duplicate: nếu có identify_info thì dùng nó, không thì dùng keywords + col_keyword + col_value
+                if identify_info:
+                    existing = BankStatementConfig.query.filter_by(
+                        company_id=company_id,
+                        bank_code=bank_code,
+                        identify_info=identify_info
+                    ).first()
+                else:
+                    # Tìm theo keywords nếu không có identify_info
+                    existing = None
+                
+                if existing:
+                    existing.keywords = keywords_array
+                    existing.col_keyword = col_keyword
+                    existing.col_value = col_value
+                    existing.row_start = row_start
+                    existing.row_end = row_end
+                    existing.cell_format = cell_format
+                    success_count += 1
+                    logging.info(f"[UPLOAD BULK] Update config dòng {idx+2} bank_code={bank_code} identify_info={identify_info}")
+                else:
+                    config = BankStatementConfig(
+                        company_id=company_id,
+                        bank_code=bank_code,
+                        keywords=keywords_array,
+                        col_keyword=col_keyword,
+                        col_value=col_value,
+                        row_start=row_start,
+                        row_end=row_end,
+                        identify_info=identify_info,
+                        cell_format=cell_format
+                    )
+                    db.session.add(config)
+                    success_count += 1
+                    logging.info(f"[UPLOAD BULK] Thêm mới dòng {idx+2} bank_code={bank_code} identify_info={identify_info}")
+            except Exception as e:
+                errors.append(f"Dòng {idx + 2}: {str(e)}")
+                error_count += 1
+                logging.error(f"[UPLOAD BULK] Lỗi dòng {idx+2}: {e}")
+        db.session.commit()
+        logging.info(f"[UPLOAD BULK] Commit xong, success={success_count}, error={error_count}")
+        if success_count > 0:
+            flash(f"✅ Đã upload thành công {success_count} cấu hình!", 'success')
+        if error_count > 0:
+            flash(f"⚠️ {error_count} dòng bị lỗi", 'warning')
+            for err in errors[:5]:
+                flash(err, 'warning')
+            if len(errors) > 5:
+                flash(f"... và {len(errors) - 5} lỗi khác", 'warning')
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Lỗi khi đọc file: {str(e)}", 'danger')
+        logging.error(f"[UPLOAD BULK] Lỗi tổng: {e}")
+    finally:
+        try:
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+                logging.info(f"[UPLOAD BULK] Đã xóa file tạm: {temp_path}")
+        except Exception as e:
+            logging.error(f"[UPLOAD BULK] Lỗi xóa file tạm: {e}")
+    bank_code_filter = request.form.get('bank_code', '')
+    if bank_code_filter:
+        return redirect(url_for('admin.manage_statement_configs', bank_code=bank_code_filter))
+    return redirect(url_for('admin.manage_statement_configs'))
+
+@main_bp.route('/user/statement-config/template')
+@login_required
+def download_statement_config_template():
+    """User/Admin: Generate and download a template Excel file for bulk upload"""
+    # Cho phép cả user và admin tải template
+    if session.get('role') not in ['user', 'admin']:
+        flash('Bạn không có quyền thực hiện thao tác này!', 'danger')
+        return redirect(url_for('main.user_dashboard'))
+    
+    import pandas as pd
+    from io import BytesIO
+    
+    # Create sample data with multiple configs for same bank_code
+    template_data = {
+        'bank_code': ['VCB', 'VCB', 'VCB', 'VCB', 'VCB', 'VCB', 'VCB', 'VCB', 'VCB', 'VCB', 'VCB', 'VCB'],
+        'keywords': [
+            'Số tài khoản,Account Number,Account No',
+            'Loại tiền,Currency',
+            'Số dư đầu kỳ,Opening Balance',
+            'Số dư cuối kỳ,Closing Balance',
+            'Diễn giải,Narrative,Description',
+            'Ngày GD,Transaction Date,Date',
+            'Số tiền ghi nợ,Debit,Dr',
+            'Số tiền ghi có,Credit,Cr',
+            'Mã luồng,Flow Code',
+            'Phí giao dịch,Transaction Fee,Fee',
+            'VAT,Transaction VAT',
+            'Thông tin định danh,Identify Info'
+        ],
+        'col_keyword': ['A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A'],
+        'col_value': ['B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B'],
+        'row_start': [1, 2, 3, 4, 10, 10, 10, 10, 10, 10, 10, 10],
+        'row_end': [1, 2, 3, 4, 100, 100, 100, 100, 100, 100, 100, 100],
+        'identify_info': [
+            'accountno',
+            'currency',
+            'openingbalance',
+            'closingbalance',
+            'narrative',
+            'transactiondate',
+            'debit',
+            'credit',
+            'flowcode',
+            'transactionfee',
+            'transactionvat',
+            'identify_info'
+        ],
+        'cell_format': ['Text', 'Text', 'Number', 'Number', 'Text', 'Date', 'Number', 'Number', 'Text', 'Number', 'Number', 'Text']
+    }
+    
+    df = pd.DataFrame(template_data)
+    
+    # Create Excel file in memory
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Template')
+        
+        # Auto-adjust column widths
+        worksheet = writer.sheets['Template']
+        for idx, col in enumerate(df.columns):
+            max_length = max(df[col].astype(str).apply(len).max(), len(col)) + 2
+            worksheet.column_dimensions[chr(65 + idx)].width = min(max_length, 50)  # Cap at 50
+    
+    output.seek(0)
+    
+    return send_file(
+        output,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        as_attachment=True,
+        download_name='statement_config_template.xlsx'
+    )
 
 @main_bp.route('/user/statement-config/delete/<int:config_id>')
-@user_required
+@login_required
 def delete_statement_config(config_id):
-    """Delete statement config"""
+    """Admin-only: Delete statement config"""
+    if session.get('role') != 'admin':
+        flash('⚠️ Chỉ Admin mới có quyền thực hiện thao tác này!', 'danger')
+        return redirect(url_for('admin.manage_statement_configs'))
+    
     from models.bank_statement_config import BankStatementConfig
     
     company_id = session.get('company_id')
@@ -735,7 +1081,7 @@ def delete_statement_config(config_id):
     
     if not config:
         flash("Không tìm thấy cấu hình hoặc bạn không có quyền!", 'danger')
-        return redirect(url_for('main.user_statement_configs'))
+        return redirect(url_for('admin.manage_statement_configs'))
     
     try:
         db.session.delete(config)
@@ -745,4 +1091,41 @@ def delete_statement_config(config_id):
         db.session.rollback()
         flash(f"Lỗi khi xóa: {str(e)}", 'danger')
     
-    return redirect(url_for('main.user_statement_configs'))
+    return redirect(url_for('admin.manage_statement_configs'))
+
+@main_bp.route('/user/statement-config/delete-by-bank', methods=['POST'])
+@login_required
+def delete_statement_configs_by_bank():
+    """Admin-only: Bulk delete all statement configs for a given bank_code in the current company."""
+    if session.get('role') != 'admin':
+        flash('⚠️ Chỉ Admin mới có quyền xóa cấu hình theo bank_code!', 'danger')
+        return redirect(url_for('admin.manage_statement_configs'))
+    
+    from models.bank_statement_config import BankStatementConfig
+
+    company_id = session.get('company_id')
+    if not company_id:
+        flash('Vui lòng chọn công ty trước!', 'warning')
+        return redirect(url_for('admin.manage_statement_configs'))
+
+    bank_code = (request.form.get('bank_code') or '').strip().upper()
+    if not bank_code:
+        flash('Vui lòng nhập mã ngân hàng hợp lệ.', 'warning')
+        return redirect(url_for('admin.manage_statement_configs'))
+
+    try:
+        q = BankStatementConfig.query.filter_by(company_id=company_id, bank_code=bank_code)
+        count = q.count()
+        if count == 0:
+            flash(f'Không tìm thấy cấu hình nào cho {bank_code}.', 'info')
+            return redirect(url_for('admin.manage_statement_configs'))
+
+        q.delete(synchronize_session=False)
+        db.session.commit()
+        flash(f'Đã xóa {count} cấu hình sổ phụ cho ngân hàng {bank_code}.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Xóa thất bại: {e}', 'danger')
+
+    # Redirect về admin statement configs
+    return redirect(url_for('admin.manage_statement_configs'))

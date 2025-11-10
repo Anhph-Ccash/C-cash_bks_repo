@@ -42,19 +42,29 @@ def switch_company(company_id):
     from models import User, Company, UserCompany
     user = User.query.get(session['user_id'])
     
-    # Check if user has access to this company
-    user_company = UserCompany.query.filter_by(
-        user_id=user.id,
-        company_id=company_id
-    ).first()
-    
-    if user_company:
+    # Admin can access all companies, regular users need UserCompany permission
+    if session.get('role') == 'admin':
         company = Company.query.get(company_id)
         if company and company.is_active:
             session['company_id'] = company.id
             session['company_name'] = company.name
             flash(f'Đã chuyển sang công ty: {company.name}', 'success')
+        else:
+            flash('Công ty không tồn tại hoặc không hoạt động!', 'danger')
     else:
-        flash('Bạn không có quyền truy cập công ty này!', 'danger')
+        # Check if user has access to this company
+        user_company = UserCompany.query.filter_by(
+            user_id=user.id,
+            company_id=company_id
+        ).first()
+        
+        if user_company:
+            company = Company.query.get(company_id)
+            if company and company.is_active:
+                session['company_id'] = company.id
+                session['company_name'] = company.name
+                flash(f'Đã chuyển sang công ty: {company.name}', 'success')
+        else:
+            flash('Bạn không có quyền truy cập công ty này!', 'danger')
     
     return redirect(request.referrer or url_for('main.user_dashboard'))
