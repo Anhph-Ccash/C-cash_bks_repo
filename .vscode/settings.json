@@ -1,11 +1,46 @@
-{
-    "livePreview.defaultPreviewPath": "/templates/base.html",
-    "python.testing.pytestArgs": [
-        "app"
-    ],
-    "python.testing.unittestEnabled": false,
-    "python.testing.pytestEnabled": true,
-    "python.analysis.diagnosticSeverityOverrides": {
-        "reportMissingImports": "none"
-    }
+{{
+
+  "livePreview.defaultPreviewPath": "/templates/base.html",    "livePreview.defaultPreviewPath": "/templates/base.html",
+
+  "python.testing.pytestArgs": ["app"],    "python.testing.pytestArgs": [
+
+  "python.testing.unittestEnabled": false,        "app"
+
+  "python.testing.pytestEnabled": true,    ],
+
+  "python.analysis.diagnosticSeverityOverrides": {    "python.testing.unittestEnabled": false,
+
+    "reportMissingImports": "none"    "python.testing.pytestEnabled": true,
+
+  },    "python.analysis.diagnosticSeverityOverrides": {
+
+  "python.analysis.typeCheckingMode": "basic",        "reportMissingImports": "none"
+
+  "python.analysis.autoImportCompletions": true,    }
+
+  "python.analysis.indexing": true,}
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/*/**": true,
+    "**/.venv/**": true,
+    "**/__pycache__/**": true,
+    "**/uploads/**": true
+  },
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/*.pyc": true,
+    "**/.pytest_cache": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.venv": true,
+    "**/uploads": true,
+    "**/__pycache__": true,
+    "**/db_dumps": true
+  },
+  "editor.formatOnSave": false,
+  "python.linting.enabled": false,
+  "python.linting.pylintEnabled": false,
+  "python.linting.flake8Enabled": false
 }

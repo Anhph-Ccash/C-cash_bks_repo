@@ -7,15 +7,15 @@ class Config:
     # Database configuration
     # Để sử dụng local database, uncomment dòng dưới và comment dòng remote
     # SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:11223344@localhost:5432/FlaskWebPostgreSQL'
-    # SQLALCHEMY_DATABASE_URI = os.environ.get(
-    #     'DATABASE_URL',
-    #     'postgresql://postgres:11223344@localhost:5432/FlaskWebPostgreSQL'
-    # )
-    # Remote database (Render)
     SQLALCHEMY_DATABASE_URI = os.environ.get(
         'DATABASE_URL',
-        'postgresql://flaskwebpostgresql_user:nrDeXdaJQ2GA9Bv04ISC2rdNpI7EKhYr@dpg-d47l9824d50c7388ofsg-a.singapore-postgres.render.com/flaskwebpostgresql'
+        'postgresql://postgres:11223344@localhost:5432/FlaskWebPostgreSQL'
     )
+    # Remote database (Render)
+    # SQLALCHEMY_DATABASE_URI = os.environ.get(
+    #     'DATABASE_URL',
+    #     'postgresql://flaskwebpostgresql_user:nrDeXdaJQ2GA9Bv04ISC2rdNpI7EKhYr@dpg-d47l9824d50c7388ofsg-a.singapore-postgres.render.com/flaskwebpostgresql'
+    # )
     
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     

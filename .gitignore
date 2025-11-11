@@ -1,4 +1,58 @@
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+*.pyc
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+*.dump
+
+# Logs
+*.log
+logs/
+
+# Environment variables
+.env
+.env.local
+
+# Uploads
+uploads/*.xlsx
+uploads/*.xls
+uploads/*.csv
+uploads/tmp/*
+uploads/mt940/*
+!uploads/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db
+
 # Playwright
 node_modules/
 /test-results/
