@@ -1,28 +1,52 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="{{ current_lang|default('vi') }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Đăng nhập</title>
+  <title>{{ _('Đăng nhập') }}</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body class="bg-light">
 <div class="container mt-5">
-  <h3 class="text-center mb-4">🔐 Đăng nhập hệ thống</h3>
-  <form method="POST" class="mx-auto login-form">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-    {% if error %}
-      <div class="alert alert-danger">{{ error }}</div>
-    {% endif %}
-    <div class="mb-3">
-  <input name="username" class="form-control" placeholder="Tên đăng nhập" required>
+  <div class="card mx-auto login-form shadow">
+    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">🔐 {{ _('Đăng nhập hệ thống') }}</h5>
+      <div class="dropdown">
+        <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-label="{{ _('Chọn ngôn ngữ') }}">
+          {{ current_lang|upper }}
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+          {% for lang in languages %}
+          <li>
+            <a class="dropdown-item {% if current_lang==lang %}active{% endif %}"
+               href="{{ url_for('set_language', lang=lang, next=request.full_path) }}">
+              {% if lang=='en' %}English{% else %}Tiếng Việt{% endif %}
+            </a>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
     </div>
-    <div class="mb-3">
-  <input name="password" type="password" class="form-control" placeholder="Mật khẩu" required>
+    <div class="card-body">
+      <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        {% if error %}
+          <div class="alert alert-danger">{{ error }}</div>
+        {% endif %}
+        <div class="mb-3">
+          <label for="username" class="form-label">{{ _('Tên đăng nhập') }}</label>
+          <input id="username" name="username" class="form-control" placeholder="{{ _('Tên đăng nhập') }}" required>
+        </div>
+        <div class="mb-3">
+          <label for="password" class="form-label">{{ _('Mật khẩu') }}</label>
+          <input id="password" name="password" type="password" class="form-control" placeholder="{{ _('Mật khẩu') }}" required>
+        </div>
+        <button type="submit" class="btn btn-success w-100">{{ _('Đăng nhập') }}</button>
+      </form>
     </div>
-    <button type="submit" class="btn btn-primary w-100">Đăng nhập</button>
-  </form>
+  </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

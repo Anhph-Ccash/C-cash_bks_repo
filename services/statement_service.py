@@ -9,6 +9,102 @@ from models.bank_log import BankLog
 import os
 
 
+def validate_statement_data(parsed_data):
+    """
+    Validate parsed statement data for required fields
+
+    Args:
+        parsed_data: Dictionary containing parsed statement information
+
+    Returns:
+        tuple: (is_valid: bool, errors: list of error messages)
+    """
+    errors = []
+
+    # Check required header fields
+    if not parsed_data.get('opening_balance'):
+        errors.append("❌ Thiếu thông tin Số dư đầu kỳ (Opening Balance)")
+
+    if not parsed_data.get('closing_balance'):
+        errors.append("❌ Thiếu thông tin Số dư cuối kỳ (Closing Balance)")
+
+    if not parsed_data.get('currency'):
+        errors.append("❌ Thiếu thông tin Loại tiền (Currency)")
+
+    if not parsed_data.get('bank_code'):
+        errors.append("❌ Thiếu thông tin Tên ngân hàng (Bank Code)")
+
+    # Note: Account number is now optional - if missing, user will be prompted to enter it
+    # This is intentional to allow manual entry
+
+    # Check transaction data
+    transactions = parsed_data.get('transactions', [])
+
+    if not transactions or len(transactions) == 0:
+        errors.append("❌ Không tìm thấy giao dịch nào trong file. Phải có tối thiểu 1 giao dịch hợp lệ.")
+    else:
+        # Check each transaction for required fields
+        missing_fields_summary = {
+            'credit_debit': 0,
+            'narrative': 0,
+            'transaction_date': 0
+        }
+
+        valid_transactions = 0
+
+        for idx, txn in enumerate(transactions, 1):
+            # At least one of credit or debit must have value
+            credit = txn.get('credit') or txn.get('creditmoney')
+            debit = txn.get('debit') or txn.get('debitmoney')
+
+            has_credit_debit = False
+            if credit or debit:
+                try:
+                    # Check if it's a valid number (not empty string)
+                    if credit and str(credit).strip():
+                        float(str(credit).replace(',', ''))
+                        has_credit_debit = True
+                    if debit and str(debit).strip():
+                        float(str(debit).replace(',', ''))
+                        has_credit_debit = True
+                except (ValueError, TypeError):
+                    pass
+
+            if not has_credit_debit:
+                missing_fields_summary['credit_debit'] += 1
+
+            # Check narrative
+            narrative = txn.get('narrative') or txn.get('detail') or txn.get('description')
+            if not narrative or not str(narrative).strip():
+                missing_fields_summary['narrative'] += 1
+
+            # Check transaction date
+            txn_date = txn.get('transactiondate') or txn.get('valuedate') or txn.get('date')
+            if not txn_date or not str(txn_date).strip():
+                missing_fields_summary['transaction_date'] += 1
+
+            # Count as valid if it has all 4 required fields
+            if has_credit_debit and narrative and str(narrative).strip() and txn_date and str(txn_date).strip():
+                valid_transactions += 1
+
+        # Report summary of missing fields
+        if valid_transactions == 0:
+            errors.append(f"❌ Không có giao dịch hợp lệ nào. Mỗi giao dịch phải có: Transaction Date, Narrative, và Credit/Debit")
+
+        if missing_fields_summary['credit_debit'] > 0:
+            errors.append(f"⚠️ Thiếu thông tin Credit/Debit cho {missing_fields_summary['credit_debit']}/{len(transactions)} giao dịch")
+
+        if missing_fields_summary['narrative'] > 0:
+            errors.append(f"⚠️ Thiếu thông tin Narrative (Diễn giải) cho {missing_fields_summary['narrative']}/{len(transactions)} giao dịch")
+
+        if missing_fields_summary['transaction_date'] > 0:
+            errors.append(f"⚠️ Thiếu thông tin Transaction Date (Ngày giao dịch) cho {missing_fields_summary['transaction_date']}/{len(transactions)} giao dịch")
+
+    is_valid = len(errors) == 0
+
+    return is_valid, errors
+
+
 def _col_to_index(col_str):
     """Convert Excel-style column (A, B, AA) to 0-based index. If numeric string, return int-1."""
     if not col_str:
@@ -225,6 +321,54 @@ def parse_and_store_statement(session, file_path, original_filename, ext, compan
                 # fallback: keep original order on any failure
                 pass
 
+        # ===== VALIDATION: Check required fields =====
+        validation_data = {
+            'opening_balance': header.get('openingbalance'),
+            'closing_balance': header.get('closingbalance'),
+            'currency': header.get('currency'),
+            'bank_code': bank_code,
+            'account_number': header.get('accountno'),
+            'transactions': details
+        }
+
+        is_valid, validation_errors = validate_statement_data(validation_data)
+
+        if not is_valid:
+            # Check if error is ONLY missing account number
+            # If so, we'll create the StatementLog and let user edit it later
+            account_only_error = (
+                len(validation_errors) == 0 or
+                all('account' in err.lower() or 'tài khoản' in err.lower() for err in validation_errors)
+            )
+
+            if not account_only_error:
+                # Critical validation errors (not just missing account) - delete file and return error
+                try:
+                    if os.path.exists(file_path):
+                        os.remove(file_path)
+                except Exception:
+                    pass
+
+                # Delete associated BankLog if exists
+                try:
+                    bl = session.query(BankLog).filter_by(filename=file_path).first()
+                    if bl:
+                        session.delete(bl)
+                        session.commit()
+                except Exception:
+                    pass
+
+                error_message = "Mẫu sổ phụ không hợp lệ"
+                current_app.logger.warning(f"Statement validation failed: {validation_errors}")
+
+                return {
+                    "status": "INVALID",
+                    "message": error_message,
+                    "errors": validation_errors
+                }
+            # If only account is missing, continue to create StatementLog below
+        # ===== END VALIDATION =====
+
         # Validate balances: compute totals and ensure closing balance matches expected.
         # Totals: sum credits, sum debits, sum fees, sum vat (all numeric via float_safe)
         try:
@@ -262,7 +406,10 @@ def parse_and_store_statement(session, file_path, original_filename, ext, compan
 
         # If totals are None, we skip validation
         if total_credit is not None:
-            expected_closing = opening_val + total_credit - total_debit - total_fee - total_vat
+            # Số dư phát sinh = Credit - Debit - Fee - VAT
+            so_du_phat_sinh = total_credit - total_debit - total_fee - total_vat
+            expected_closing = opening_val + so_du_phat_sinh
+
             # allow small epsilon for floating point rounding (1e-2 => cents)
             if abs(expected_closing - closing_val) > 0.01:
                 # On mismatch: remove the uploaded file and any BankLog referencing it, then return INVALID
@@ -279,14 +426,31 @@ def parse_and_store_statement(session, file_path, original_filename, ext, compan
                 except Exception:
                     session.rollback()
 
-                # Build detailed message including the computed formula and values
-                msg = (
-                    "Số dư cuối kỳ không khớp với số dư đầu kỳ cộng số dư phát sinh. Vui lòng kiểm tra lại! "
-                    f"(Công thức: expected = opening + totalCredit - totalDebit - totalFee - totalVat)\n"
-                    f"opening={opening_val:.2f}, totalCredit={total_credit:.2f}, totalDebit={total_debit:.2f}, totalFee={total_fee:.2f}, totalVat={total_vat:.2f} -> expected_closing={expected_closing:.2f}, closing={closing_val:.2f}"
-                )
+                # Build detailed error message
+                error_details = [
+                    "❌ Số dư cuối kỳ <> Số dư phát sinh + Số dư đầu kỳ",
+                    "",
+                    "📊 Chi tiết:",
+                    f"   • Số dư đầu kỳ (Opening Balance): {opening_val:,.2f}",
+                    f"   • Tổng Credit: {total_credit:,.2f}",
+                    f"   • Tổng Debit: {total_debit:,.2f}",
+                    f"   • Tổng Fee: {total_fee:,.2f}",
+                    f"   • Tổng VAT: {total_vat:,.2f}",
+                    f"   • Số dư phát sinh = Credit - Debit - Fee - VAT = {so_du_phat_sinh:,.2f}",
+                    "",
+                    f"🔢 Kết quả:",
+                    f"   • Số dư cuối kỳ TÍNH ĐƯỢC = Số dư đầu kỳ + Số dư phát sinh = {opening_val:,.2f} + {so_du_phat_sinh:,.2f} = {expected_closing:,.2f}",
+                    f"   • Số dư cuối kỳ TRONG FILE (Closing Balance) = {closing_val:,.2f}",
+                    f"   • Chênh lệch = {abs(expected_closing - closing_val):,.2f}",
+                ]
 
-                return {"status": "INVALID", "message": msg}
+                msg = "\n".join(error_details)
+
+                return {
+                    "status": "INVALID",
+                    "message": "Số dư cuối kỳ khác Số dư phát sinh + Số dư đầu kỳ",
+                    "errors": error_details
+                }
 
         # Normalize account number and other header fields: treat pandas NaN, empty strings,
         # and common null tokens as missing (store as None) so downstream logic can detect missing accounts.
@@ -476,7 +640,7 @@ def build_mt940_strict(stmt_log):
         # format amount for MT940 (no thousand sep, comma decimal)
         amt_str = _format_amount_mt940(amt)
 
-        # parse transaction date to DDMMYYYY for value date (user requested)
+        # parse transaction date to YYMMDD format (MT940 standard)
         date_str = ''
         if tdate:
             try:
@@ -486,17 +650,17 @@ def build_mt940_strict(stmt_log):
                     # fallback to flexible parse with dayfirst
                     dt = pd.to_datetime(tdate, dayfirst=True, errors='coerce')
                 if not pd.isna(dt):
-                    date_str = dt.strftime('%d%m%Y')
+                    date_str = dt.strftime('%y%m%d')  # YYMMDD format
             except Exception:
                 date_str = ''
         # If date_str still empty, fall back to statement-level min date so :61 always includes a date
         if not date_str:
             try:
-                # min_date_str currently in YYMMDD; convert to DDMMYYYY fallback
+                # min_date_str already in YYMMDD format
                 md = pd.to_datetime(min_date_str, format='%y%m%d', errors='coerce')
-                date_str = md.strftime('%d%m%Y') if not pd.isna(md) else datetime.utcnow().strftime('%d%m%Y')
+                date_str = md.strftime('%y%m%d') if not pd.isna(md) else datetime.utcnow().strftime('%y%m%d')
             except Exception:
-                date_str = datetime.utcnow().strftime('%d%m%Y')
+                date_str = datetime.utcnow().strftime('%y%m%d')
         # transaction type: prefer an explicit transaction type from data, else default to 'NTRF'
         trx_type = (d.get('transactiontype') or d.get('trx_type') or 'NTRF')
         trx_type = str(trx_type).strip().upper()
@@ -511,7 +675,7 @@ def build_mt940_strict(stmt_log):
         else:
             trailing = ''
         # Build :61 in requested style WITHOUT spaces: DDMMYYYY + D/C + amount + TRX_TYPE + [REF//bankref]
-        line61 = f":61:{date_str}{dc_flag}{amt_str}{trx_type}{trailing}"
+        line61 = f":61:{date_str}{dc_flag}{amt_str}{trailing}"
         lines.append(line61)
 
         # :86: - narrative free text. Emit exactly one :86: line per transaction.

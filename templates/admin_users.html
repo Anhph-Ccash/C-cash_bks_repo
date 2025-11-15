@@ -1,18 +1,17 @@
 {% extends "admin_base.html" %}
 
-{% block title %}Quản lý Users - Admin Panel{% endblock %}
+{% block title %}{{ _('Quản lý - Admin Users') }}{% endblock %}
 {% block nav_users %}active{% endblock %}
 
 {% block content %}
-<h3>👥 Quản lý Users</h3>
-
+<h3>👥 {{ _('Quản lý - Người dùng') }}</h3>
 <!-- Flash Messages -->
 {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
         {% for category, message in messages %}
         <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
             {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ _('Đóng') }}"></button>
         </div>
         {% endfor %}
     {% endif %}
@@ -20,20 +19,20 @@
 
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center bg-info text-white">
-        <span>User Management - Tổng: {{ user_pagination.total }}</span>
-        <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#addUserModal">➕ Thêm</button>
+        <span>{{ _('Tổng') }}: {{ user_pagination.total }}</span>
+        <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#addUserModal">➕ {{ _('Thêm') }}</button>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-sm table-hover mb-0">
                 <thead class="table-light sticky-top">
                     <tr>
-                        <th>ID</th>
-                        <th>Username</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                        <th>Companies</th>
-                        <th width="120">Hành động</th>
+                        <th>{{ _('ID') }}</th>
+                        <th>{{ _('Tên đăng nhập') }}</th>
+                        <th>{{ _('Địa chỉ email') }}</th>
+                        <th>{{ _('Vai trò') }}</th>
+                        <th>{{ _('Tên công ty') }}</th>
+                        <th width="120">{{ _('Hành động') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -58,37 +57,37 @@
                                     data-email="{{ user.email }}"
                                     data-role="{{ user.role }}"
                                     data-company-ids="{% for c in user.get_companies() %}{{ c.id }}{% if not loop.last %},{% endif %}{% endfor %}"
-                                    title="Sửa">✏️</button>
-                            <a href="{{ url_for('admin.delete_user', user_id=user.id) }}" 
-                               class="btn btn-sm btn-danger" 
-                               onclick="return confirm('Xóa user {{ user.username }}?')">🗑️</a>
+                                    title="{{ _('Sửa') }}">✏️</button>
+                            <a href="{{ url_for('admin.delete_user', user_id=user.id) }}"
+                               class="btn btn-sm btn-danger"
+                               onclick="return confirm('{{ _('Xóa người dùng %(username)s?', username=user.username) }}')">🗑️</a>
                         </td>
                     </tr>
                     {% else %}
-                    <tr><td colspan="6" class="text-center text-muted">Chưa có user nào</td></tr>
+                    <tr><td colspan="6" class="text-center text-muted">{{ _('Chưa có người dùng nào') }}</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
-    
+
     <!-- Pagination -->
     {% if user_pagination.total > 0 %}
     <div class="card-footer d-flex justify-content-between align-items-center">
         <div>
-            Hiển thị {{ ((user_pagination.page - 1) * user_pagination.per_page) + 1 }} - {{ [user_pagination.page * user_pagination.per_page, user_pagination.total]|min }} / {{ user_pagination.total }} users
+            {{ _('Hiển thị') }} {{ ((user_pagination.page - 1) * user_pagination.per_page) + 1 }} - {{ [user_pagination.page * user_pagination.per_page, user_pagination.total]|min }} / {{ user_pagination.total }} {{ _('users') }}
         </div>
         <div class="btn-group">
             {% if user_pagination.has_prev %}
-                <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin.manage_users', per_page=user_pagination.per_page, page=user_pagination.page - 1) }}">« Trước</a>
+                <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin.manage_users', per_page=user_pagination.per_page, page=user_pagination.page - 1) }}">« {{ _('Trước') }}</a>
             {% else %}
-                <a class="btn btn-sm btn-outline-secondary disabled">« Trước</a>
+                <a class="btn btn-sm btn-outline-secondary disabled">« {{ _('Trước') }}</a>
             {% endif %}
-            <span class="btn btn-sm btn-outline-secondary disabled">Trang {{ user_pagination.page }}/{{ user_pagination.total_pages }}</span>
+            <span class="btn btn-sm btn-outline-secondary disabled">{{ _('Trang') }} {{ user_pagination.page }}/{{ user_pagination.total_pages }}</span>
             {% if user_pagination.has_next %}
-                <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin.manage_users', per_page=user_pagination.per_page, page=user_pagination.page + 1) }}">Sau »</a>
+                <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin.manage_users', per_page=user_pagination.per_page, page=user_pagination.page + 1) }}">{{ _('Sau') }} »</a>
             {% else %}
-                <a class="btn btn-sm btn-outline-secondary disabled">Sau »</a>
+                <a class="btn btn-sm btn-outline-secondary disabled">{{ _('Sau') }} »</a>
             {% endif %}
         </div>
     </div>
@@ -102,42 +101,42 @@
             <form action="{{ url_for('admin.add_user') }}" method="POST">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
                 <div class="modal-header bg-info text-white">
-                    <h5 class="modal-title">➕ Thêm User mới</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                    <h5 class="modal-title">➕ {{ _('Thêm người dùng mới') }}</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="{{ _('Đóng') }}"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Username <span class="text-danger">*</span></label>
-                        <input name="username" type="text" class="form-control" placeholder="Tên đăng nhập" title="Tên đăng nhập của user" required>
+                        <label class="form-label">{{ _('Tên đăng nhập') }} <span class="text-danger">*</span></label>
+                        <input name="username" type="text" class="form-control" placeholder="{{ _('Tên đăng nhập') }}" title="{{ _('Tên đăng nhập của user') }}" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Email <span class="text-danger">*</span></label>
-                        <input name="email" type="email" class="form-control" placeholder="user@example.com" title="Địa chỉ email của user" required>
+                        <label class="form-label">{{ _('Email') }} <span class="text-danger">*</span></label>
+                        <input name="email" type="email" class="form-control" placeholder="user@example.com" title="{{ _('Địa chỉ email của user') }}" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Password <span class="text-danger">*</span></label>
-                        <input name="password" type="password" class="form-control" placeholder="Mật khẩu" title="Mật khẩu đăng nhập" required>
+                        <label class="form-label">{{ _('Mật khẩu') }} <span class="text-danger">*</span></label>
+                        <input name="password" type="password" class="form-control" placeholder="{{ _('Mật khẩu') }}" title="{{ _('Mật khẩu đăng nhập') }}" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Role <span class="text-danger">*</span></label>
-                        <select name="role" class="form-select" required>
-                            <option value="user">User</option>
-                            <option value="admin">Admin</option>
+                        <label class="form-label">{{ _('Vai trò') }} <span class="text-danger">*</span></label>
+                        <select name="role" class="form-select" required aria-label="User role">
+                            <option value="user">{{ _('Người dùng') }}</option>
+                            <option value="admin">{{ _('Quản trị viên') }}</option>
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Companies <span class="text-danger">*</span></label>
-                        <select name="company_ids[]" class="form-select" multiple size="5" required>
+                        <label class="form-label">{{ _('Công ty') }} <span class="text-danger">*</span></label>
+                        <select name="company_ids[]" class="form-select" multiple size="5" required aria-label="Select companies">
                             {% for c in companies %}
                             <option value="{{ c.id }}">{{ c.name }}</option>
                             {% endfor %}
                         </select>
-                        <small class="text-muted">Giữ Ctrl/Cmd để chọn nhiều công ty</small>
+                        <small class="text-muted">{{ _('Giữ Ctrl/Cmd để chọn nhiều công ty') }}</small>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                    <button type="submit" class="btn btn-info text-white">Thêm User</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Hủy') }}</button>
+                    <button type="submit" class="btn btn-info text-white">{{ _('Thêm người dùng') }}</button>
                 </div>
             </form>
         </div>
@@ -151,43 +150,43 @@
             <form id="editUserForm" method="POST">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
                 <div class="modal-header bg-warning">
-                    <h5 class="modal-title">✏️ Chỉnh sửa User</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                    <h5 class="modal-title">✏️ {{ _('Chỉnh sửa người dùng') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ _('Đóng') }}"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Username <span class="text-danger">*</span></label>
-                        <input id="edit_username" name="username" type="text" class="form-control" placeholder="Tên đăng nhập" title="Tên đăng nhập của user" required>
+                        <label class="form-label">{{ _('Tên đăng nhập') }} <span class="text-danger">*</span></label>
+                        <input id="edit_username" name="username" type="text" class="form-control" placeholder="{{ _('Tên đăng nhập') }}" title="{{ _('Tên đăng nhập của người dùng') }}" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Email <span class="text-danger">*</span></label>
-                        <input id="edit_email" name="email" type="email" class="form-control" placeholder="user@example.com" title="Địa chỉ email của user" required>
+                        <label class="form-label">{{ _('Email') }} <span class="text-danger">*</span></label>
+                        <input id="edit_email" name="email" type="email" class="form-control" placeholder="user@example.com" title="{{ _('Địa chỉ email của user') }}" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Password</label>
-                        <input id="edit_password" name="password" type="password" class="form-control" placeholder="Để trống nếu không đổi" title="Mật khẩu mới (để trống nếu không thay đổi)">
-                        <small class="text-muted">Chỉ nhập nếu muốn đổi mật khẩu</small>
+                        <label class="form-label">{{ _('Mật khẩu') }}</label>
+                        <input id="edit_password" name="password" type="password" class="form-control" placeholder="{{ _('Để trống nếu không đổi') }}" title="{{ _('Mật khẩu mới (để trống nếu không thay đổi)') }}">
+                        <small class="text-muted">{{ _('Chỉ nhập nếu muốn đổi mật khẩu') }}</small>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Role <span class="text-danger">*</span></label>
-                        <select id="edit_role" name="role" class="form-select" required>
-                            <option value="user">User</option>
-                            <option value="admin">Admin</option>
+                        <label class="form-label">{{ _('Vai trò') }} <span class="text-danger">*</span></label>
+                        <select id="edit_role" name="role" class="form-select" required aria-label="Edit user role">
+                            <option value="user">{{ _('Người dùng') }}</option>
+                            <option value="admin">{{ _('Quản trị viên') }}</option>
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Companies <span class="text-danger">*</span></label>
-                        <select id="edit_company_ids" name="company_ids[]" class="form-select" multiple size="5" required>
+                        <label class="form-label">{{ _('Công ty') }} <span class="text-danger">*</span></label>
+                        <select id="edit_company_ids" name="company_ids[]" class="form-select" multiple size="5" required aria-label="Edit user companies">
                             {% for c in companies %}
                             <option value="{{ c.id }}">{{ c.name }}</option>
                             {% endfor %}
                         </select>
-                        <small class="text-muted">Giữ Ctrl/Cmd để chọn nhiều công ty</small>
+                        <small class="text-muted">{{ _('Giữ Ctrl/Cmd để chọn nhiều công ty') }}</small>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                    <button type="submit" class="btn btn-warning">Cập nhật</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Hủy') }}</button>
+                    <button type="submit" class="btn btn-warning">{{ _('Cập nhật') }}</button>
                 </div>
             </form>
         </div>
@@ -205,16 +204,16 @@ document.querySelectorAll('.editUserBtn').forEach(btn => {
         const email = this.dataset.email;
         const role = this.dataset.role;
         const companyIds = this.dataset.companyIds ? this.dataset.companyIds.split(',') : [];
-        
+
         // Set form action
         document.getElementById('editUserForm').action = `/admin/update-user/${userId}`;
-        
+
         // Populate fields
         document.getElementById('edit_username').value = username;
         document.getElementById('edit_email').value = email;
         document.getElementById('edit_password').value = '';
         document.getElementById('edit_role').value = role;
-        
+
         // Select companies
         const companySelect = document.getElementById('edit_company_ids');
         Array.from(companySelect.options).forEach(option => {

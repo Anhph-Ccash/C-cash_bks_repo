@@ -18,6 +18,210 @@
 			"problemMatcher": [],
 			"label": "npm: install",
 			"detail": "install dependencies from package"
+		},
+		{
+			"label": "i18n: extract",
+			"type": "shell",
+			"command": ".venv\\Scripts\\python.exe",
+			"args": [
+				"-m",
+				"babel.messages.frontend",
+				"extract",
+				"-F",
+				"babel.cfg",
+				"-o",
+				"messages.pot",
+				"."
+			],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "i18n: extract",
+			"type": "shell",
+			"command": ".venv\\Scripts\\python.exe",
+			"args": [
+				"-m",
+				"babel.messages.frontend",
+				"extract",
+				"-F",
+				"babel.cfg",
+				"-o",
+				"messages.pot",
+				"."
+			],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "i18n: init vi",
+			"type": "shell",
+			"command": ".venv\\Scripts\\python.exe",
+			"args": [
+				"-m",
+				"babel.messages.frontend",
+				"init",
+				"-i",
+				"messages.pot",
+				"-d",
+				"translations",
+				"-l",
+				"vi"
+			],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "i18n: init en",
+			"type": "shell",
+			"command": ".venv\\Scripts\\python.exe",
+			"args": [
+				"-m",
+				"babel.messages.frontend",
+				"init",
+				"-i",
+				"messages.pot",
+				"-d",
+				"translations",
+				"-l",
+				"en"
+			],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "i18n: compile",
+			"type": "shell",
+			"command": ".venv\\Scripts\\python.exe",
+			"args": [
+				"-m",
+				"babel.messages.frontend",
+				"compile",
+				"-d",
+				"translations"
+			],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "i18n: extract (login)",
+			"type": "shell",
+			"command": ".venv\\Scripts\\python.exe",
+			"args": [
+				"-m",
+				"babel.messages.frontend",
+				"extract",
+				"-F",
+				"babel.cfg",
+				"-o",
+				"messages.pot",
+				"."
+			],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "i18n: update catalogs",
+			"type": "shell",
+			"command": ".venv\\Scripts\\python.exe",
+			"args": [
+				"-m",
+				"babel.messages.frontend",
+				"update",
+				"-i",
+				"messages.pot",
+				"-d",
+				"translations"
+			],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "i18n: compile (login)",
+			"type": "shell",
+			"command": ".venv\\Scripts\\python.exe",
+			"args": [
+				"-m",
+				"babel.messages.frontend",
+				"compile",
+				"-d",
+				"translations"
+			],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "i18n: extract updated templates",
+			"type": "shell",
+			"command": ".venv\\Scripts\\python.exe",
+			"args": [
+				"-m",
+				"babel.messages.frontend",
+				"extract",
+				"-F",
+				"babel.cfg",
+				"-o",
+				"messages.pot",
+				"."
+			],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "i18n: update catalogs (after mark)",
+			"type": "shell",
+			"command": ".venv\\Scripts\\python.exe",
+			"args": [
+				"-m",
+				"babel.messages.frontend",
+				"update",
+				"-i",
+				"messages.pot",
+				"-d",
+				"translations"
+			],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "i18n: compile (after mark)",
+			"type": "shell",
+			"command": ".venv\\Scripts\\python.exe",
+			"args": [
+				"-m",
+				"babel.messages.frontend",
+				"compile",
+				"-d",
+				"translations"
+			],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "i18n: compile catalogs",
+			"type": "shell",
+			"command": ".venv\\Scripts\\python.exe",
+			"args": [
+				"-m",
+				"babel.messages.frontend",
+				"compile",
+				"-d",
+				"translations"
+			],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
 		}
 	]
 }

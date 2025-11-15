@@ -13,7 +13,7 @@ class BankLog(db.Model):
     message = db.Column(db.Text, nullable=True)
     detected_keywords = db.Column(db.ARRAY(db.String), default=[])
     processed_at = db.Column(db.TIMESTAMP, server_default=func.now())
-    
+
     # Relationships
     user = db.relationship('User', foreign_keys=[user_id], backref='bank_logs')
     company = db.relationship('Company', back_populates='bank_logs')

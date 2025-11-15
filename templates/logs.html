@@ -1,55 +1,59 @@
+{% if session.get('role') == 'admin' %}
 {% extends "admin_base.html" %}
+{% else %}
+{% extends "base_layout.html" %}
+{% endif %}
 
-{% block title %}Lịch sử Tải lên - Admin Panel{% endblock %}
+{% block title %}{{ _('Nhật ký Tải lên') }}{% endblock %}
 {% block nav_logs %}active{% endblock %}
 
 {% block content %}
-<h3>📋 Lịch sử tải lên</h3>
+<h3>📋 {{ _('Nhật ký tải lên') }}</h3>
 
 <div class="card">
     <div class="card-header bg-info text-white">
-        <h5 class="card-title mb-0">Lịch sử tải lên</h5>
+        <h5 class="card-title mb-0">{{ _('Nhật ký tải lên') }}</h5>
     </div>
     <div class="card-body">
         <!-- Filter Form -->
         <form class="row g-3 mb-4">
             <div class="col-md-3">
-                <label class="form-label">Ngân hàng</label>
-                <input type="text" name="bank_code" value="{{ request.args.get('bank_code', '') }}" 
-                       class="form-control" placeholder="Mã ngân hàng">
+                <label class="form-label">{{ _('Mã Ngân hàng') }}</label>
+                <input type="text" name="bank_code" value="{{ request.args.get('bank_code', '') }}"
+                       class="form-control" placeholder="{{ _('Mã ngân hàng') }}">
             </div>
             <div class="col-md-3">
-                <label class="form-label" for="status-select">Trạng thái</label>
+                <label class="form-label" for="status-select">{{ _('Trạng thái') }}</label>
                 <select name="status" id="status-select" class="form-select">
-                    <option value="">Tất cả</option>
-                    <option value="SUCCESS" {% if request.args.get('status') == 'SUCCESS' %}selected{% endif %}>Thành công</option>
-                    <option value="ERROR" {% if request.args.get('status') == 'ERROR' %}selected{% endif %}>Lỗi</option>
+                    <option value="">{{ _('Tất cả') }}</option>
+                    <option value="SUCCESS" {% if request.args.get('status') == 'SUCCESS' %}selected{% endif %}>{{ _('Thành công') }}</option>
+                    <option value="ERROR" {% if request.args.get('status') == 'ERROR' %}selected{% endif %}>{{ _('Lỗi') }}</option>
                 </select>
             </div>
             <div class="col-md-3">
-                <label class="form-label" for="days-select">Thời gian</label>
+                <label class="form-label" for="days-select">{{ _('Thời gian') }}</label>
                 <select name="days" id="days-select" class="form-select">
-                    <option value="7" {% if request.args.get('days', '7') == '7' %}selected{% endif %}>7 ngày</option>
-                    <option value="30" {% if request.args.get('days') == '30' %}selected{% endif %}>30 ngày</option>
-                    <option value="90" {% if request.args.get('days') == '90' %}selected{% endif %}>90 ngày</option>
-                    <option value="0" {% if request.args.get('days') == '0' %}selected{% endif %}>Tất cả</option>
+                    <option value="7" {% if request.args.get('days', '7') == '7' %}selected{% endif %}>{{ _('7 ngày') }}</option>
+                    <option value="30" {% if request.args.get('days') == '30' %}selected{% endif %}>{{ _('30 ngày') }}</option>
+                    <option value="90" {% if request.args.get('days') == '90' %}selected{% endif %}>{{ _('90 ngày') }}</option>
+                    <option value="0" {% if request.args.get('days') == '0' %}selected{% endif %}>{{ _('Tất cả') }}</option>
                 </select>
             </div>
             <div class="col-md-3">
                 <label class="form-label">&nbsp;</label>
-                <button type="submit" class="btn btn-primary d-block">🔍 Lọc</button>
+                <button type="submit" class="btn btn-primary d-block">🔍 {{ _('Lọc') }}</button>
             </div>
         </form>
 
         <!-- Bulk Actions -->
         <div class="d-flex justify-content-between align-items-center mb-3">
             <div>
-                <strong>Tổng số: {{ pagination.total if pagination else 0 }} log(s)</strong>
+                <strong>{{ _('Tổng số') }}: {{ pagination.total if pagination else 0 }} {{ _('log(s)') }}</strong>
             </div>
             <div>
-                <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteLogsModal" 
+                <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteLogsModal"
                         {% if not pagination or pagination.total == 0 %}disabled{% endif %}>
-                    🗑️ Xóa logs theo bộ lọc
+                    🗑️ {{ _('Xóa logs theo bộ lọc') }}
                 </button>
             </div>
         </div>
@@ -59,12 +63,13 @@
             <table class="table table-sm table-hover mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th>Thời gian</th>
-                        <th>File gốc</th>
-                        <th>Ngân hàng</th>
-                        <th>Trạng thái</th>
-                        <th>Từ khóa phát hiện</th>
-                        <th>Thông báo</th>
+                        <th>{{ _('Thời gian') }}</th>
+                        <th>{{ _('Tệp gốc') }}</th>
+                        <th>{{ _('Mã Ngân hàng') }}</th>
+                        <th>{{ _('Trạng thái') }}</th>
+                        <th>{{ _('Từ khóa phát hiện') }}</th>
+                        <th>{{ _('Thông báo') }}</th>
+                        <th>{{ _('Hành động') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -75,23 +80,23 @@
                             {% if log.processed_at %}
                                 {{ log.processed_at.strftime('%H:%M:%S %d/%m/%Y') }}
                             {% else %}
-                                N/A
+                                {{ _('N/A') }}
                             {% endif %}
                             </small>
                         </td>
-                        <td>{{ log.original_filename if log.original_filename else 'N/A' }}</td>
+                        <td>{{ log.original_filename if log.original_filename else _('N/A') }}</td>
                         <td>
                             {% if log.bank_code %}
                                 <span class="badge bg-info">{{ log.bank_code }}</span>
                             {% else %}
-                                <span class="badge bg-secondary">N/A</span>
+                                <span class="badge bg-secondary">{{ _('N/A') }}</span>
                             {% endif %}
                         </td>
                         <td>
                             {% if log.status == 'SUCCESS' %}
-                                <span class="badge bg-success">Thành công</span>
+                                <span class="badge bg-success">{{ _('Thành công') }}</span>
                             {% elif log.status == 'ERROR' %}
-                                <span class="badge bg-danger">Lỗi</span>
+                                <span class="badge bg-danger">{{ _('Lỗi') }}</span>
                             {% else %}
                                 <span class="badge bg-warning text-dark">{{ log.status }}</span>
                             {% endif %}
@@ -106,34 +111,43 @@
                             {% endif %}
                         </td>
                         <td><small>{{ log.message }}</small></td>
+                        <td>
+                            {% if log.filename %}
+                            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('main.download_bank_log_file', log_id=log.id) }}" title="{{ _('Tải file gốc') }}">
+                                📥 {{ _('Tải file') }}
+                            </a>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="6" class="text-center text-muted">Không tìm thấy log nào</td>
+                        <td colspan="7" class="text-center text-muted">{{ _('Không tìm thấy nhật ký nào') }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
-    
+
     <!-- Pagination -->
     {% if pagination and pagination.total > 0 %}
     <div class="card-footer d-flex justify-content-between align-items-center">
         <div>
-            Hiển thị {{ ((pagination.page - 1) * pagination.per_page) + 1 }} - {{ [pagination.page * pagination.per_page, pagination.total]|min }} / {{ pagination.total }} mục
+            {{ _('Hiển thị') }} {{ ((pagination.page - 1) * pagination.per_page) + 1 }} - {{ [pagination.page * pagination.per_page, pagination.total]|min }} / {{ pagination.total }} {{ _('mục') }}
         </div>
         <div class="btn-group">
             {% if pagination.has_prev %}
-                <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('upload.view_logs', page=pagination.page - 1, per_page=pagination.per_page, bank_code=request.args.get('bank_code', ''), status=request.args.get('status', ''), days=request.args.get('days', '7')) }}">« Trước</a>
+                <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('upload.view_logs', page=pagination.page - 1, per_page=pagination.per_page, bank_code=request.args.get('bank_code', ''), status=request.args.get('status', ''), days=request.args.get('days', '7')) }}">« {{ _('Trước') }}</a>
             {% else %}
-                <a class="btn btn-sm btn-outline-secondary disabled">« Trước</a>
+                <a class="btn btn-sm btn-outline-secondary disabled">« {{ _('Trước') }}</a>
             {% endif %}
-            <span class="btn btn-sm btn-outline-secondary disabled">Trang {{ pagination.page }}/{{ pagination.total_pages }}</span>
+            <span class="btn btn-sm btn-outline-secondary disabled">{{ _('Trang') }} {{ pagination.page }}/{{ pagination.total_pages }}</span>
             {% if pagination.has_next %}
-                <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('upload.view_logs', page=pagination.page + 1, per_page=pagination.per_page, bank_code=request.args.get('bank_code', ''), status=request.args.get('status', ''), days=request.args.get('days', '7')) }}">Sau »</a>
+                <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('upload.view_logs', page=pagination.page + 1, per_page=pagination.per_page, bank_code=request.args.get('bank_code', ''), status=request.args.get('status', ''), days=request.args.get('days', '7')) }}">{{ _('Sau') }} »</a>
             {% else %}
-                <a class="btn btn-sm btn-outline-secondary disabled">Sau »</a>
+                <a class="btn btn-sm btn-outline-secondary disabled">{{ _('Sau') }} »</a>
             {% endif %}
         </div>
     </div>
@@ -145,51 +159,51 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title" id="deleteLogsModalLabel">🗑️ Xóa logs</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title" id="deleteLogsModalLabel">🗑️ {{ _('Xóa nhật ký') }}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="{{ _('Đóng') }}"></button>
             </div>
             <div class="modal-body">
                 <div class="alert alert-warning">
-                    <strong>⚠️ Cảnh báo:</strong> Bạn đang xóa logs theo bộ lọc hiện tại:
+                    <strong>⚠️ {{ _('Cảnh báo') }}:</strong> {{ _('Bạn đang xóa nhật ký theo bộ lọc hiện tại:') }}
                 </div>
-                
+
                 <ul class="list-unstyled">
-                    <li><strong>Ngân hàng:</strong> 
-                        <span class="badge bg-info">{{ request.args.get('bank_code') if request.args.get('bank_code') else 'Tất cả' }}</span>
+                    <li><strong>{{ _('Mã Ngân hàng') }}:</strong>
+                        <span class="badge bg-info">{{ request.args.get('bank_code') if request.args.get('bank_code') else _('Tất cả') }}</span>
                     </li>
-                    <li><strong>Trạng thái:</strong> 
+                    <li><strong>{{ _('Trạng thái') }}:</strong>
                         <span class="badge bg-info">
-                            {% if request.args.get('status') == 'SUCCESS' %}Thành công
-                            {% elif request.args.get('status') == 'ERROR' %}Lỗi
-                            {% else %}Tất cả{% endif %}
+                            {% if request.args.get('status') == 'SUCCESS' %}{{ _('Thành công') }}
+                            {% elif request.args.get('status') == 'ERROR' %}{{ _('Lỗi') }}
+                            {% else %}{{ _('Tất cả') }}{% endif %}
                         </span>
                     </li>
-                    <li><strong>Thời gian:</strong> 
+                    <li><strong>{{ _('Thời gian') }}:</strong>
                         <span class="badge bg-info">
-                            {% if request.args.get('days') == '30' %}30 ngày
-                            {% elif request.args.get('days') == '90' %}90 ngày
-                            {% elif request.args.get('days') == '0' %}Tất cả
-                            {% else %}7 ngày{% endif %}
+                            {% if request.args.get('days') == '30' %}{{ _('30 ngày') }}
+                            {% elif request.args.get('days') == '90' %}{{ _('90 ngày') }}
+                            {% elif request.args.get('days') == '0' %}{{ _('Tất cả') }}
+                            {% else %}{{ _('7 ngày') }}{% endif %}
                         </span>
                     </li>
-                    <li><strong>Số lượng sẽ xóa:</strong> 
-                        <span class="badge bg-danger text-white">{{ pagination.total if pagination else 0 }} log(s)</span>
+                    <li><strong>{{ _('Số lượng sẽ xóa:') }}</strong>
+                        <span class="badge bg-danger text-white">{{ pagination.total if pagination else 0 }} {{ _('log(s)') }}</span>
                     </li>
                 </ul>
-                
+
                 <hr>
                 <p class="text-danger mb-0">
-                    <strong>Hành động này không thể hoàn tác!</strong> Bạn có chắc chắn muốn xóa?
+                    <strong>{{ _('Hành động này không thể hoàn tác!') }}</strong> {{ _('Bạn có chắc chắn muốn xóa?') }}
                 </p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">❌ Hủy</button>
-                <form method="POST" action="{{ url_for('upload.delete_logs') }}" style="display: inline;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">❌ {{ _('Hủy') }}</button>
+                <form method="POST" action="{{ url_for('upload.delete_logs') }}" class="d-inline">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="bank_code" value="{{ request.args.get('bank_code', '') }}">
                     <input type="hidden" name="status" value="{{ request.args.get('status', '') }}">
                     <input type="hidden" name="days" value="{{ request.args.get('days', '7') }}">
-                    <button type="submit" class="btn btn-danger">🗑️ Xác nhận xóa</button>
+                    <button type="submit" class="btn btn-danger">🗑️ {{ _('Xác nhận xóa') }}</button>
                 </form>
             </div>
         </div>

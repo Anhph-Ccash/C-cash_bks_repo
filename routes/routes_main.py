@@ -41,7 +41,7 @@ def user_required(f):
 def index():
     if 'user_id' not in session:
         return redirect(url_for('auth.login'))
-    
+
     # Redirect based on role
     if session.get('role') == 'admin':
         return redirect(url_for('admin.admin'))
@@ -53,19 +53,19 @@ def index():
 def user_dashboard():
     from models import User, Company
     from models.bank_config import BankConfig
-    
+
     # Get user's companies
     user = User.query.get(session['user_id'])
     companies = user.get_companies()
-    
+
     # Get current company_id from session
     company_id = session.get('company_id')
-    
+
     # Get recent logs for the dashboard filtered by user and company
     query = BankLog.query.filter(BankLog.user_id == session['user_id'])
     if company_id:
         query = query.filter(BankLog.company_id == company_id)
-    
+
     recent_logs = query.order_by(
         BankLog.processed_at.desc()
     ).limit(10).all()
@@ -94,7 +94,7 @@ def user_dashboard():
     except Exception:
         # non-fatal: if something goes wrong here, don't block the dashboard
         pass
-    
+
     # Get bank configs for current company
     bank_configs = []
     statement_configs = []
@@ -104,7 +104,7 @@ def user_dashboard():
             company_id=company_id,
             is_active=True
         ).order_by(BankConfig.bank_code.asc()).all()
-        
+
         # Get statement configs
         from models.bank_statement_config import BankStatementConfig
         # Order statement configs by bank_code alphabetically
@@ -118,8 +118,8 @@ def user_dashboard():
     if company_id:
         stmt_query = stmt_query.filter(StatementLog.company_id == company_id)
     statement_logs = stmt_query.order_by(StatementLog.processed_at.desc()).limit(10).all()
-    
-    return render_template('users.html', 
+
+    return render_template('users.html',
                          username=session.get('username'),
                          company_name=session.get('company_name'),
                          companies=companies,
@@ -130,6 +130,42 @@ def user_dashboard():
                          statement_configs=statement_configs)
 
 
+@main_bp.route('/user/user-upload-page')
+@login_required
+def user_upload_page():
+    """User upload page with recent logs and statement logs"""
+    from models import User, Company
+
+    user_id = session.get('user_id')
+    user = User.query.get(user_id)
+    if not user:
+        flash("User không tồn tại!", 'danger')
+        return redirect(url_for('auth.logout'))
+
+    # Get user's companies
+    companies = user.get_companies()
+    company_id = session.get('company_id')
+    company_name = session.get('company_name')
+
+    # Get recent bank logs
+    recent_logs = BankLog.query.filter_by(user_id=user_id).order_by(
+        BankLog.processed_at.desc()
+    ).limit(10).all()
+
+    # Get recent statement logs (parsed statements)
+    statement_logs = StatementLog.query.filter_by(user_id=user_id).order_by(
+        StatementLog.processed_at.desc()
+    ).limit(10).all()
+
+    return render_template('user_upload.html',
+                         username=user.username,
+                         logs=recent_logs,
+                         statement_logs=statement_logs,
+                         companies=companies,
+                         current_company_id=company_id,
+                         company_name=company_name)
+
+
 @main_bp.route('/bank-configs')
 @login_required
 def user_bank_configs():
@@ -137,17 +173,10 @@ def user_bank_configs():
     if session.get('role') != 'admin':
         flash('Chỉ Admin mới có quyền truy cập trang này!', 'danger')
         return redirect(url_for('main.user_dashboard'))
-    
+
     # Redirect to admin route
     return redirect(url_for('admin.manage_bank_configs'))
 
-
-@main_bp.route('/statement-configs')
-@login_required
-def user_statement_configs():
-    """Redirect to admin statement configs page - Allow both user and admin"""
-    # Cho phép cả user và admin truy cập
-    return redirect(url_for('admin.manage_statement_configs'))
 
 @main_bp.route('/user/upload', methods=['POST'])
 @user_required
@@ -155,18 +184,18 @@ def user_upload():
     """Upload file for regular users"""
     user_id = session.get('user_id')
     company_id = session.get('company_id')
-    
+
     # Validate user exists
     from models import User
     user = User.query.get(user_id)
     if not user:
         flash("User không tồn tại, vui lòng đăng nhập lại!", 'danger')
         return redirect(url_for('auth.logout'))
-    
+
     if not company_id:
         flash("Vui lòng chọn công ty trước khi upload!", 'warning')
         return redirect(url_for('main.user_dashboard'))
-    
+
     f = request.files.get("file")
     if not f:
         flash("Không tìm thấy file!", 'danger')
@@ -208,7 +237,11 @@ def user_upload():
                     processed += 1
                     if status == 'SUCCESS' and result.get('bank_code'):
                         parse_result = parse_and_store_statement(db.session, ef, orig_inner, inner_ext, company_id, result.get('bank_code'), user_id)
-                        if parse_result.get('status') == 'SUCCESS':
+
+                        if parse_result.get('status') == 'INVALID':
+                            # Validation failed
+                            failures.append(f"{orig_inner}: {parse_result.get('message', 'Không hợp lệ')}")
+                        elif parse_result.get('status') == 'SUCCESS':
                             successes += 1
                             # if the parsed statement was created but account is missing, remember it
                             sid = parse_result.get('statement_log_id')
@@ -249,7 +282,15 @@ def user_upload():
                 try:
                     ext_for_parse = ext
                     parse_result = parse_and_store_statement(db.session, saved_path, orig_name, ext_for_parse, company_id, result.get('bank_code'), user_id)
-                    if parse_result.get('status') == 'SUCCESS':
+
+                    if parse_result.get('status') == 'INVALID':
+                        # Validation failed - show detailed errors
+                        errors = parse_result.get('errors', [])
+                        error_msg = parse_result.get('message', 'Mẫu sổ phụ không hợp lệ')
+                        flash(error_msg, 'danger')
+                        for err in errors[:5]:  # Show first 5 errors
+                            flash(f"• {err}", 'warning')
+                    elif parse_result.get('status') == 'SUCCESS':
                         flash('Sổ phụ đã được phân tích và MT940 sẵn sàng để tải xuống.', 'success')
                         # if account missing on the created StatementLog, redirect user to edit it
                         sid = parse_result.get('statement_log_id')
@@ -273,7 +314,7 @@ def user_upload():
         flash(f"Upload FAILED: {e}", 'danger')
     finally:
         cleanup_file(saved_path)
-    
+
     # If any parsed statement was missing account number, redirect the user to the first such statement
     if missing_statement_log_id:
         return redirect(url_for('main.view_statement_detail', log_id=missing_statement_log_id))
@@ -296,19 +337,19 @@ def user_logs():
         per_page = 10
     if not page or page < 1:
         page = 1
-    
+
     # Get user's companies
     user = User.query.get(session['user_id'])
     companies = user.get_companies()
     company_id = session.get('company_id')
-    
+
     # Filter by user first - only show logs uploaded by this user
     query = BankLog.query.filter(BankLog.user_id == session['user_id'])
-    
+
     # Filter by company
     if company_id:
         query = query.filter(BankLog.company_id == company_id)
-    
+
     if bank_code:
         query = query.filter(BankLog.bank_code == bank_code)
     if status:
@@ -316,7 +357,7 @@ def user_logs():
     if days and days > 0:
         cutoff = datetime.now() - timedelta(days=days)
         query = query.filter(BankLog.processed_at >= cutoff)
-        
+
     total = query.count()
     total_pages = max(1, math.ceil(total / per_page))
     if page > total_pages:
@@ -332,8 +373,8 @@ def user_logs():
         'has_prev': page > 1,
         'has_next': page < total_pages,
     }
-    
-    return render_template('user_logs.html', 
+
+    return render_template('user_logs.html',
                          logs=logs,
                          username=session.get('username'),
                          company_name=session.get('company_name'),
@@ -444,6 +485,11 @@ def list_statement_logs():
     # distinct bank codes for filter dropdown
     banks = [r[0] for r in db.session.query(StatementLog.bank_code).distinct().all()]
 
+    # Get companies for navbar
+    companies = Company.query.filter_by(is_active=True).all()
+    current_company_id = session.get('company_id')
+    company_name = session.get('company_name')
+
     pagination = {
         'page': page,
         'per_page': per_page,
@@ -453,33 +499,126 @@ def list_statement_logs():
         'has_next': page < total_pages,
     }
 
-    return render_template('statement_logs.html', logs=logs, banks=banks, username=session.get('username'), pagination=pagination)
+    return render_template('statement_logs.html',
+                         logs=logs,
+                         banks=banks,
+                         username=session.get('username'),
+                         pagination=pagination,
+                         companies=companies,
+                         current_company_id=current_company_id,
+                         company_name=company_name)
+
+
+@main_bp.route('/user/bank-log/<int:log_id>/download')
+@login_required
+def download_bank_log_file(log_id):
+    """Download the original uploaded Excel/CSV file from BankLog.
+    Permission: admin OR owner user OR same-company user.
+    """
+    print(f"[DEBUG] Attempting to download bank log ID: {log_id}")
+    print(f"[DEBUG] Current user_id in session: {session.get('user_id')}")
+
+    log = BankLog.query.filter_by(id=log_id).first()
+    if not log:
+        print(f"[DEBUG] Log ID {log_id} does not exist in database")
+        abort(404)
+
+    # permission: owner, company, or admin
+    allowed = False
+    if session.get('role') == 'admin':
+        allowed = True
+    elif log.user_id and log.user_id == session.get('user_id'):
+        allowed = True
+    elif log.company_id and log.company_id == session.get('company_id'):
+        allowed = True
+
+    if not allowed:
+        print(f"[DEBUG] Permission denied for user {session.get('user_id')} on bank log {log_id}")
+        # Role-aware redirect
+        flash('Bạn không có quyền tải file này.', 'danger')
+        if session.get('role') == 'admin':
+            return redirect(url_for('admin.admin_view_logs'))
+        return redirect(url_for('main.user_logs'))
+
+    print(f"[DEBUG] Found log - filename: {log.filename}, original_filename: {log.original_filename}")
+
+    if not log.filename:
+        print(f"[DEBUG] Log has no filename")
+        abort(404)
+
+    full_path = os.path.join(current_app.config.get('UPLOAD_FOLDER', 'uploads'), log.filename)
+    print(f"[DEBUG] Full path to file: {full_path}")
+    print(f"[DEBUG] File exists: {os.path.exists(full_path)}")
+
+    if not os.path.exists(full_path):
+        print(f"[DEBUG] File not found at path: {full_path}")
+        abort(404)
+
+    # Use original filename for download
+    download_name = log.original_filename if log.original_filename else os.path.basename(log.filename)
+    print(f"[DEBUG] Sending file with download name: {download_name}")
+    return send_file(full_path, as_attachment=True, download_name=download_name)
 
 
 @main_bp.route('/user/statement-log/<int:log_id>/download')
-@user_required
+@login_required
 def download_statement_mt940(log_id):
-    stmt = StatementLog.query.filter_by(id=log_id, user_id=session['user_id']).first()
-    if not stmt:
+    """Allow both user and admin to download generated MT940 for a statement log.
+    Permission: owner user OR same company OR admin.
+    """
+    stmt = StatementLog.query.filter_by(id=log_id).first()
+    if not stmt or not stmt.mt940_filename:
         abort(404)
-    if not stmt.mt940_filename:
-        abort(404)
+
+    # permission: owner, company, or admin
+    allowed = False
+    if session.get('role') == 'admin':
+        allowed = True
+    elif stmt.user_id and stmt.user_id == session.get('user_id'):
+        allowed = True
+    elif stmt.company_id and stmt.company_id == session.get('company_id'):
+        allowed = True
+
+    if not allowed:
+        # If not permitted, redirect appropriately per role
+        flash('Bạn không có quyền tải file MT940 này.', 'danger')
+        if session.get('role') == 'admin':
+            return redirect(url_for('admin.admin_upload_page'))
+        return redirect(url_for('main.user_dashboard'))
+
     full_path = os.path.join(current_app.config.get('UPLOAD_FOLDER', 'uploads'), stmt.mt940_filename)
     if not os.path.exists(full_path):
         abort(404)
-    return send_file(full_path, as_attachment=True)
+
+    # Provide a friendly download name if available
+    download_name = os.path.basename(stmt.mt940_filename)
+    return send_file(full_path, as_attachment=True, download_name=download_name)
 
 
 @main_bp.route('/user/statement-log/<int:log_id>')
-@user_required
+@login_required
 def view_statement_detail(log_id):
-    """Show parsed statement header and details."""
-    stmt = StatementLog.query.filter_by(id=log_id, user_id=session['user_id']).first()
-    if not stmt:
-        # also allow company owners to view statements for their company users
-        stmt = StatementLog.query.filter_by(id=log_id, company_id=session.get('company_id')).first()
+    """Show parsed statement header and details.
+    Allow admin, owner user, or same-company user to view.
+    """
+    stmt = StatementLog.query.filter_by(id=log_id).first()
     if not stmt:
         abort(404)
+
+    # permission: owner, company, or admin
+    allowed = False
+    if session.get('role') == 'admin':
+        allowed = True
+    elif stmt.user_id and stmt.user_id == session.get('user_id'):
+        allowed = True
+    elif stmt.company_id and stmt.company_id == session.get('company_id'):
+        allowed = True
+
+    if not allowed:
+        flash('Bạn không có quyền xem chi tiết bản ghi này.', 'danger')
+        if session.get('role') == 'admin':
+            return redirect(url_for('admin.admin_upload_page'))
+        return redirect(url_for('main.user_dashboard'))
 
     # details is stored as JSON list of dicts
     details = stmt.details or []
@@ -551,7 +690,7 @@ def update_statement_account(log_id):
 
 
 @main_bp.route('/user/statement-log/delete/<int:log_id>')
-@user_required
+@login_required
 def delete_statement_log(log_id):
     """Delete a StatementLog record and associated MT940 file (if present)."""
     stmt = StatementLog.query.filter_by(id=log_id).first()
@@ -590,8 +729,34 @@ def delete_statement_log(log_id):
         db.session.rollback()
         flash(f'Lỗi khi xóa bản ghi: {e}', 'danger')
 
-    # redirect back to dashboard
-    return redirect(url_for('main.user_dashboard'))
+    # Redirect based on user role and referrer
+    # If admin, redirect to admin upload page; otherwise user dashboard
+    if session.get('role') == 'admin':
+        # Check for 'next' parameter first (highest priority)
+        next_page = request.args.get('next')
+        if next_page:
+            current_app.logger.info(f"[DEBUG] Delete statement_log - Using next parameter: {next_page}")
+            return redirect(next_page)
+
+        # Check referrer
+        referrer = request.referrer or ''
+        current_app.logger.info(f"[DEBUG] Delete statement_log - Referrer: {referrer}")
+
+        if 'statement-logs' in referrer or 'statement_logs' in referrer:
+            current_app.logger.info("[DEBUG] Redirecting to statement_logs")
+            return redirect(url_for('upload.list_statement_logs'))
+        elif 'admin-upload' in referrer or 'admin/upload/admin-upload' in referrer or 'upload/admin/admin-upload' in referrer:
+            current_app.logger.info("[DEBUG] Redirecting to admin_upload_page")
+            return redirect(url_for('admin.admin_upload_page'))
+        elif 'users' in referrer or 'admin-users' in referrer:
+            current_app.logger.info("[DEBUG] Redirecting to manage_users")
+            return redirect(url_for('admin.manage_users'))
+        else:
+            # Default to admin upload page
+            current_app.logger.info("[DEBUG] Default redirect to admin_upload_page")
+            return redirect(url_for('admin.admin_upload_page'))
+    else:
+        return redirect(url_for('main.user_dashboard'))
 
 @main_bp.route('/user/bank-config/add', methods=['POST'])
 @login_required
@@ -600,45 +765,45 @@ def add_bank_config():
     if session.get('role') != 'admin':
         flash('Chỉ Admin mới có quyền thực hiện thao tác này!', 'danger')
         return redirect(url_for('admin.manage_bank_configs'))
-    
+
     from models.bank_config import BankConfig
-    
+
     company_id = session.get('company_id')
     if not company_id:
         flash("⚠️ Vui lòng chọn công ty trước khi thêm cấu hình ngân hàng!", 'warning')
         return redirect(url_for('admin.manage_bank_configs'))
-    
+
     try:
         bank_code = request.form.get('bank_code', '').strip().upper()
         bank_name = request.form.get('bank_name', '').strip()
         keywords = request.form.get('keywords', '').strip()
-        
+
         # Validation
         if not bank_code:
             flash("❌ Mã ngân hàng không được để trống!", 'danger')
             return redirect(url_for('admin.manage_bank_configs'))
-        
+
         if not keywords:
             flash("❌ Từ khóa không được để trống!", 'danger')
             return redirect(url_for('admin.manage_bank_configs'))
-        
+
         # Check if bank_code already exists for this company
         existing = BankConfig.query.filter_by(
             company_id=company_id,
             bank_code=bank_code
         ).first()
-        
+
         if existing:
             flash(f"❌ Mã ngân hàng '{bank_code}' đã tồn tại trong công ty này!", 'danger')
             return redirect(url_for('admin.manage_bank_configs'))
-        
+
         # Convert keywords string to array
         keywords_array = [kw.strip() for kw in keywords.split(',') if kw.strip()]
-        
+
         if not keywords_array:
             flash("❌ Vui lòng nhập ít nhất một từ khóa hợp lệ!", 'danger')
             return redirect(url_for('admin.manage_bank_configs'))
-        
+
         config = BankConfig(
             company_id=company_id,
             bank_code=bank_code,
@@ -653,7 +818,7 @@ def add_bank_config():
     except Exception as e:
         db.session.rollback()
         flash(f"❌ Lỗi khi thêm cấu hình: {str(e)}", 'danger')
-    
+
     return redirect(url_for('admin.manage_bank_configs'))
 
 @main_bp.route('/user/bank-config/update/<int:config_id>', methods=['POST'])
@@ -663,37 +828,37 @@ def update_bank_config(config_id):
     if session.get('role') != 'admin':
         flash('Chỉ Admin mới có quyền thực hiện thao tác này!', 'danger')
         return redirect(url_for('admin.manage_bank_configs'))
-    
+
     from models.bank_config import BankConfig
-    
+
     company_id = session.get('company_id')
     config = BankConfig.query.filter_by(id=config_id, company_id=company_id).first()
-    
+
     if not config:
         flash("❌ Không tìm thấy cấu hình hoặc bạn không có quyền!", 'danger')
         return redirect(url_for('admin.manage_bank_configs'))
-    
+
     try:
         bank_code = request.form.get('bank_code', '').strip().upper()
         bank_name = request.form.get('bank_name', '').strip()
         keywords = request.form.get('keywords', '').strip()
-        
+
         # Validation
         if not bank_code:
             flash("❌ Mã ngân hàng không được để trống!", 'danger')
             return redirect(url_for('admin.manage_bank_configs'))
-        
+
         if not keywords:
             flash("❌ Từ khóa không được để trống!", 'danger')
             return redirect(url_for('admin.manage_bank_configs'))
-        
+
         # Convert keywords string to array
         keywords_array = [kw.strip() for kw in keywords.split(',') if kw.strip()]
-        
+
         if not keywords_array:
             flash("❌ Vui lòng nhập ít nhất một từ khóa hợp lệ!", 'danger')
             return redirect(url_for('admin.manage_bank_configs'))
-        
+
         config.bank_code = bank_code
         config.bank_name = bank_name if bank_name else None
         config.keywords = keywords_array
@@ -702,7 +867,7 @@ def update_bank_config(config_id):
     except Exception as e:
         db.session.rollback()
         flash(f"❌ Lỗi khi cập nhật: {str(e)}", 'danger')
-    
+
     return redirect(url_for('admin.manage_bank_configs'))
 
 @main_bp.route('/user/bank-config/delete/<int:config_id>')
@@ -712,16 +877,16 @@ def delete_bank_config(config_id):
     if session.get('role') != 'admin':
         flash('Chỉ Admin mới có quyền thực hiện thao tác này!', 'danger')
         return redirect(url_for('admin.manage_bank_configs'))
-    
+
     from models.bank_config import BankConfig
-    
+
     company_id = session.get('company_id')
     config = BankConfig.query.filter_by(id=config_id, company_id=company_id).first()
-    
+
     if not config:
         flash("❌ Không tìm thấy cấu hình hoặc bạn không có quyền!", 'danger')
         return redirect(url_for('admin.manage_bank_configs'))
-    
+
     try:
         bank_code = config.bank_code
         db.session.delete(config)
@@ -730,7 +895,7 @@ def delete_bank_config(config_id):
     except Exception as e:
         db.session.rollback()
         flash(f"❌ Lỗi khi xóa: {str(e)}", 'danger')
-    
+
     return redirect(url_for('admin.manage_bank_configs'))
 
 # ============= Statement Config Routes =============
@@ -742,14 +907,14 @@ def add_statement_config():
     if session.get('role') != 'admin':
         flash('⚠️ Chỉ Admin mới có quyền thêm cấu hình sổ phụ!', 'danger')
         return redirect(url_for('admin.manage_statement_configs'))
-    
+
     from models.bank_statement_config import BankStatementConfig
-    
+
     company_id = session.get('company_id')
     if not company_id:
         flash("Vui lòng chọn công ty trước!", 'danger')
         return redirect(url_for('main.user_dashboard'))
-    
+
     bank_code = request.form.get('bank_code', '').strip().upper()
     keywords = request.form.get('keywords', '').strip()
     col_keyword = request.form.get('col_keyword', '').strip()
@@ -758,14 +923,14 @@ def add_statement_config():
     row_end = request.form.get('row_end', '').strip()
     identify_info = request.form.get('identify_info', '').strip()
     cell_format = request.form.get('cell_format', '').strip()
-    
+
     if not bank_code or not keywords or not identify_info:
         flash("Mã ngân hàng, từ khóa và định danh không được để trống!", 'danger')
-        return redirect(url_for('main.user_statement_configs'))
-    
+        return redirect(url_for('admin.manage_statement_configs'))
+
     # Convert keywords string to array
     keywords_array = [kw.strip() for kw in keywords.split(',') if kw.strip()]
-    
+
     try:
         config = BankStatementConfig(
             company_id=company_id,
@@ -784,7 +949,7 @@ def add_statement_config():
     except Exception as e:
         db.session.rollback()
         flash(f"Lỗi khi thêm cấu hình: {str(e)}", 'danger')
-    
+
     return redirect(url_for('admin.manage_statement_configs'))
 
 @main_bp.route('/user/statement-config/update/<int:config_id>', methods=['POST'])
@@ -794,16 +959,16 @@ def update_statement_config(config_id):
     if session.get('role') != 'admin':
         flash('⚠️ Chỉ Admin mới có quyền sửa cấu hình sổ phụ!', 'danger')
         return redirect(url_for('admin.manage_statement_configs'))
-    
+
     from models.bank_statement_config import BankStatementConfig
-    
+
     company_id = session.get('company_id')
     config = BankStatementConfig.query.filter_by(id=config_id, company_id=company_id).first()
-    
+
     if not config:
         flash("Không tìm thấy cấu hình hoặc bạn không có quyền!", 'danger')
         return redirect(url_for('admin.manage_statement_configs'))
-    
+
     bank_code = request.form.get('bank_code', '').strip().upper()
     keywords = request.form.get('keywords', '').strip()
     col_keyword = request.form.get('col_keyword', '').strip()
@@ -812,14 +977,14 @@ def update_statement_config(config_id):
     row_end = request.form.get('row_end', '').strip()
     identify_info = request.form.get('identify_info', '').strip()
     cell_format = request.form.get('cell_format', '').strip()
-    
+
     if not bank_code or not keywords or not identify_info:
         flash("Mã ngân hàng, từ khóa và định danh không được để trống!", 'danger')
-        return redirect(url_for('main.user_dashboard'))
-    
+        return redirect(url_for('admin.manage_statement_configs'))
+
     # Convert keywords string to array
     keywords_array = [kw.strip() for kw in keywords.split(',') if kw.strip()]
-    
+
     try:
         config.bank_code = bank_code
         config.keywords = keywords_array
@@ -834,7 +999,7 @@ def update_statement_config(config_id):
     except Exception as e:
         db.session.rollback()
         flash(f"Lỗi khi cập nhật: {str(e)}", 'danger')
-    
+
     return redirect(url_for('admin.manage_statement_configs'))
 
 @main_bp.route('/user/statement-config/bulk-upload', methods=['POST'])
@@ -847,7 +1012,7 @@ def bulk_upload_statement_configs():
         flash('⚠️ Chỉ Admin mới có quyền upload cấu hình sổ phụ theo lô!', 'danger')
         logging.warning(f"[UPLOAD BULK] User không phải admin: {session.get('username')}")
         return redirect(url_for('admin.manage_statement_configs'))
-    
+
     from models.bank_statement_config import BankStatementConfig
     import pandas as pd
     import uuid
@@ -860,27 +1025,27 @@ def bulk_upload_statement_configs():
         flash("Vui lòng chọn công ty trước!", 'danger')
         logging.warning(f"[UPLOAD BULK] Chưa chọn công ty")
         return redirect(url_for('admin.manage_statement_configs'))
-    
+
     file = request.files.get('file')
     if not file or file.filename == '':
         flash("Vui lòng chọn file để upload!", 'danger')
         logging.warning(f"[UPLOAD BULK] Không có file upload")
         return redirect(url_for('admin.manage_statement_configs'))
-    
+
     filename = secure_filename(file.filename)
     ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
     logging.info(f"[UPLOAD BULK] File nhận: {filename}, ext={ext}")
-    
+
     if ext not in ['xlsx', 'xls', 'csv']:
         flash("Chỉ hỗ trợ file Excel (.xlsx, .xls) hoặc CSV!", 'danger')
         logging.warning(f"[UPLOAD BULK] Định dạng file không hợp lệ: {ext}")
         return redirect(url_for('admin.manage_statement_configs'))
-    
+
     temp_path = os.path.join(current_app.config.get('UPLOAD_FOLDER', 'uploads'), 'tmp', f"{uuid.uuid4().hex}.{ext}")
     os.makedirs(os.path.dirname(temp_path), exist_ok=True)
     file.save(temp_path)
     logging.info(f"[UPLOAD BULK] File lưu tạm: {temp_path}")
-    
+
     try:
         if ext == 'csv':
             df = pd.read_csv(temp_path)
@@ -928,7 +1093,7 @@ def bulk_upload_statement_configs():
                 row_end = int(row_end) if pd.notna(row_end) else None
                 cell_format = str(row.get('cell_format', '')).strip().lower()
                 cell_format = cell_format if cell_format != 'nan' else None
-                
+
                 # Kiểm tra duplicate: nếu có identify_info thì dùng nó, không thì dùng keywords + col_keyword + col_value
                 if identify_info:
                     existing = BankStatementConfig.query.filter_by(
@@ -939,7 +1104,7 @@ def bulk_upload_statement_configs():
                 else:
                     # Tìm theo keywords nếu không có identify_info
                     existing = None
-                
+
                 if existing:
                     existing.keywords = keywords_array
                     existing.col_keyword = col_keyword
@@ -1002,10 +1167,10 @@ def download_statement_config_template():
     if session.get('role') not in ['user', 'admin']:
         flash('Bạn không có quyền thực hiện thao tác này!', 'danger')
         return redirect(url_for('main.user_dashboard'))
-    
+
     import pandas as pd
     from io import BytesIO
-    
+
     # Create sample data with multiple configs for same bank_code
     template_data = {
         'bank_code': ['VCB', 'VCB', 'VCB', 'VCB', 'VCB', 'VCB', 'VCB', 'VCB', 'VCB', 'VCB', 'VCB', 'VCB'],
@@ -1043,22 +1208,22 @@ def download_statement_config_template():
         ],
         'cell_format': ['Text', 'Text', 'Number', 'Number', 'Text', 'Date', 'Number', 'Number', 'Text', 'Number', 'Number', 'Text']
     }
-    
+
     df = pd.DataFrame(template_data)
-    
+
     # Create Excel file in memory
     output = BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         df.to_excel(writer, index=False, sheet_name='Template')
-        
+
         # Auto-adjust column widths
         worksheet = writer.sheets['Template']
         for idx, col in enumerate(df.columns):
             max_length = max(df[col].astype(str).apply(len).max(), len(col)) + 2
             worksheet.column_dimensions[chr(65 + idx)].width = min(max_length, 50)  # Cap at 50
-    
+
     output.seek(0)
-    
+
     return send_file(
         output,
         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -1073,16 +1238,16 @@ def delete_statement_config(config_id):
     if session.get('role') != 'admin':
         flash('⚠️ Chỉ Admin mới có quyền thực hiện thao tác này!', 'danger')
         return redirect(url_for('admin.manage_statement_configs'))
-    
+
     from models.bank_statement_config import BankStatementConfig
-    
+
     company_id = session.get('company_id')
     config = BankStatementConfig.query.filter_by(id=config_id, company_id=company_id).first()
-    
+
     if not config:
         flash("Không tìm thấy cấu hình hoặc bạn không có quyền!", 'danger')
         return redirect(url_for('admin.manage_statement_configs'))
-    
+
     try:
         db.session.delete(config)
         db.session.commit()
@@ -1090,7 +1255,7 @@ def delete_statement_config(config_id):
     except Exception as e:
         db.session.rollback()
         flash(f"Lỗi khi xóa: {str(e)}", 'danger')
-    
+
     return redirect(url_for('admin.manage_statement_configs'))
 
 @main_bp.route('/user/statement-config/delete-by-bank', methods=['POST'])
@@ -1100,7 +1265,7 @@ def delete_statement_configs_by_bank():
     if session.get('role') != 'admin':
         flash('⚠️ Chỉ Admin mới có quyền xóa cấu hình theo bank_code!', 'danger')
         return redirect(url_for('admin.manage_statement_configs'))
-    
+
     from models.bank_statement_config import BankStatementConfig
 
     company_id = session.get('company_id')
@@ -1129,3 +1294,212 @@ def delete_statement_configs_by_bank():
 
     # Redirect về admin statement configs
     return redirect(url_for('admin.manage_statement_configs'))
+
+@main_bp.route('/statement/upload-to-sftp/<int:log_id>', methods=['POST'])
+@login_required
+def upload_statement_to_sftp(log_id):
+    '''Upload MT940 file to SFTP server'''
+    from models.company import Company
+    from services.sftp_service import SFTPService
+    from datetime import datetime
+    from flask import jsonify
+
+    try:
+        log = StatementLog.query.get(log_id)
+        if not log:
+            return jsonify({'success': False, 'status': 'error', 'message': 'Không tìm thấy log'}), 404
+
+        # Permission: allow admin OR owner user OR same-company user
+        allowed = False
+        if session.get('role') == 'admin':
+            allowed = True
+        elif log.user_id and log.user_id == session.get('user_id'):
+            allowed = True
+        elif log.company_id and log.company_id == session.get('company_id'):
+            allowed = True
+
+        if not allowed:
+            return jsonify({'success': False, 'status': 'error', 'message': 'Bạn không có quyền upload log này'}), 403
+
+        if not log.mt940_filename:
+            return jsonify({'success': False, 'status': 'error', 'message': 'File MT940 chưa được tạo'}), 400
+
+        company = Company.query.get(log.company_id)
+        if not company:
+            return jsonify({'success': False, 'status': 'error', 'message': 'Không tìm thấy thông tin công ty'}), 404
+
+        if not company.sftp_host:
+            return jsonify({
+                'success': False,
+                'status': 'error',
+                'message': 'Công ty chưa cấu hình SFTP. Vui lòng liên hệ admin để cấu hình: SFTP Host, Port, Username, Password và Remote Path'
+            }), 400
+
+        # Validate all required SFTP fields
+        missing_fields = []
+        if not company.sftp_host:
+            missing_fields.append('SFTP Host')
+        if not company.sftp_port:
+            missing_fields.append('SFTP Port')
+        if not company.sftp_username:
+            missing_fields.append('SFTP Username')
+        if not company.sftp_password and not company.sftp_private_key_path:
+            missing_fields.append('SFTP Password hoặc Private Key')
+        if not company.sftp_remote_path:
+            missing_fields.append('SFTP Remote Path')
+
+        if missing_fields:
+            return jsonify({
+                'success': False,
+                'status': 'error',
+                'message': f'Thiếu thông tin SFTP: {", ".join(missing_fields)}. Vui lòng liên hệ admin để cấu hình.'
+            }), 400
+
+        upload_folder = current_app.config.get('UPLOAD_FOLDER', 'uploads')
+        mt940_path = os.path.join(upload_folder, log.mt940_filename)
+
+        if not os.path.exists(mt940_path):
+            return jsonify({'success': False, 'status': 'error', 'message': f'File MT940 không tồn tại'}), 404
+
+        current_app.logger.info(f'Uploading MT940 file: {mt940_path} for log_id={log_id}')
+
+        result = SFTPService.upload_file(
+            local_file_path=mt940_path,
+            company=company,
+            original_filename=log.mt940_filename
+        )
+
+        log.sftp_uploaded = result['success']
+        log.sftp_uploaded_at = datetime.now() if result['success'] else None
+        log.sftp_remote_path = result.get('remote_path')
+        log.sftp_upload_message = result['message']
+
+        db.session.commit()
+
+        return jsonify({
+            'success': result['success'],
+            'status': 'success' if result['success'] else 'error',
+            'message': result['message'],
+            'remote_path': result.get('remote_path'),
+            'uploaded_at': log.sftp_uploaded_at.strftime('%Y-%m-%d %H:%M:%S') if log.sftp_uploaded_at else None
+        }), 200 if result['success'] else 500
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f'Error uploading to SFTP: {e}', exc_info=True)
+        return jsonify({'success': False, 'status': 'error', 'message': f'Lỗi: {str(e)}'}), 500
+
+
+@main_bp.route('/statement/upload-to-sftp-bulk', methods=['POST'])
+@login_required
+def upload_statement_to_sftp_bulk():
+    """Bulk upload multiple MT940 files to SFTP server.
+    Input JSON: {"ids": [1,2,3]}
+    Response JSON summarizes per-id results.
+    Permission per item: admin OR owner user OR same-company user.
+    """
+    from models.company import Company
+    from services.sftp_service import SFTPService
+    from flask import jsonify
+    data = request.get_json(silent=True) or {}
+    ids = data.get('ids') or []
+    if not isinstance(ids, list) or not ids:
+        return jsonify({'success': False, 'status': 'error', 'message': 'Thiếu danh sách IDs', 'results': []}), 400
+
+    results = []
+    success_count = 0
+    failure_count = 0
+
+    for _id in ids:
+        try:
+            try:
+                log_id = int(_id)
+            except Exception:
+                results.append({'id': _id, 'success': False, 'message': 'ID không hợp lệ'})
+                failure_count += 1
+                continue
+
+            stmt = StatementLog.query.get(log_id)
+            if not stmt:
+                results.append({'id': log_id, 'success': False, 'message': 'Không tìm thấy log'})
+                failure_count += 1
+                continue
+
+            # permission per item
+            allowed = False
+            if session.get('role') == 'admin':
+                allowed = True
+            elif stmt.user_id and stmt.user_id == session.get('user_id'):
+                allowed = True
+            elif stmt.company_id and stmt.company_id == session.get('company_id'):
+                allowed = True
+            if not allowed:
+                results.append({'id': log_id, 'success': False, 'message': 'Không có quyền'})
+                failure_count += 1
+                continue
+
+            if not stmt.mt940_filename:
+                results.append({'id': log_id, 'success': False, 'message': 'File MT940 chưa được tạo'})
+                failure_count += 1
+                continue
+
+            company = Company.query.get(stmt.company_id)
+            if not company:
+                results.append({'id': log_id, 'success': False, 'message': 'Không tìm thấy thông tin công ty'})
+                failure_count += 1
+                continue
+
+            # Validate minimal SFTP fields; detailed validation happens inside upload service and route
+            if not company.sftp_host or not company.sftp_username or (not company.sftp_password and not company.sftp_private_key_path) or not company.sftp_remote_path:
+                results.append({'id': log_id, 'success': False, 'message': 'Thiếu cấu hình SFTP của công ty'})
+                failure_count += 1
+                continue
+
+            upload_folder = current_app.config.get('UPLOAD_FOLDER', 'uploads')
+            mt940_path = os.path.join(upload_folder, stmt.mt940_filename)
+            if not os.path.exists(mt940_path):
+                results.append({'id': log_id, 'success': False, 'message': 'File MT940 không tồn tại'})
+                failure_count += 1
+                continue
+
+            # perform upload
+            res = SFTPService.upload_file(
+                local_file_path=mt940_path,
+                company=company,
+                original_filename=stmt.mt940_filename
+            )
+
+            # update stmt status
+            stmt.sftp_uploaded = res.get('success', False)
+            stmt.sftp_uploaded_at = datetime.now() if stmt.sftp_uploaded else None
+            stmt.sftp_remote_path = res.get('remote_path')
+            stmt.sftp_upload_message = res.get('message')
+            try:
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                # still report failure for this item
+                results.append({'id': log_id, 'success': False, 'message': 'Lỗi cập nhật database sau khi upload'})
+                failure_count += 1
+                continue
+
+            if stmt.sftp_uploaded:
+                success_count += 1
+            else:
+                failure_count += 1
+            results.append({'id': log_id, 'success': stmt.sftp_uploaded, 'message': res.get('message'), 'remote_path': stmt.sftp_remote_path})
+
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f'Bulk SFTP error for id={_id}: {e}', exc_info=True)
+            results.append({'id': _id, 'success': False, 'message': f'Lỗi: {str(e)}'})
+            failure_count += 1
+
+    overall_success = success_count > 0 and failure_count == 0
+    return jsonify({
+        'success': overall_success,
+        'status': 'success' if overall_success else 'partial' if success_count > 0 else 'error',
+        'success_count': success_count,
+        'failure_count': failure_count,
+        'results': results
+    }), 200

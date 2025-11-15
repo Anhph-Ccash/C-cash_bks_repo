@@ -1,19 +1,19 @@
 {% extends "admin_base.html" %}
 
-{% block title %}Cấu hình Sổ phụ - Admin Panel{% endblock %}
+{% block title %}{{ _('Cấu hình Sổ phụ') }}{% endblock %}
 {% block nav_statement_configs %}active{% endblock %}
 
 {% block content %}
-<h3>📋 Cấu hình Sổ phụ Ngân hàng</h3>
+<h3>📋 {{ _('Cấu hình Sổ phụ') }}</h3>
 
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center bg-info text-white">
-        <span>Statement Configs (A-Z) - Tổng: {{ stmt_pagination.total }}</span>
+        <span>{{ _('Cấu hình Sổ phụ Ngân hàng (A-Z)') }} - {{ _('Tổng') }}: {{ stmt_pagination.total }}</span>
         {% if session.get('role') == 'admin' %}
         <div class="d-flex gap-2">
-            <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#addStatementConfigModal">➕ Thêm mới</button>
-            <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#bulkUploadModal">📤 Upload theo lô</button>
-            <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteByBankModal">🗑️ Xóa theo bank_code</button>
+            <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#addStatementConfigModal">➕ {{ _('Thêm mới') }}</button>
+            <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#bulkUploadModal">📤 {{ _('Tải lên theo lô') }}</button>
+            <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteByBankModal">🗑️ {{ _('Xóa theo bank_code') }}</button>
         </div>
         {% endif %}
     </div>
@@ -22,12 +22,12 @@
         <form method="GET" class="mb-3">
             <div class="row g-2 align-items-end">
                 <div class="col-md-3">
-                    <label for="bank_code_filter" class="form-label small">Mã Ngân hàng</label>
-                    <input type="text" id="bank_code_filter" name="bank_code" class="form-control form-control-sm" placeholder="VD: VCB, TCB" value="{{ request.args.get('bank_code', '') }}">
+                    <label for="bank_code_filter" class="form-label small">{{ _('Mã Ngân hàng') }}</label>
+                    <input type="text" id="bank_code_filter" name="bank_code" class="form-control form-control-sm" placeholder="{{ _('VD: VCB, TCB') }}" value="{{ request.args.get('bank_code', '') }}">
                 </div>
                 <div class="col-md-3">
-                    <button type="submit" class="btn btn-sm btn-primary">🔍 Lọc</button>
-                    <a href="{{ url_for('admin.manage_statement_configs') }}" class="btn btn-sm btn-secondary">🔄 Xóa lọc</a>
+                    <button type="submit" class="btn btn-sm btn-primary">🔍 {{ _('Lọc') }}</button>
+                    <a href="{{ url_for('admin.manage_statement_configs') }}" class="btn btn-sm btn-secondary">🔄 {{ _('Xóa lọc') }}</a>
                 </div>
             </div>
         </form>
@@ -37,21 +37,22 @@
             <table class="table table-sm table-hover mb-0">
                 <thead class="table-light sticky-top">
                     <tr>
-                        <th>Bank Code</th>
-                        <th>Từ khóa</th>
-                        <th>col_keyword</th>
-                        <th>col_value</th>
-                        <th>row_start</th>
-                        <th>row_end</th>
-                        <th>Identify Info</th>
-                        <th>Cell Format</th>
-                        <th>Ngày tạo</th>
-                        <th width="120">Thao tác</th>
+                        <th>{{ _('ID') }}</th>
+                        <th>{{ _('Mã ngân hàng') }}</th>
+                        <th>{{ _('Từ khóa') }}</th>
+                        <th>{{ _('Cột từ khóa') }}</th>
+                        <th>{{ _('Cột giá trị') }}</th>
+                        <th>{{ _('Dòng bắt đầu') }}</th>
+                        <th>{{ _('Dòng kết thúc') }}</th>
+                        <th>{{ _('Trường mặc định MT940') }}</th>
+                        <th>{{ _('Ngày tạo') }}</th>
+                        <th width="120">{{ _('Thao tác') }}</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for sc in statement_configs %}
                     <tr>
+                        <td><small class="text-muted">{{ sc.id }}</small></td>
                         <td><span class="badge bg-primary">{{ sc.bank_code }}</span></td>
                         <td>
                             {% for kw in sc.keywords %}
@@ -63,7 +64,6 @@
                         <td>{{ sc.row_start or '-' }}</td>
                         <td>{{ sc.row_end or '-' }}</td>
                         <td><span class="badge bg-warning text-dark">{{ sc.identify_info }}</span></td>
-                        <td>{{ sc.cell_format or '-' }}</td>
                         <td><small class="text-muted">{{ sc.created_at.strftime('%d/%m/%Y') if sc.created_at else '-' }}</small></td>
                         <td>
                             {% if session.get('role') == 'admin' %}
@@ -75,39 +75,38 @@
                                     data-col-value="{{ sc.col_value or '' }}"
                                     data-row-start="{{ sc.row_start or '' }}"
                                     data-row-end="{{ sc.row_end or '' }}"
-                                    data-identify-info="{{ sc.identify_info }}"
-                                    data-cell-format="{{ sc.cell_format or '' }}">✏️</button>
-                            <a href="{{ url_for('main.delete_statement_config', config_id=sc.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('Xóa cấu hình sổ phụ {{ sc.bank_code }}?')">🗑️</a>
+                                    data-identify-info="{{ sc.identify_info }}">✏️</button>
+                            <a href="{{ url_for('main.delete_statement_config', config_id=sc.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('{{ _('Xóa cấu hình sổ phụ %(bank_code)s?', bank_code=sc.bank_code) }}')">🗑️</a>
                             {% else %}
                             <span class="text-muted">-</span>
                             {% endif %}
                         </td>
                     </tr>
                     {% else %}
-                    <tr><td colspan="10" class="text-center text-muted">Chưa có cấu hình sổ phụ</td></tr>
+                    <tr><td colspan="10" class="text-center text-muted">{{ _('Chưa có cấu hình sổ phụ') }}</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
-    
+
     <!-- Statement Config Pagination -->
     {% if stmt_pagination.total > 0 %}
     <div class="card-footer d-flex justify-content-between align-items-center">
         <div>
-            Hiển thị {{ ((stmt_pagination.page - 1) * stmt_pagination.per_page) + 1 }} - {{ [stmt_pagination.page * stmt_pagination.per_page, stmt_pagination.total]|min }} / {{ stmt_pagination.total }} mục
+            {{ _('Hiển thị') }} {{ ((stmt_pagination.page - 1) * stmt_pagination.per_page) + 1 }} - {{ [stmt_pagination.page * stmt_pagination.per_page, stmt_pagination.total]|min }} / {{ stmt_pagination.total }} {{ _('mục') }}
         </div>
         <div class="btn-group">
             {% if stmt_pagination.has_prev %}
-                <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin.manage_statement_configs', page=stmt_pagination.page - 1, per_page=stmt_pagination.per_page, bank_code=request.args.get('bank_code', '')) }}">« Trước</a>
+                <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin.manage_statement_configs', page=stmt_pagination.page - 1, per_page=stmt_pagination.per_page, bank_code=request.args.get('bank_code', '')) }}">« {{ _('Trước') }}</a>
             {% else %}
-                <a class="btn btn-sm btn-outline-secondary disabled">« Trước</a>
+                <a class="btn btn-sm btn-outline-secondary disabled">« {{ _('Trước') }}</a>
             {% endif %}
-            <span class="btn btn-sm btn-outline-secondary disabled">Trang {{ stmt_pagination.page }}/{{ stmt_pagination.total_pages }}</span>
+            <span class="btn btn-sm btn-outline-secondary disabled">{{ _('Trang') }} {{ stmt_pagination.page }}/{{ stmt_pagination.total_pages }}</span>
             {% if stmt_pagination.has_next %}
-                <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin.manage_statement_configs', page=stmt_pagination.page + 1, per_page=stmt_pagination.per_page, bank_code=request.args.get('bank_code', '')) }}">Sau »</a>
+                <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin.manage_statement_configs', page=stmt_pagination.page + 1, per_page=stmt_pagination.per_page, bank_code=request.args.get('bank_code', '')) }}">{{ _('Sau') }} »</a>
             {% else %}
-                <a class="btn btn-sm btn-outline-secondary disabled">Sau »</a>
+                <a class="btn btn-sm btn-outline-secondary disabled">{{ _('Sau') }} »</a>
             {% endif %}
         </div>
     </div>
@@ -119,50 +118,46 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-info text-white">
-                <h5 class="modal-title">➕ Thêm Cấu hình Sổ phụ</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                <h5 class="modal-title">➕ {{ _('Thêm Cấu hình Sổ phụ') }}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="{{ _('Đóng') }}"></button>
             </div>
             <form action="{{ url_for('main.add_statement_config') }}" method="POST">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
                 <div class="modal-body">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Bank Code</label>
+                            <label class="form-label">{{ _('Mã ngân hàng') }}</label>
                             <input type="text" name="bank_code" class="form-control" placeholder="VD: VCB, TCB" title="Mã ngân hàng" required>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Từ khóa (phân cách bằng dấu phẩy)</label>
+                            <label class="form-label">{{ _('Từ khóa (phân cách bằng dấu phẩy)') }}</label>
                             <input type="text" name="keywords" class="form-control" placeholder="keyword1, keyword2" title="Từ khóa để nhận diện">
                         </div>
                         <div class="col-md-3 mb-3">
-                            <label class="form-label">col_keyword</label>
+                            <label class="form-label">{{ _('Cột từ khóa') }}</label>
                             <input type="text" name="col_keyword" class="form-control" placeholder="A, B, C..." title="Cột chứa keyword">
                         </div>
                         <div class="col-md-3 mb-3">
-                            <label class="form-label">col_value</label>
+                            <label class="form-label">{{ _('Cột giá trị') }}</label>
                             <input type="text" name="col_value" class="form-control" placeholder="B, C, D..." title="Cột chứa giá trị">
                         </div>
                         <div class="col-md-3 mb-3">
-                            <label class="form-label">row_start</label>
+                            <label class="form-label">{{ _('Dòng bắt đầu') }}</label>
                             <input type="number" name="row_start" class="form-control" placeholder="1" title="Dòng bắt đầu">
                         </div>
                         <div class="col-md-3 mb-3">
-                            <label class="form-label">row_end</label>
+                            <label class="form-label">{{ _('Dòng kết thúc') }}</label>
                             <input type="number" name="row_end" class="form-control" placeholder="100" title="Dòng kết thúc">
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Identify Info <small class="text-muted">(Tùy chọn)</small></label>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">{{ _('Trường mặc định MT940') }} <small class="text-muted">({{ _('Tùy chọn') }})</small></label>
                             <input type="text" name="identify_info" class="form-control" placeholder="VD: account_number, currency, narrative..." title="Loại thông tin định danh (không bắt buộc)">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Cell Format</label>
-                            <input type="text" name="cell_format" class="form-control" placeholder="text, number, date..." title="Định dạng của cell (chữ thường)">
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                    <button type="submit" class="btn btn-info text-white">Thêm</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Đóng') }}</button>
+                    <button type="submit" class="btn btn-info text-white">{{ _('Thêm') }}</button>
                 </div>
             </form>
         </div>
@@ -174,50 +169,46 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-warning">
-                <h5 class="modal-title">✏️ Sửa Cấu hình Sổ phụ</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                <h5 class="modal-title">✏️ {{ _('Sửa Cấu hình Sổ phụ') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ _('Đóng') }}"></button>
             </div>
             <form id="editStatementConfigForm" method="POST">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
                 <div class="modal-body">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Bank Code</label>
+                            <label class="form-label">{{ _('Mã ngân hàng') }}</label>
                             <input type="text" id="edit_stmt_bank_code" name="bank_code" class="form-control" placeholder="VD: VCB, TCB" title="Mã ngân hàng" required>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Từ khóa (phân cách bằng dấu phẩy)</label>
+                            <label class="form-label">{{ _('Từ khóa (phân cách bằng dấu phẩy)') }}</label>
                             <input type="text" id="edit_stmt_keywords" name="keywords" class="form-control" placeholder="keyword1, keyword2" title="Từ khóa để nhận diện">
                         </div>
                         <div class="col-md-3 mb-3">
-                            <label class="form-label">col_keyword</label>
+                            <label class="form-label">{{ _('Cột từ khóa') }}</label>
                             <input type="text" id="edit_stmt_col_keyword" name="col_keyword" class="form-control" placeholder="A, B, C..." title="Cột chứa keyword">
                         </div>
                         <div class="col-md-3 mb-3">
-                            <label class="form-label">col_value</label>
+                            <label class="form-label">{{ _('Cột giá trị') }}</label>
                             <input type="text" id="edit_stmt_col_value" name="col_value" class="form-control" placeholder="B, C, D..." title="Cột chứa giá trị">
                         </div>
                         <div class="col-md-3 mb-3">
-                            <label class="form-label">row_start</label>
+                            <label class="form-label">{{ _('Dòng bắt đầu') }}</label>
                             <input type="number" id="edit_stmt_row_start" name="row_start" class="form-control" placeholder="1" title="Dòng bắt đầu">
                         </div>
                         <div class="col-md-3 mb-3">
-                            <label class="form-label">row_end</label>
+                            <label class="form-label">{{ _('Dòng kết thúc') }}</label>
                             <input type="number" id="edit_stmt_row_end" name="row_end" class="form-control" placeholder="100" title="Dòng kết thúc">
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Identify Info <small class="text-muted">(Tùy chọn)</small></label>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">{{ _('Trường mặc định MT940') }} <small class="text-muted">({{ _('Bắt buộc') }})</small></label>
                             <input type="text" id="edit_stmt_identify_info" name="identify_info" class="form-control" placeholder="VD: account_number, currency, narrative..." title="Loại thông tin định danh (không bắt buộc)">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Cell Format</label>
-                            <input type="text" id="edit_stmt_cell_format" name="cell_format" class="form-control" placeholder="text, number, date..." title="Định dạng của cell (chữ thường)">
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                    <button type="submit" class="btn btn-warning">Cập nhật</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Đóng') }}</button>
+                    <button type="submit" class="btn btn-warning">{{ _('Cập nhật') }}</button>
                 </div>
             </form>
         </div>
@@ -231,22 +222,22 @@
             <form action="{{ url_for('main.delete_statement_configs_by_bank') }}" method="POST">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
                 <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title">🗑️ Xóa cấu hình theo Bank Code</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                    <h5 class="modal-title">🗑️ {{ _('Xóa cấu hình theo Bank Code') }}</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="{{ _('Đóng') }}"></button>
                 </div>
                 <div class="modal-body">
                     <div class="alert alert-warning">
-                        <strong>⚠️ Cảnh báo:</strong> Thao tác này sẽ xóa <strong>TẤT CẢ</strong> các cấu hình sổ phụ của ngân hàng được chọn!
+                        <strong>⚠️ {{ _('Cảnh báo') }}:</strong> {{ _('Thao tác này sẽ xóa') }} <strong>{{ _('TẤT CẢ') }}</strong> {{ _('các cấu hình sổ phụ của ngân hàng được chọn!') }}
                     </div>
                     <div class="mb-3">
-                        <label for="delete_bank_code" class="form-label">Mã Ngân hàng <span class="text-danger">*</span></label>
+                        <label for="delete_bank_code" class="form-label">{{ _('Mã Ngân hàng') }} <span class="text-danger">*</span></label>
                         <input type="text" id="delete_bank_code" name="bank_code" class="form-control" placeholder="VD: VCB, TCB" required>
-                        <small class="form-text text-muted">Nhập chính xác mã ngân hàng cần xóa</small>
+                        <small class="form-text text-muted">{{ _('Nhập chính xác mã ngân hàng cần xóa') }}</small>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                    <button type="submit" class="btn btn-danger" onclick="return confirm('Bạn có chắc chắn muốn xóa TẤT CẢ cấu hình của ngân hàng này?')">🗑️ Xóa</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Hủy') }}</button>
+                    <button type="submit" class="btn btn-danger" onclick="return confirm('{{ _('Bạn có chắc chắn muốn xóa TẤT CẢ cấu hình của ngân hàng này?') }}')">🗑️ {{ _('Xóa') }}</button>
                 </div>
             </form>
         </div>
@@ -261,34 +252,33 @@
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
                 <input type="hidden" name="bank_code" value="{{ request.args.get('bank_code', '') }}" />
                 <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title">📤 Upload cấu hình sổ phụ theo lô</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                    <h5 class="modal-title">📤 {{ _('Upload cấu hình sổ phụ theo lô') }}</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="{{ _('Đóng') }}"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="bulk_file" class="form-label">File Excel/CSV <span class="text-danger">*</span></label>
+                        <label for="bulk_file" class="form-label">{{ _('File Excel/CSV') }} <span class="text-danger">*</span></label>
                         <input type="file" id="bulk_file" name="file" class="form-control" accept=".xlsx,.xls,.csv" required>
                         <small class="form-text text-muted">
-                            <strong>Ví dụ:</strong> Upload 11 dòng cho VCB (account_number, currency, opening_balance, closing_balance, narrative, transaction_date, debit, credit, flow_code, transaction_fee, transaction_vat)
+                            <strong>{{ _('Ví dụ:') }}</strong> {{ _('Upload 11 dòng cho VCB (account_number, currency, opening_balance, closing_balance, narrative, transaction_date, debit, credit, flow_code, transaction_fee, transaction_vat)') }}
                             <br>
-                            <a href="{{ url_for('main.download_statement_config_template') }}" class="text-decoration-none fw-bold">📥 Tải file mẫu với đầy đủ 11 trường</a>
+                            <a href="{{ url_for('main.download_statement_config_template') }}" class="text-decoration-none fw-bold">📥 {{ _('Tải file mẫu với đầy đủ 11 trường') }}</a>
                         </small>
                     </div>
                     <div class="alert alert-info mb-0">
-                        <strong>📝 Định dạng file:</strong><br>
-                        - <strong>bank_code</strong>: Mã ngân hàng (VD: VCB, TCB) - có thể lặp lại cho nhiều trường<br>
-                        - <strong>keywords</strong>: Các từ khóa ngăn cách bằng dấu phẩy<br>
-                        - <strong>identify_info</strong>: (Tùy chọn) Loại trường để dễ quản lý (account_number, currency, opening_balance...)<br>
-                        - <strong>col_keyword</strong>: Cột keyword (VD: A, B)<br>
-                        - <strong>col_value</strong>: Cột giá trị (VD: B, C)<br>
-                        - <strong>row_start/row_end</strong>: Phạm vi dòng (số)<br>
-                        - <strong>cell_format</strong>: Định dạng cell (text, number, date - chữ thường)<br><br>
-                        <small class="text-muted">Mỗi dòng = 1 cấu hình cho 1 trường. Có thể có nhiều dòng cho cùng 1 bank_code.</small>
+                        <strong>📝 {{ _('Định dạng file:') }}</strong><br>
+                        - <strong>{{ _('Mã ngân hàng') }}</strong>: {{ _('Mã ngân hàng (VD: VCB, TCB) - có thể lặp lại cho nhiều trường') }}<br>
+                        - <strong>{{ _('Từ khóa') }}</strong>: {{ _('Các từ khóa ngăn cách bằng dấu phẩy') }}<br>
+                        - <strong>{{ _('Trường mặc định MT940') }}</strong>: {{ _('(Tùy chọn) Loại trường để dễ quản lý (account_number, currency, opening_balance...)') }}<br>
+                        - <strong>{{ _('Cột từ khóa') }}</strong>: {{ _('Cột keyword (VD: A, B)') }}<br>
+                        - <strong>{{ _('Cột giá trị') }}</strong>: {{ _('Cột giá trị (VD: B, C)') }}<br>
+                        - <strong>{{ _('Dòng bắt đầu/Dòng kết thúc') }}</strong>: {{ _('Phạm vi dòng (số)') }}<br>
+                        <small class="text-muted">{{ _('Mỗi dòng = 1 cấu hình cho 1 trường. Có thể có nhiều dòng cho cùng 1 bank_code.') }}</small>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                    <button type="submit" class="btn btn-success">📤 Upload</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Hủy') }}</button>
+                    <button type="submit" class="btn btn-success">📤 {{ _('Tải lên') }}</button>
                 </div>
             </form>
         </div>
@@ -310,13 +300,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const rowStart = this.dataset.rowStart;
             const rowEnd = this.dataset.rowEnd;
             const identifyInfo = this.dataset.identifyInfo;
-            const cellFormat = this.dataset.cellFormat;
-            
+
             console.log('Edit Statement Config:', {
-                configId, bankCode, keywords, colKeyword, colValue, 
-                rowStart, rowEnd, identifyInfo, cellFormat
+                configId, bankCode, keywords, colKeyword, colValue,
+                rowStart, rowEnd, identifyInfo
             });
-            
+
             // Populate edit modal
             document.getElementById('edit_stmt_bank_code').value = bankCode || '';
             document.getElementById('edit_stmt_keywords').value = keywords || '';
@@ -324,8 +313,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('edit_stmt_col_value').value = colValue || '';
             document.getElementById('edit_stmt_row_start').value = rowStart || '';
             document.getElementById('edit_stmt_row_end').value = rowEnd || '';
-            document.getElementById('edit_stmt_cell_format').value = cellFormat || '';
-            
+
             // Set identify_info select - handle empty/undefined
             const selectIdentifyInfo = document.getElementById('edit_stmt_identify_info');
             if (identifyInfo && identifyInfo.trim()) {
@@ -335,13 +323,64 @@ document.addEventListener('DOMContentLoaded', function() {
                 selectIdentifyInfo.selectedIndex = 0; // Default to first option
                 console.warn('identify_info is empty, using first option');
             }
-            
+
             // Set form action
             document.getElementById('editStatementConfigForm').action = `/user/statement-config/update/${configId}`;
-            
+
             // Show modal
             new bootstrap.Modal(document.getElementById('editStatementConfigModal')).show();
         });
+    });
+});
+
+// Save and restore bank_code filter in localStorage
+document.addEventListener('DOMContentLoaded', function() {
+    const bankCodeInput = document.getElementById('bank_code_filter');
+    const filterForm = bankCodeInput.closest('form');
+    const clearFilterBtn = document.querySelector('a[href="{{ url_for("admin.manage_statement_configs") }}"]');
+
+    // Get current bank_code from URL parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlBankCode = urlParams.get('bank_code');
+
+    // Restore saved bank_code on page load and redirect if needed
+    if (!urlBankCode) {
+        // No URL parameter, check localStorage
+        const savedBankCode = localStorage.getItem('statement_config_bank_code_filter');
+        if (savedBankCode) {
+            // Redirect to URL with saved filter (no page reload)
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.set('bank_code', savedBankCode);
+            window.location.href = newUrl.toString();
+            return; // Stop execution
+        }
+    } else {
+        // URL has bank_code parameter, save it to localStorage
+        localStorage.setItem('statement_config_bank_code_filter', urlBankCode);
+    }
+
+    // Save bank_code to localStorage when form is submitted
+    filterForm.addEventListener('submit', function() {
+        const bankCode = bankCodeInput.value.trim();
+        if (bankCode) {
+            localStorage.setItem('statement_config_bank_code_filter', bankCode);
+        } else {
+            localStorage.removeItem('statement_config_bank_code_filter');
+        }
+    });
+
+    // Clear localStorage when "Xóa lọc" button is clicked
+    clearFilterBtn.addEventListener('click', function() {
+        localStorage.removeItem('statement_config_bank_code_filter');
+        bankCodeInput.value = '';
+    });
+
+    // Also save on input change (for better UX)
+    bankCodeInput.addEventListener('input', function() {
+        const bankCode = this.value.trim();
+        if (bankCode) {
+            localStorage.setItem('statement_config_bank_code_filter', bankCode);
+        }
     });
 });
 </script>

@@ -12,10 +12,10 @@ class BankConfig(db.Model):
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
+
     # Relationships
     company = db.relationship('Company', back_populates='bank_configs')
-    
+
     __table_args__ = (
         db.UniqueConstraint('company_id', 'bank_code', name='unique_company_bank'),
     )

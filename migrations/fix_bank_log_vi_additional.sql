@@ -21,25 +21,25 @@ SET original_filename = replace(
         substring(original_filename from '^[^_]+'),
         convert_from(decode('4de1baab752073e1bb95207068e1bba5','hex'),'UTF8')
     )
-WHERE id BETWEEN 61 AND 114 
+WHERE id BETWEEN 61 AND 114
   AND original_filename ~ '^M[^a-zA-Z]';
 
 -- Simpler approach: directly set known patterns
 UPDATE public.bank_log
 SET original_filename = convert_from(decode('4de1baab752073e1bb95207068e1bba5','hex'),'UTF8') || ' _TPB.xlsx'
-WHERE original_filename LIKE '%_TPB.xlsx' 
+WHERE original_filename LIKE '%_TPB.xlsx'
   AND original_filename !~ '^Mau'
   AND encode(convert_to(original_filename,'UTF8'),'hex') LIKE '4dc383%';
 
 UPDATE public.bank_log
 SET original_filename = convert_from(decode('4de1baab752073e1bb95207068e1bba5','hex'),'UTF8') || ' _EXB.xlsx'
-WHERE original_filename LIKE '%_EXB.xlsx' 
+WHERE original_filename LIKE '%_EXB.xlsx'
   AND original_filename !~ '^Mau'
   AND encode(convert_to(original_filename,'UTF8'),'hex') LIKE '4dc383%';
 
 UPDATE public.bank_log
 SET original_filename = convert_from(decode('4de1baab752073e1bb95207068e1bba5','hex'),'UTF8') || ' _TCB.xlsx'
-WHERE original_filename LIKE '%_TCB.xlsx' 
+WHERE original_filename LIKE '%_TCB.xlsx'
   AND original_filename !~ '^Mau'
   AND encode(convert_to(original_filename,'UTF8'),'hex') LIKE '4dc383%';
 
@@ -56,8 +56,8 @@ WHERE filename LIKE '%Sß╗ò phß╗Ñ%';
 COMMIT;
 
 -- Verify
-SELECT id, original_filename, 
+SELECT id, original_filename,
        encode(convert_to(original_filename,'UTF8'),'hex') AS hex
-FROM bank_log 
+FROM bank_log
 WHERE id IN (56, 57, 60, 61, 62)
 ORDER BY id;

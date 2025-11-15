@@ -1,0 +1,1297 @@
+# English translations for PROJECT.
+# Copyright (C) 2025 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2025-11-15 01:34+0700\n"
+"PO-Revision-Date: 2025-11-15 02:00+0700\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: en\n"
+"Language-Team: en <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: templates/admin.html:6
+msgid "Trang quản trị"
+msgstr "Admin Page"
+
+#: templates/admin.html:13
+msgid "Quản trị người dùng"
+msgstr "User Management"
+
+#: templates/admin.html:20 templates/admin.html:106
+msgid "Quản lý Users"
+msgstr "Manage Users"
+
+#: templates/admin.html:23
+msgid "Quản lý Companies"
+msgstr "Manage Companies"
+
+#: templates/admin.html:26 templates/admin.html:203
+#: templates/admin_bank_configs.html:7
+msgid "Cấu hình Ngân hàng"
+msgstr "Bank Configuration"
+
+#: templates/admin.html:29 templates/admin_statement_configs.html:7
+msgid "Cấu hình Sổ phụ"
+msgstr "Bank Statement Configuration"
+
+#: templates/admin.html:32 templates/admin_upload.html:3
+#: templates/admin_upload.html:46
+msgid "Tải sổ phụ lên"
+msgstr "Upload Bank Statement"
+
+#: templates/admin.html:35
+msgid "Xem Logs"
+msgstr "View Logs"
+
+#: templates/admin.html:41 templates/admin_base.html:61
+#: templates/base_layout.html:76
+msgid "Chọn công ty"
+msgstr "Select Company"
+
+#: templates/admin.html:50
+msgid "Đang chọn"
+msgstr "Selected"
+
+#: templates/admin.html:59
+msgid "Xin chào"
+msgstr "Hello"
+
+#: templates/admin.html:61 templates/admin_base.html:82
+#: templates/base_layout.html:98
+msgid "Đăng xuất"
+msgstr "Logout"
+
+#: templates/admin.html:70
+msgid "Công ty đang quản lý:"
+msgstr "Managing Company:"
+
+#: templates/admin.html:74
+msgid "Chưa chọn công ty"
+msgstr "No Company Selected"
+
+#: templates/admin.html:79
+msgid "Đổi công ty"
+msgstr "Change Company"
+
+#: templates/admin.html:89
+msgid "Danh sách công ty:"
+msgstr "Company List:"
+
+#: templates/admin.html:135 templates/admin_bank_configs.html:144
+#: templates/admin_companies.html:140
+#: templates/admin_statement_configs.html:160 templates/admin_users.html:23
+msgid "Thêm"
+msgstr "Add"
+
+#: templates/admin.html:168
+msgid "Xóa user này?"
+msgstr "Delete this user?"
+
+#: templates/admin.html:181 templates/admin.html:267
+#: templates/admin_bank_configs.html:99
+#: templates/admin_statement_configs.html:97 templates/admin_users.html:78
+#: templates/logs.html:138
+msgid "Hiển thị"
+msgstr "Show"
+
+#: templates/admin.html:181 templates/admin_users.html:78
+msgid "users"
+msgstr "users"
+
+#: templates/admin.html:184 templates/admin.html:275
+#: templates/admin_bank_configs.html:107
+#: templates/admin_statement_configs.html:105 templates/admin_users.html:86
+#: templates/logs.html:146 templates/user_logs.html:134
+msgid "Trang"
+msgstr "Page"
+
+#: templates/admin.html:188 templates/admin.html:271
+#: templates/admin_bank_configs.html:103 templates/admin_bank_configs.html:105
+#: templates/admin_statement_configs.html:101
+#: templates/admin_statement_configs.html:103 templates/admin_users.html:82
+#: templates/admin_users.html:84 templates/logs.html:142
+#: templates/logs.html:144 templates/user_logs.html:138
+#: templates/user_logs.html:140
+msgid "Trước"
+msgstr "Previous"
+
+#: templates/admin.html:193 templates/admin.html:277
+#: templates/admin_bank_configs.html:109 templates/admin_bank_configs.html:111
+#: templates/admin_statement_configs.html:107
+#: templates/admin_statement_configs.html:109 templates/admin_users.html:88
+#: templates/admin_users.html:90 templates/logs.html:148
+#: templates/logs.html:150 templates/user_logs.html:143
+#: templates/user_logs.html:145
+msgid "Sau"
+msgstr "Next"
+
+#: templates/admin.html:207 templates/admin_bank_configs.html:42
+msgid "Cấu hình Ngân hàng (A-Z)"
+msgstr "Bank Configuration (A-Z)"
+
+#: templates/admin.html:207 templates/admin_bank_configs.html:42
+#: templates/admin_companies.html:11 templates/admin_statement_configs.html:11
+#: templates/admin_users.html:22
+msgid "Tổng"
+msgstr "Total"
+
+#: templates/admin.html:209 templates/admin_bank_configs.html:44
+#: templates/admin_companies.html:12 templates/admin_statement_configs.html:14
+msgid "Thêm mới"
+msgstr "Add New"
+
+#: templates/admin.html:210 templates/admin_users.html:60
+msgid "Sửa"
+msgstr "Edit"
+
+#: templates/admin.html:218
+msgid "Chọn tất cả"
+msgstr "Select All"
+
+#: templates/admin.html:219
+msgid "Mã NH"
+msgstr "Bank Code"
+
+#: templates/admin.html:220 templates/admin_bank_configs.html:53
+#: templates/admin_bank_configs.html:134 templates/admin_bank_configs.html:167
+msgid "Tên Ngân hàng"
+msgstr "Bank Name"
+
+#: templates/admin.html:221 templates/admin_bank_configs.html:54
+#: templates/admin_statement_configs.html:42
+#: templates/admin_statement_configs.html:271
+msgid "Từ khóa"
+msgstr "Keywords"
+
+#: templates/admin.html:222 templates/admin_bank_configs.html:55
+#: templates/admin_companies.html:24 templates/admin_upload.html:84
+#: templates/logs.html:26 templates/logs.html:69 templates/logs.html:174
+#: templates/statement_logs.html:28 templates/statement_logs.html:59
+#: templates/user_logs.html:22 templates/user_logs.html:76
+#: templates/user_upload.html:51 templates/users.html:49
+msgid "Trạng thái"
+msgstr "Status"
+
+#: templates/admin.html:223 templates/admin_bank_configs.html:56
+#: templates/admin_companies.html:209
+#: templates/admin_statement_configs.html:211 templates/admin_users.html:189
+msgid "Cập nhật"
+msgstr "Update"
+
+#: templates/admin.html:224 templates/admin_bank_configs.html:57
+#: templates/admin_companies.html:25 templates/admin_statement_configs.html:49
+#: templates/admin_upload.html:225 templates/user_upload.html:52
+#: templates/user_upload.html:122 templates/users.html:50
+#: templates/users.html:123
+msgid "Thao tác"
+msgstr "Actions"
+
+#: templates/admin.html:230
+#, python-format
+msgid "Chọn cấu hình %(code)s"
+msgstr "Select config %(code)s"
+
+#: templates/admin.html:240 templates/admin_bank_configs.html:72
+#: templates/admin_companies.html:44
+msgid "Active"
+msgstr "Active"
+
+#: templates/admin.html:242 templates/admin_bank_configs.html:74
+#: templates/admin_companies.html:46
+msgid "Inactive"
+msgstr "Inactive"
+
+#: templates/admin.html:251 templates/admin_bank_configs.html:83
+msgid "Sửa nhanh"
+msgstr "Quick Edit"
+
+#: templates/admin.html:252 templates/admin_bank_configs.html:84
+#, python-format
+msgid "Xóa cấu hình %(bank_code)s?"
+msgstr "Delete config %(bank_code)s?"
+
+#: templates/admin.html:256 templates/admin_bank_configs.html:88
+msgid "Chưa có cấu hình ngân hàng"
+msgstr "No bank configuration yet"
+
+#: templates/admin.html:267 templates/admin_bank_configs.html:99
+#: templates/admin_statement_configs.html:97 templates/logs.html:138
+msgid "mục"
+msgstr "items"
+
+#: templates/admin.html:289
+msgid "Cấu hình Sổ phụ Ngân hàng"
+msgstr "Bank Statement Configuration"
+
+#: templates/admin_bank_configs.html:3
+msgid "Cấu hình Ngân hàng - Admin Panel"
+msgstr "Bank Configuration - Admin Panel"
+
+#: templates/admin_bank_configs.html:15 templates/admin_bank_configs.html:124
+#: templates/admin_bank_configs.html:143 templates/admin_bank_configs.html:157
+#: templates/admin_companies.html:84 templates/admin_companies.html:139
+#: templates/admin_companies.html:153 templates/admin_companies.html:208
+#: templates/admin_statement_configs.html:122
+#: templates/admin_statement_configs.html:159
+#: templates/admin_statement_configs.html:173
+#: templates/admin_statement_configs.html:210
+#: templates/admin_statement_configs.html:226
+#: templates/admin_statement_configs.html:256 templates/admin_users.html:14
+#: templates/admin_users.html:105 templates/admin_users.html:154
+#: templates/logs.html:163
+msgid "Đóng"
+msgstr "Close"
+
+#: templates/admin_bank_configs.html:26
+msgid "Tìm kiếm theo mã ngân hàng..."
+msgstr "Search by bank code..."
+
+#: templates/admin_bank_configs.html:29
+msgid "Tìm kiếm"
+msgstr "Search"
+
+#: templates/admin_bank_configs.html:33
+msgid "Xóa bộ lọc"
+msgstr "Clear Filter"
+
+#: templates/admin_bank_configs.html:52 templates/admin_bank_configs.html:130
+#: templates/admin_bank_configs.html:163
+#: templates/admin_statement_configs.html:25
+#: templates/admin_statement_configs.html:233 templates/admin_upload.html:82
+#: templates/admin_upload.html:220 templates/logs.html:21
+#: templates/logs.html:68 templates/logs.html:171
+msgid "Mã Ngân hàng"
+msgstr "Bank Code"
+
+#: templates/admin_bank_configs.html:123
+msgid "Thêm Cấu hình Ngân hàng"
+msgstr "Add Bank Configuration"
+
+#: templates/admin_bank_configs.html:138 templates/admin_bank_configs.html:171
+#: templates/admin_statement_configs.html:133
+#: templates/admin_statement_configs.html:184
+msgid "Từ khóa (phân cách bằng dấu phẩy)"
+msgstr "Keywords (comma-separated)"
+
+#: templates/admin_bank_configs.html:156
+msgid "Sửa Cấu hình Ngân hàng"
+msgstr "Edit Bank Configuration"
+
+#: templates/admin_base.html:6 templates/admin_base.html:13
+#: templates/base_layout.html:14
+msgid "Quản lý - Admin Panel"
+msgstr "Quản lý - Admin Panel"
+
+#: templates/admin_base.html:20 templates/admin_users.html:123
+#: templates/admin_users.html:173 templates/base_layout.html:23
+msgid "Người dùng"
+msgstr "Users"
+
+#: templates/admin_base.html:23 templates/admin_users.html:128
+#: templates/admin_users.html:178 templates/base_layout.html:26
+msgid "Công ty"
+msgstr "Company"
+
+#: templates/admin_base.html:26 templates/admin_upload.html:178
+#: templates/base_layout.html:29 templates/statement_detail.html:43
+msgid "Ngân hàng"
+msgstr "Bank"
+
+#: templates/admin_base.html:29 templates/base_layout.html:32
+msgid "Sổ phụ"
+msgstr "Bank Statement"
+
+#: templates/admin_base.html:32 templates/admin_statement_configs.html:281
+#: templates/admin_upload.html:56 templates/base_layout.html:35
+#: templates/base_layout.html:46 templates/user_upload.html:23
+#: templates/users.html:21
+msgid "Tải lên"
+msgstr "Upload"
+
+#: templates/admin_base.html:35 templates/base_layout.html:38
+#: templates/base_layout.html:49
+msgid "Nhật ký"
+msgstr "Logs"
+
+#: templates/admin_base.html:42 templates/base_layout.html:57
+#: templates/login.html:16
+msgid "Chọn ngôn ngữ"
+msgstr "Select Language"
+
+#: templates/admin_companies.html:3
+msgid "Quản lý Công ty - Admin Panel"
+msgstr "Company Management - Admin Panel"
+
+#: templates/admin_companies.html:7
+msgid "Danh sách Công ty"
+msgstr "Company List"
+
+#: templates/admin_companies.html:19 templates/admin_statement_configs.html:40
+#: templates/admin_users.html:30
+msgid "ID"
+msgstr "ID"
+
+#: templates/admin_companies.html:20 templates/admin_companies.html:90
+#: templates/admin_companies.html:91 templates/admin_companies.html:159
+#: templates/admin_companies.html:160 templates/admin_users.html:34
+msgid "Tên công ty"
+msgstr "Company Name"
+
+#: templates/admin_companies.html:21 templates/admin_companies.html:94
+#: templates/admin_companies.html:95 templates/admin_companies.html:163
+#: templates/admin_companies.html:164
+msgid "Địa chỉ"
+msgstr "Address"
+
+#: templates/admin_companies.html:22 templates/admin_companies.html:98
+#: templates/admin_companies.html:99 templates/admin_companies.html:167
+#: templates/admin_companies.html:168
+msgid "Mã số thuế"
+msgstr "Tax Code"
+
+#: templates/admin_companies.html:23 templates/user_upload.html:120
+#: templates/users.html:121
+msgid "SFTP"
+msgstr "SFTP"
+
+#: templates/admin_companies.html:37
+msgid "Đã cấu hình"
+msgstr "Configured"
+
+#: templates/admin_companies.html:66
+#, python-format
+msgid "Xóa công ty %(name)s?"
+msgstr "Delete company %(name)s?"
+
+#: templates/admin_companies.html:70
+msgid "Chưa có công ty nào"
+msgstr "No companies yet"
+
+#: templates/admin_companies.html:83
+msgid "Thêm Công ty mới"
+msgstr "Add New Company"
+
+#: templates/admin_companies.html:95 templates/admin_companies.html:164
+msgid "Địa chỉ công ty"
+msgstr "Company Address"
+
+#: templates/admin_companies.html:99 templates/admin_companies.html:168
+msgid "MST"
+msgstr "Tax ID"
+
+#: templates/admin_companies.html:103 templates/admin_companies.html:172
+msgid "Thông tin SFTP (Tùy chọn)"
+msgstr "SFTP Info (Optional)"
+
+#: templates/admin_companies.html:107 templates/admin_companies.html:176
+msgid "SFTP Host"
+msgstr "SFTP Host"
+
+#: templates/admin_companies.html:111 templates/admin_companies.html:180
+msgid "Port"
+msgstr "Port"
+
+#: templates/admin_companies.html:117 templates/admin_companies.html:186
+msgid "Username"
+msgstr "Username"
+
+#: templates/admin_companies.html:118 templates/admin_companies.html:187
+msgid "SFTP username"
+msgstr "SFTP username"
+
+#: templates/admin_companies.html:122 templates/admin_companies.html:191
+msgid "Password"
+msgstr "Password"
+
+#: templates/admin_companies.html:123 templates/admin_companies.html:192
+msgid "SFTP password"
+msgstr "SFTP password"
+
+#: templates/admin_companies.html:124
+msgid "Để trống nếu sử dụng SSH key"
+msgstr "Leave blank if using SSH key"
+
+#: templates/admin_companies.html:128 templates/admin_companies.html:197
+msgid "Remote Path"
+msgstr "Remote Path"
+
+#: templates/admin_companies.html:133 templates/admin_companies.html:202
+msgid "Private Key Path"
+msgstr "Private Key Path"
+
+#: templates/admin_companies.html:135 templates/admin_companies.html:204
+msgid "Đường dẫn tới SSH private key (nếu có)"
+msgstr "Path to SSH private key (if any)"
+
+#: templates/admin_companies.html:152
+msgid "Sửa Công ty"
+msgstr "Edit Company"
+
+#: templates/admin_companies.html:193
+msgid "Để trống nếu không đổi hoặc sử dụng SSH key"
+msgstr "Leave blank if not changing or using SSH key"
+
+#: templates/admin_statement_configs.html:3
+msgid "Cấu hình Sổ phụ - Admin Panel"
+msgstr "Bank Statement Configuration - Admin Panel"
+
+#: templates/admin_statement_configs.html:11
+msgid "Cấu hình Sổ phụ Ngân hàng (A-Z)"
+msgstr "Bank Statement Configuration (A-Z)"
+
+#: templates/admin_statement_configs.html:15
+msgid "Tải lên theo lô"
+msgstr "Bulk Upload"
+
+#: templates/admin_statement_configs.html:16
+msgid "Xóa theo bank_code"
+msgstr "Delete by bank_code"
+
+#: templates/admin_statement_configs.html:26
+msgid "VD: VCB, TCB"
+msgstr "e.g.: VCB, TCB"
+
+#: templates/admin_statement_configs.html:29 templates/admin_upload.html:207
+#: templates/logs.html:44 templates/statement_logs.html:45
+#: templates/user_logs.html:49
+msgid "Lọc"
+msgstr "Filter"
+
+#: templates/admin_statement_configs.html:30 templates/admin_upload.html:208
+#: templates/statement_logs.html:46
+msgid "Xóa lọc"
+msgstr "Clear Filter"
+
+#: templates/admin_statement_configs.html:41
+#: templates/admin_statement_configs.html:129
+#: templates/admin_statement_configs.html:180
+#: templates/admin_statement_configs.html:270 templates/logs.html:23
+#: templates/statement_logs.html:19 templates/statement_logs.html:57
+#: templates/user_logs.html:17 templates/user_logs.html:19
+#: templates/user_logs.html:75 templates/user_upload.html:49
+#: templates/user_upload.html:117 templates/users.html:47
+#: templates/users.html:118
+msgid "Mã ngân hàng"
+msgstr "Bank Code"
+
+#: templates/admin_statement_configs.html:43
+#: templates/admin_statement_configs.html:137
+#: templates/admin_statement_configs.html:188
+#: templates/admin_statement_configs.html:273
+msgid "Cột từ khóa"
+msgstr "Keyword Column"
+
+#: templates/admin_statement_configs.html:44
+#: templates/admin_statement_configs.html:141
+#: templates/admin_statement_configs.html:192
+#: templates/admin_statement_configs.html:274
+msgid "Cột giá trị"
+msgstr "Value Column"
+
+#: templates/admin_statement_configs.html:45
+#: templates/admin_statement_configs.html:145
+#: templates/admin_statement_configs.html:196
+msgid "Dòng bắt đầu"
+msgstr "Start Row"
+
+#: templates/admin_statement_configs.html:46
+#: templates/admin_statement_configs.html:149
+#: templates/admin_statement_configs.html:200
+msgid "Dòng kết thúc"
+msgstr "End Row"
+
+#: templates/admin_statement_configs.html:47
+#: templates/admin_statement_configs.html:153
+#: templates/admin_statement_configs.html:204
+#: templates/admin_statement_configs.html:272
+msgid "Trường mặc định MT940"
+msgstr "MT940 Default Field"
+
+#: templates/admin_statement_configs.html:48
+msgid "Ngày tạo"
+msgstr "Created Date"
+
+#: templates/admin_statement_configs.html:79
+#, python-format
+msgid "Xóa cấu hình sổ phụ %(bank_code)s?"
+msgstr "Delete bank statement config %(bank_code)s?"
+
+#: templates/admin_statement_configs.html:86
+msgid "Chưa có cấu hình sổ phụ"
+msgstr "No bank statement configuration yet"
+
+#: templates/admin_statement_configs.html:121
+msgid "Thêm Cấu hình Sổ phụ"
+msgstr "Add Bank Statement Configuration"
+
+#: templates/admin_statement_configs.html:153
+msgid "Tùy chọn"
+msgstr "Optional"
+
+#: templates/admin_statement_configs.html:172
+msgid "Sửa Cấu hình Sổ phụ"
+msgstr "Edit Bank Statement Configuration"
+
+#: templates/admin_statement_configs.html:204
+msgid "Bắt buộc"
+msgstr "Required"
+
+#: templates/admin_statement_configs.html:225
+msgid "Xóa cấu hình theo Bank Code"
+msgstr "Delete Configs by Bank Code"
+
+#: templates/admin_statement_configs.html:230 templates/logs.html:167
+msgid "Cảnh báo"
+msgstr "Warning"
+
+#: templates/admin_statement_configs.html:230
+msgid "Thao tác này sẽ xóa"
+msgstr "This action will delete"
+
+#: templates/admin_statement_configs.html:230
+msgid "TẤT CẢ"
+msgstr "ALL"
+
+#: templates/admin_statement_configs.html:230
+msgid "các cấu hình sổ phụ của ngân hàng được chọn!"
+msgstr "bank statement configs of the selected bank!"
+
+#: templates/admin_statement_configs.html:235
+msgid "Nhập chính xác mã ngân hàng cần xóa"
+msgstr "Enter exact bank code to delete"
+
+#: templates/admin_statement_configs.html:239
+#: templates/admin_statement_configs.html:280 templates/admin_upload.html:19
+#: templates/admin_users.html:138 templates/admin_users.html:188
+#: templates/logs.html:200
+msgid "Hủy"
+msgstr "Cancel"
+
+#: templates/admin_statement_configs.html:240
+msgid "Bạn có chắc chắn muốn xóa TẤT CẢ cấu hình của ngân hàng này?"
+msgstr "Are you sure you want to delete ALL configurations of this bank?"
+
+#: templates/admin_statement_configs.html:240 templates/admin_upload.html:277
+#: templates/statement_logs.html:93 templates/users.html:167
+msgid "Xóa"
+msgstr "Delete"
+
+#: templates/admin_statement_configs.html:255
+msgid "Upload cấu hình sổ phụ theo lô"
+msgstr "Bulk Upload Bank Statement Configuration"
+
+#: templates/admin_statement_configs.html:260
+msgid "File Excel/CSV"
+msgstr "Excel/CSV File"
+
+#: templates/admin_statement_configs.html:263
+msgid "Ví dụ:"
+msgstr "Example:"
+
+#: templates/admin_statement_configs.html:263
+msgid ""
+"Upload 11 dòng cho VCB (account_number, currency, opening_balance, "
+"closing_balance, narrative, transaction_date, debit, credit, flow_code, "
+"transaction_fee, transaction_vat)"
+msgstr ""
+"Upload 11 rows for VCB (account_number, currency, opening_balance, "
+"closing_balance, narrative, transaction_date, debit, credit, flow_code, "
+"transaction_fee, transaction_vat)"
+
+#: templates/admin_statement_configs.html:265
+msgid "Tải file mẫu với đầy đủ 11 trường"
+msgstr "Download sample file with all 11 fields"
+
+#: templates/admin_statement_configs.html:269
+msgid "Định dạng file:"
+msgstr "File format:"
+
+#: templates/admin_statement_configs.html:270
+msgid "Mã ngân hàng (VD: VCB, TCB) - có thể lặp lại cho nhiều trường"
+msgstr "Bank code (e.g.: VCB, TCB) - can repeat for multiple fields"
+
+#: templates/admin_statement_configs.html:271
+msgid "Các từ khóa ngăn cách bằng dấu phẩy"
+msgstr "Keywords separated by commas"
+
+#: templates/admin_statement_configs.html:272
+msgid ""
+"(Tùy chọn) Loại trường để dễ quản lý (account_number, currency, "
+"opening_balance...)"
+msgstr ""
+"(Optional) Field type for easy management (account_number, currency, "
+"opening_balance...)"
+
+#: templates/admin_statement_configs.html:273
+msgid "Cột keyword (VD: A, B)"
+msgstr "Keyword column (e.g.: A, B)"
+
+#: templates/admin_statement_configs.html:274
+msgid "Cột giá trị (VD: B, C)"
+msgstr "Value column (e.g.: B, C)"
+
+#: templates/admin_statement_configs.html:275
+msgid "Dòng bắt đầu/Dòng kết thúc"
+msgstr "Start row/End row"
+
+#: templates/admin_statement_configs.html:275
+msgid "Phạm vi dòng (số)"
+msgstr "Row range (number)"
+
+#: templates/admin_statement_configs.html:276
+msgid ""
+"Mỗi dòng = 1 cấu hình cho 1 trường. Có thể có nhiều dòng cho cùng 1 "
+"bank_code."
+msgstr ""
+"Each row = 1 config for 1 field. Can have multiple rows for the same "
+"bank_code."
+
+#: templates/admin_upload.html:12
+msgid "Xác nhận tải lên SFTP"
+msgstr "Confirm SFTP Upload"
+
+#: templates/admin_upload.html:16
+msgid "Bạn có chắc chắn muốn gửi tệp này lên SFTP server?"
+msgstr "Are you sure you want to send this file to SFTP server?"
+
+#: templates/admin_upload.html:20
+msgid "Xác nhận tải lên"
+msgstr "Confirm Upload"
+
+#: templates/admin_upload.html:32
+msgid "Công ty của bạn:"
+msgstr "Your Company:"
+
+#: templates/admin_upload.html:52 templates/user_upload.html:19
+#: templates/users.html:17
+msgid "Chọn tệp Excel/CSV hoặc ZIP chứa nhiều sổ phụ"
+msgstr "Select Excel/CSV or ZIP file containing multiple bank statements"
+
+#: templates/admin_upload.html:72 templates/user_upload.html:39
+#: templates/users.html:37
+msgid "Nhật ký gần đây"
+msgstr "Recent Logs"
+
+#: templates/admin_upload.html:73
+msgid "Hiển thị phân trang ngay tại đây"
+msgstr "Display pagination right here"
+
+#: templates/admin_upload.html:81 templates/admin_upload.html:219
+#: templates/statement_logs.html:56 templates/user_upload.html:48
+#: templates/user_upload.html:116 templates/users.html:46
+#: templates/users.html:117
+msgid "Tệp"
+msgstr "File"
+
+#: templates/admin_upload.html:83 templates/admin_upload.html:222
+#: templates/logs.html:34 templates/logs.html:66 templates/logs.html:181
+#: templates/statement_logs.html:61 templates/user_logs.html:30
+#: templates/user_logs.html:73 templates/user_upload.html:50
+#: templates/user_upload.html:119 templates/users.html:48
+#: templates/users.html:120
+msgid "Thời gian"
+msgstr "Time"
+
+#: templates/admin_upload.html:85 templates/admin_users.html:35
+#: templates/logs.html:72 templates/statement_logs.html:62
+msgid "Hành động"
+msgstr "Action"
+
+#: templates/admin_upload.html:105 templates/user_upload.html:72
+#: templates/users.html:73
+msgid "Chưa có thời gian"
+msgstr "No time yet"
+
+#: templates/admin_upload.html:110 templates/logs.html:29
+#: templates/logs.html:97 templates/logs.html:176 templates/user_logs.html:25
+#: templates/user_logs.html:104 templates/user_upload.html:77
+#: templates/users.html:78
+msgid "Thành công"
+msgstr "Success"
+
+#: templates/admin_upload.html:112 templates/admin_upload.html:251
+#: templates/error.html:6 templates/logs.html:30 templates/logs.html:99
+#: templates/logs.html:177 templates/statement_logs.html:80
+#: templates/user_logs.html:26 templates/user_logs.html:106
+#: templates/user_upload.html:79 templates/user_upload.html:148
+#: templates/users.html:80 templates/users.html:143
+msgid "Lỗi"
+msgstr "Error"
+
+#: templates/admin_upload.html:120 templates/user_upload.html:87
+#: templates/users.html:88
+msgid "Tải tệp Excel gốc"
+msgstr "Download original Excel file"
+
+#: templates/admin_upload.html:121 templates/user_upload.html:88
+#: templates/users.html:89 templates/users.html:191
+msgid "Tải tệp"
+msgstr "Download File"
+
+#: templates/admin_upload.html:130
+msgid "Phân trang lịch sử"
+msgstr "Pagination History"
+
+#: templates/admin_upload.html:133 templates/admin_upload.html:293
+#: templates/statement_logs.html:106
+msgid "Trang trước"
+msgstr "Previous Page"
+
+#: templates/admin_upload.html:141 templates/admin_upload.html:299
+#: templates/statement_logs.html:117
+msgid "Trang sau"
+msgstr "Next Page"
+
+#: templates/admin_upload.html:147 templates/user_upload.html:97
+msgid "Chưa có nhật ký nào"
+msgstr "No logs yet"
+
+#: templates/admin_upload.html:157 templates/statement_logs.html:12
+msgid "Danh sách Sổ phụ đã phân tích"
+msgstr "List of Parsed Bank Statements"
+
+#: templates/admin_upload.html:160
+msgid "Hiển thị:"
+msgstr "Show:"
+
+#: templates/admin_upload.html:168 templates/user_logs.html:134
+msgid "Tổng:"
+msgstr "Total:"
+
+#: templates/admin_upload.html:168
+msgid "bản ghi"
+msgstr "records"
+
+#: templates/admin_upload.html:180
+msgid "Tất cả Mã Ngân hàng"
+msgstr "All Bank Codes"
+
+#: templates/admin_upload.html:190
+msgid "Trạng thái SFTP"
+msgstr "SFTP Status"
+
+#: templates/admin_upload.html:192 templates/statement_logs.html:30
+msgid "Tất cả trạng thái"
+msgstr "All Statuses"
+
+#: templates/admin_upload.html:193 templates/admin_upload.html:249
+#: templates/statement_logs.html:76 templates/user_upload.html:146
+#: templates/users.html:141
+msgid "Đã tải lên"
+msgstr "Uploaded"
+
+#: templates/admin_upload.html:194
+msgid "Chưa tải lên"
+msgstr "Not Uploaded"
+
+#: templates/admin_upload.html:195
+msgid "Có lỗi"
+msgstr "Has Error"
+
+#: templates/admin_upload.html:199 templates/statement_logs.html:37
+msgid "Từ ngày"
+msgstr "From Date"
+
+#: templates/admin_upload.html:203 templates/statement_logs.html:41
+msgid "Đến ngày"
+msgstr "To Date"
+
+#: templates/admin_upload.html:221 templates/statement_detail.html:26
+#: templates/statement_logs.html:58 templates/user_upload.html:118
+#: templates/users.html:119
+msgid "Số tài khoản"
+msgstr "Account Number"
+
+#: templates/admin_upload.html:223 templates/statement_logs.html:163
+#: templates/statement_logs.html:170
+msgid "Gửi qua SFTP"
+msgstr "Send via SFTP"
+
+#: templates/admin_upload.html:224
+msgid "Tệp MT940"
+msgstr "MT940 File"
+
+#: templates/admin_upload.html:249 templates/users.html:141
+msgid "Đã tải lên lúc"
+msgstr "Uploaded at"
+
+#: templates/admin_upload.html:263 templates/user_upload.html:160
+msgid "Tải file MT940"
+msgstr "Download MT940 file"
+
+#: templates/admin_upload.html:264 templates/statement_detail.html:16
+#: templates/statement_logs.html:89 templates/user_upload.html:161
+#: templates/users.html:156
+msgid "Tải MT940"
+msgstr "Download MT940"
+
+#: templates/admin_upload.html:270
+msgid "Xem chi tiết"
+msgstr "View Details"
+
+#: templates/admin_upload.html:271 templates/statement_logs.html:87
+#: templates/user_upload.html:167 templates/users.html:162
+msgid "Chi tiết"
+msgstr "Details"
+
+#: templates/admin_upload.html:275
+msgid "Xóa nhật ký Sổ phụ này?"
+msgstr "Delete this bank statement log?"
+
+#: templates/admin_upload.html:276
+msgid "Xóa bản ghi"
+msgstr "Delete Record"
+
+#: templates/admin_upload.html:286 templates/user_upload.html:176
+msgid "Chưa có sổ phụ đã phân tích"
+msgstr "No parsed bank statements yet"
+
+#: templates/admin_upload.html:290
+msgid "Phân trang sổ phụ"
+msgstr "Bank Statement Pagination"
+
+#: templates/admin_users.html:3
+msgid "Quản lý - Admin Users"
+msgstr "User Management - Admin Users"
+
+#: templates/admin_users.html:7
+msgid "Quản lý - Người dùng"
+msgstr "User Management"
+
+#: templates/admin_users.html:31 templates/admin_users.html:109
+#: templates/admin_users.html:110 templates/admin_users.html:158
+#: templates/admin_users.html:159 templates/login.html:38
+#: templates/login.html:39
+msgid "Tên đăng nhập"
+msgstr "Username"
+
+#: templates/admin_users.html:32
+msgid "Địa chỉ email"
+msgstr "Email Address"
+
+#: templates/admin_users.html:33 templates/admin_users.html:121
+#: templates/admin_users.html:171
+msgid "Vai trò"
+msgstr "Role"
+
+#: templates/admin_users.html:63
+#, python-format
+msgid "Xóa người dùng %(username)s?"
+msgstr "Delete user %(username)s?"
+
+#: templates/admin_users.html:67
+msgid "Chưa có người dùng nào"
+msgstr "No users yet"
+
+#: templates/admin_users.html:104
+msgid "Thêm người dùng mới"
+msgstr "Add New User"
+
+#: templates/admin_users.html:110
+msgid "Tên đăng nhập của user"
+msgstr "User's username"
+
+#: templates/admin_users.html:113 templates/admin_users.html:162
+msgid "Email"
+msgstr "Email"
+
+#: templates/admin_users.html:114 templates/admin_users.html:163
+msgid "Địa chỉ email của user"
+msgstr "User's email address"
+
+#: templates/admin_users.html:117 templates/admin_users.html:118
+#: templates/admin_users.html:166 templates/login.html:42
+#: templates/login.html:43
+msgid "Mật khẩu"
+msgstr "Password"
+
+#: templates/admin_users.html:118
+msgid "Mật khẩu đăng nhập"
+msgstr "Login Password"
+
+#: templates/admin_users.html:124 templates/admin_users.html:174
+msgid "Quản trị viên"
+msgstr "Administrator"
+
+#: templates/admin_users.html:134 templates/admin_users.html:184
+msgid "Giữ Ctrl/Cmd để chọn nhiều công ty"
+msgstr "Hold Ctrl/Cmd to select multiple companies"
+
+#: templates/admin_users.html:139
+msgid "Thêm người dùng"
+msgstr "Add User"
+
+#: templates/admin_users.html:153
+msgid "Chỉnh sửa người dùng"
+msgstr "Edit User"
+
+#: templates/admin_users.html:159
+msgid "Tên đăng nhập của người dùng"
+msgstr "User's username"
+
+#: templates/admin_users.html:167
+msgid "Để trống nếu không đổi"
+msgstr "Leave blank if not changing"
+
+#: templates/admin_users.html:167
+msgid "Mật khẩu mới (để trống nếu không thay đổi)"
+msgstr "New password (leave blank if not changing)"
+
+#: templates/admin_users.html:168
+msgid "Chỉ nhập nếu muốn đổi mật khẩu"
+msgstr "Only enter if changing password"
+
+#: templates/base_layout.html:14
+msgid "Quản lý - User Panel"
+msgstr "Quản lý - User Panel"
+
+#: templates/base_layout.html:43
+msgid "Trang chủ"
+msgstr "Home"
+
+#: templates/error.html:44
+msgid "Đã xảy ra lỗi"
+msgstr "An error occurred"
+
+#: templates/error.html:45
+msgid "Vui lòng thử lại sau."
+msgstr "Please try again later."
+
+#: templates/error.html:47
+msgid "Về trang chủ"
+msgstr "Back to Home"
+
+#: templates/error.html:48 templates/statement_detail.html:19
+#: templates/statement_logs.html:13
+msgid "Quay lại"
+msgstr "Go Back"
+
+#: templates/login.html:6 templates/login.html:45
+msgid "Đăng nhập"
+msgstr "Login"
+
+#: templates/login.html:14
+msgid "Đăng nhập hệ thống"
+msgstr "System Login"
+
+#: templates/logs.html:7
+msgid "Lịch sử Tải lên"
+msgstr "Upload History"
+
+#: templates/logs.html:11 templates/logs.html:15
+msgid "Nhật ký tải lên"
+msgstr "Upload Logs"
+
+#: templates/logs.html:28 templates/logs.html:39 templates/logs.html:172
+#: templates/logs.html:178 templates/logs.html:185 templates/user_logs.html:24
+#: templates/user_logs.html:35
+msgid "Tất cả"
+msgstr "All"
+
+#: templates/logs.html:36 templates/logs.html:186 templates/user_logs.html:32
+msgid "7 ngày"
+msgstr "7 Days"
+
+#: templates/logs.html:37 templates/logs.html:183 templates/user_logs.html:33
+msgid "30 ngày"
+msgstr "30 Days"
+
+#: templates/logs.html:38 templates/logs.html:184 templates/user_logs.html:34
+msgid "90 ngày"
+msgstr "90 Days"
+
+#: templates/logs.html:51
+msgid "Tổng số"
+msgstr "Total"
+
+#: templates/logs.html:51 templates/logs.html:190
+msgid "log(s)"
+msgstr "log(s)"
+
+#: templates/logs.html:56
+msgid "Xóa logs theo bộ lọc"
+msgstr "Delete logs by filter"
+
+#: templates/logs.html:67 templates/user_logs.html:74
+msgid "Tệp gốc"
+msgstr "Original File"
+
+#: templates/logs.html:70 templates/user_logs.html:77
+msgid "Từ khóa phát hiện"
+msgstr "Detected Keywords"
+
+#: templates/logs.html:71 templates/user_logs.html:78
+msgid "Thông báo"
+msgstr "Message"
+
+#: templates/logs.html:83 templates/logs.html:87 templates/logs.html:92
+msgid "N/A"
+msgstr "N/A"
+
+#: templates/logs.html:116
+msgid "Tải file gốc"
+msgstr "Download original file"
+
+#: templates/logs.html:117
+msgid "Tải file"
+msgstr "Download File"
+
+#: templates/logs.html:126 templates/user_logs.html:124
+msgid "Không tìm thấy nhật ký nào"
+msgstr "No logs found"
+
+#: templates/logs.html:162
+msgid "Xóa nhật ký"
+msgstr "Delete Logs"
+
+#: templates/logs.html:167
+msgid "Bạn đang xóa nhật ký theo bộ lọc hiện tại:"
+msgstr "You are deleting logs by current filter:"
+
+#: templates/logs.html:189
+msgid "Số lượng sẽ xóa:"
+msgstr "Number to delete:"
+
+#: templates/logs.html:196
+msgid "Hành động này không thể hoàn tác!"
+msgstr "This action cannot be undone!"
+
+#: templates/logs.html:196
+msgid "Bạn có chắc chắn muốn xóa?"
+msgstr "Are you sure you want to delete?"
+
+#: templates/logs.html:206
+msgid "Xác nhận xóa"
+msgstr "Confirm Delete"
+
+#: templates/statement_detail.html:4 templates/statement_detail.html:10
+msgid "Chi tiết Sổ phụ"
+msgstr "Bank Statement Details"
+
+#: templates/statement_detail.html:23
+msgid "Thông tin Header"
+msgstr "Header Information"
+
+#: templates/statement_detail.html:34
+msgid "Nhập số tài khoản"
+msgstr "Enter account number"
+
+#: templates/statement_detail.html:35
+msgid "Cập nhật & Sinh MT940"
+msgstr "Update & Generate MT940"
+
+#: templates/statement_detail.html:40
+msgid "Tiền tệ"
+msgstr "Currency"
+
+#: templates/statement_detail.html:41
+msgid "Số dư đầu kỳ"
+msgstr "Opening Balance"
+
+#: templates/statement_detail.html:42
+msgid "Số dư cuối kỳ"
+msgstr "Closing Balance"
+
+#: templates/statement_detail.html:46
+msgid "Chi tiết giao dịch"
+msgstr "Transaction Details"
+
+#: templates/statement_detail.html:70
+msgid "Không có giao dịch để hiển thị."
+msgstr "No transactions to display."
+
+#: templates/statement_logs.html:7
+msgid "Danh sách Sổ phụ"
+msgstr "Bank Statement List"
+
+#: templates/statement_logs.html:17
+msgid "Bộ lọc sổ phụ"
+msgstr "Bank Statement Filter"
+
+#: templates/statement_logs.html:20
+msgid "Chọn Mã ngân hàng để lọc"
+msgstr "Select Bank Code to filter"
+
+#: templates/statement_logs.html:21
+msgid "Tất cả ngân hàng"
+msgstr "All Banks"
+
+#: templates/statement_logs.html:29 templates/user_logs.html:23
+msgid "Chọn trạng thái"
+msgstr "Select Status"
+
+#: templates/statement_logs.html:38
+msgid "Từ ngày (YYYY-MM-DD)"
+msgstr "From date (YYYY-MM-DD)"
+
+#: templates/statement_logs.html:38
+msgid "Từ"
+msgstr "From"
+
+#: templates/statement_logs.html:42
+msgid "Đến ngày (YYYY-MM-DD)"
+msgstr "To date (YYYY-MM-DD)"
+
+#: templates/statement_logs.html:42
+msgid "Đến"
+msgstr "To"
+
+#: templates/statement_logs.html:91
+msgid "Upload file MT940 lên SFTP server"
+msgstr "Upload MT940 file to SFTP server"
+
+#: templates/statement_logs.html:93
+msgid "Xóa bản ghi sổ phụ này?"
+msgstr "Delete this bank statement record?"
+
+#: templates/statement_logs.html:103
+msgid "Phân trang"
+msgstr "Pagination"
+
+#: templates/statement_logs.html:123
+msgid "Không có bản ghi."
+msgstr "No records."
+
+#: templates/statement_logs.html:138
+msgid "Bạn có chắc muốn tải tệp MT940 này lên SFTP server?"
+msgstr "Are you sure you want to upload this MT940 file to SFTP server?"
+
+#: templates/statement_logs.html:144
+msgid "Đang tải lên..."
+msgstr "Uploading..."
+
+#: templates/statement_logs.html:157
+msgid "Upload thành công!"
+msgstr "Upload successful!"
+
+#: templates/statement_logs.html:157
+msgid "Đường dẫn:"
+msgstr "Path:"
+
+#: templates/statement_logs.html:161
+msgid "Upload thất bại!"
+msgstr "Upload failed!"
+
+#: templates/statement_logs.html:168
+msgid "Lỗi kết nối! Vui lòng thử lại."
+msgstr "Connection error! Please try again."
+
+#: templates/user_logs.html:3
+msgid "Lịch sử Upload - User"
+msgstr "Upload History - User"
+
+#: templates/user_logs.html:11
+msgid "Lịch sử tải lên"
+msgstr "Upload History"
+
+#: templates/user_logs.html:15
+msgid "Bộ lọc lịch sử tải lên"
+msgstr "Upload History Filter"
+
+#: templates/user_logs.html:31
+msgid "Khoảng thời gian"
+msgstr "Time Range"
+
+#: templates/user_logs.html:39
+msgid "Hiển thị / trang"
+msgstr "Show / page"
+
+#: templates/user_logs.html:41
+msgid "Số dòng mỗi trang"
+msgstr "Rows per page"
+
+#: templates/user_logs.html:54
+msgid "Bạn có chắc muốn xóa các bản ghi đã chọn?"
+msgstr "Are you sure you want to delete selected records?"
+
+#: templates/user_logs.html:59
+msgid "Xóa đã chọn"
+msgstr "Delete Selected"
+
+#: templates/user_logs.html:62
+msgid "Chỉ xóa được các bản ghi do bạn tải lên (và thuộc công ty đang chọn)"
+msgstr ""
+"Can only delete records uploaded by you (and belonging to selected "
+"company)"
+
+#: templates/user_upload.html:3
+msgid "Tải sổ phụ "
+msgstr "Upload Bank Statement "
+
+#: templates/user_upload.html:13 templates/users.html:11
+msgid "Tải sổ phụ"
+msgstr "Upload Bank Statement"
+
+#: templates/user_upload.html:40 templates/user_upload.html:108
+#: templates/users.html:38 templates/users.html:109
+msgid "Xem tất cả"
+msgstr "View All"
+
+#: templates/user_upload.html:107 templates/users.html:108
+msgid "Sổ phụ đã phân tích (gần đây)"
+msgstr "Parsed Bank Statements (Recent)"
+
+#: templates/user_upload.html:121 templates/users.html:122
+msgid "MT940"
+msgstr "MT940"
+
+#: templates/user_upload.html:146
+msgid "Đã tải lúc"
+msgstr "Uploaded at"
+
+#: templates/user_upload.html:192
+msgid "Upload file"
+msgstr "Upload file"
+
+#: templates/user_upload.html:192 templates/users.html:191
+msgid "lên SFTP server?"
+msgstr "to SFTP server?"
+
+#: templates/user_upload.html:198
+msgid "Đang upload..."
+msgstr "Uploading..."
+
+#: templates/user_upload.html:209 templates/users.html:198
+msgid "Tải lên thành công!"
+msgstr "Upload successful!"
+
+#: templates/user_upload.html:212 templates/users.html:199
+msgid "Tải lên thất bại!"
+msgstr "Upload failed!"
+
+#: templates/user_upload.html:218 templates/users.html:201
+msgid "Lỗi kết nối:"
+msgstr "Connection error:"
+
+#: templates/users.html:2
+msgid "Trang người dùng"
+msgstr "User Page"
+
+#: templates/users.html:98
+msgid "Chưa có log nào"
+msgstr "No logs yet"
+
+#: templates/users.html:155
+msgid "Tải tệp MT940"
+msgstr "Download MT940 File"
+
+#: templates/users.html:166
+msgid "Xóa nhật ký sổ phụ này?"
+msgstr "Delete this bank statement log?"
+
+#: templates/users.html:176
+msgid "Chưa có sổ phụ nào được phân tích"
+msgstr "No bank statements parsed yet"
+
+#: templates/users.html:194
+msgid "Đang tải..."
+msgstr "Loading..."

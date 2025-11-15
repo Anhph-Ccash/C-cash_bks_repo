@@ -24,6 +24,12 @@ class StatementLog(db.Model):
     # Generated MT940 filename (relative to UPLOAD_FOLDER)
     mt940_filename = db.Column(db.String, nullable=True)
 
+    # SFTP upload tracking
+    sftp_uploaded = db.Column(db.Boolean, default=False)
+    sftp_uploaded_at = db.Column(db.TIMESTAMP, nullable=True)
+    sftp_remote_path = db.Column(db.String(500), nullable=True)
+    sftp_upload_message = db.Column(db.Text, nullable=True)
+
     processed_at = db.Column(db.TIMESTAMP, server_default=func.now())
 
     # Relationships

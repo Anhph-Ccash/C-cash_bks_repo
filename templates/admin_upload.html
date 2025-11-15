@@ -1,0 +1,439 @@
+﻿{% extends "admin_base.html" %}
+
+{% block title %}{{ _('Tải sổ phụ lên') }}{% endblock %}
+{% block nav_upload %}active{% endblock %}
+
+{% block content %}
+<!-- SFTP Upload Confirmation Modal -->
+<div class="modal fade" id="sftpConfirmModal" tabindex="-1" aria-labelledby="sftpConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title" id="sftpConfirmModalLabel">⚠️ {{ _('Xác nhận tải lên SFTP') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="sftpConfirmMessage">{{ _('Bạn có chắc chắn muốn gửi tệp này lên SFTP server?') }}</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">❌ {{ _('Hủy') }}</button>
+                <button type="button" class="btn btn-warning" id="sftpConfirmBtn">✅ {{ _('Xác nhận tải lên') }}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    {% if companies %}
+    <div class="col-12 mb-3">
+        <div class="card border-success">
+            <div class="card-body py-2">
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <span class="text-muted me-2">{{ _('Công ty của bạn:') }}</span>
+                    {% for c in companies %}
+                    <span class="badge rounded-pill {% if current_company_id == c.id %}text-bg-success{% else %}text-bg-secondary{% endif %}">{{ c.name }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Upload Section -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0">📂 {{ _('Tải sổ phụ lên') }}</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('admin.admin_process_upload') }}" method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                    <div class="mb-3">
+                        <label for="file" class="form-label">{{ _('Chọn tệp Excel/CSV hoặc ZIP chứa nhiều sổ phụ') }}</label>
+                        <input type="file" id="file" name="file" accept=".xls,.xlsx,.csv,.zip" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        📤 {{ _('Tải lên') }}
+                    </button>
+                </form>
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% for category, msg in messages %}
+                        <div class="alert alert-{{ category }} mt-3">{{ msg }}</div>
+                    {% endfor %}
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Logs Section (BankLog) -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">📋 {{ _('Nhật ký gần đây') }}</h5>
+                <span class="small">{{ _('Hiển thị phân trang ngay tại đây') }}</span>
+            </div>
+            <div class="card-body scroll-300">
+                {% if logs %}
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>{{ _('Tệp') }}</th>
+                                    <th>{{ _('Mã Ngân hàng') }}</th>
+                                    <th>{{ _('Thời gian') }}</th>
+                                    <th>{{ _('Trạng thái') }}</th>
+                                    <th>{{ _('Hành động') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in logs %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">{{ log.original_filename if log.original_filename else 'N/A' }}</div>
+                                    </td>
+                                    <td>
+                                        {% if log.bank_code %}
+                                            <span class="badge bg-info">{{ log.bank_code }}</span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="small text-muted">
+                                        {% if log.processed_at %}
+                                            {{ log.processed_at.strftime('%H:%M:%S - %d/%m/%Y') }}
+                                        {% else %}
+                                            {{ _('Chưa có thời gian') }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if log.status == 'SUCCESS' %}
+                                            <span class="badge bg-success">{{ _('Thành công') }}</span>
+                                        {% elif log.status == 'ERROR' %}
+                                            <span class="badge bg-danger">{{ _('Lỗi') }}</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">{{ log.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('main.download_bank_log_file', log_id=log.id) }}"
+                                           class="btn btn-sm btn-outline-success"
+                                           title="{{ _('Tải tệp Excel gốc') }}">
+                                            📥 {{ _('Tải tệp') }}
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if logs_pagination and logs_pagination.total_pages > 1 %}
+                    <nav aria-label="{{ _('Phân trang lịch sử') }}" class="mt-3">
+                        <ul class="pagination pagination-sm justify-content-end mb-0">
+                            <li class="page-item {% if not logs_pagination.has_prev %}disabled{% endif %}">
+                                <a class="page-link" href="{{ url_for('admin.admin_upload_page', logs_page=logs_pagination.page-1, logs_per_page=logs_pagination.per_page, page=stmt_pagination.page, per_page=stmt_pagination.per_page) }}" aria-label="{{ _('Trang trước') }}">&laquo;</a>
+                            </li>{% set start_page = logs_pagination.page - 2 if logs_pagination.page - 2 > 1 else 1 %}{% set end_page = logs_pagination.page + 2 if logs_pagination.page + 2 < logs_pagination.total_pages else logs_pagination.total_pages %}
+                            {% for p in range(start_page, end_page + 1) %}
+                            <li class="page-item {% if p == logs_pagination.page %}active{% endif %}">
+                                <a class="page-link" href="{{ url_for('admin.admin_upload_page', logs_page=p, logs_per_page=logs_pagination.per_page, page=stmt_pagination.page, per_page=stmt_pagination.per_page) }}">{{ p }}</a>
+                            </li>
+                            {% endfor %}
+                            <li class="page-item {% if not logs_pagination.has_next %}disabled{% endif %}">
+                                <a class="page-link" href="{{ url_for('admin.admin_upload_page', logs_page=logs_pagination.page+1, logs_per_page=logs_pagination.per_page, page=stmt_pagination.page, per_page=stmt_pagination.per_page) }}" aria-label="{{ _('Trang sau') }}">&raquo;</a>
+                            </li>
+                        </ul>
+                    </nav>
+                    {% endif %}
+                {% else %}
+                    <p class="text-muted text-center">{{ _('Chưa có nhật ký nào') }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Parsed Statement Logs Section - Full Width at Bottom -->
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">📥 {{ _('Danh sách Sổ phụ đã phân tích') }}</h5>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <label for="per_page_select" class="mb-0 small">{{ _('Hiển thị:') }}</label>
+                        <select id="per_page_select" class="form-select form-select-sm w-auto" onchange="changePerPage(this.value)">
+                            <option value="25" {% if stmt_pagination.per_page == 25 %}selected{% endif %}>25</option>
+                            <option value="50" {% if stmt_pagination.per_page == 50 %}selected{% endif %}>50</option>
+                            <option value="100" {% if stmt_pagination.per_page == 100 %}selected{% endif %}>100</option>
+                            <option value="200" {% if stmt_pagination.per_page == 200 %}selected{% endif %}>200</option>
+                        </select>
+                    </div>
+                    <span class="small text-white-50">{{ _('Tổng:') }} {{ stmt_pagination.total if stmt_pagination else 0 }} {{ _('bản ghi') }}</span>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if statement_logs %}
+                <!-- Filter Section -->
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <form method="GET" action="{{ url_for('admin.admin_upload_page') }}" class="row g-2 align-items-end">
+                            <div class="col-md-2">
+                                <label for="bank_filter" class="form-label small mb-1">{{ _('Ngân hàng') }}</label>
+                                <select id="bank_filter" name="bank_filter" class="form-select form-select-sm">
+                                    <option value="">{{ _('Tất cả Mã Ngân hàng') }}</option>
+                                    {% set banks = statement_logs | map(attribute='bank_code') | unique | list %}
+                                    {% for bank in banks %}
+                                        {% if bank %}
+                                        <option value="{{ bank }}" {% if request.args.get('bank_filter') == bank %}selected{% endif %}>{{ bank }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="sftp_filter" class="form-label small mb-1">{{ _('Trạng thái SFTP') }}</label>
+                                <select id="sftp_filter" name="sftp_filter" class="form-select form-select-sm">
+                                    <option value="">{{ _('Tất cả trạng thái') }}</option>
+                                    <option value="uploaded" {% if request.args.get('sftp_filter') == 'uploaded' %}selected{% endif %}>{{ _('Đã tải lên') }}</option>
+                                    <option value="not_uploaded" {% if request.args.get('sftp_filter') == 'not_uploaded' %}selected{% endif %}>{{ _('Chưa tải lên') }}</option>
+                                    <option value="error" {% if request.args.get('sftp_filter') == 'error' %}selected{% endif %}>{{ _('Có lỗi') }}</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="from_date" class="form-label small mb-1">{{ _('Từ ngày') }}</label>
+                                <input type="date" id="from_date" name="from_date" class="form-control form-control-sm" value="{{ request.args.get('from_date', '') }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="to_date" class="form-label small mb-1">{{ _('Đến ngày') }}</label>
+                                <input type="date" id="to_date" name="to_date" class="form-control form-control-sm" value="{{ request.args.get('to_date', '') }}">
+                            </div>
+                            <div class="col-md-2 d-flex gap-1">
+                                <button type="submit" class="btn btn-sm btn-primary flex-fill">🔍 {{ _('Lọc') }}</button>
+                                <a href="{{ url_for('admin.admin_upload_page') }}" class="btn btn-sm btn-secondary">✖ {{ _('Xóa lọc') }}</a>
+                            </div>
+                            <input type="hidden" name="per_page" value="{{ stmt_pagination.per_page }}">
+                        </form>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>{{ _('Tệp') }}</th>
+                                <th>{{ _('Mã Ngân hàng') }}</th>
+                                <th>{{ _('Số tài khoản') }}</th>
+                                <th>{{ _('Thời gian') }}</th>
+                                <th>{{ _('Gửi qua SFTP') }}</th>
+                                <th>{{ _('Tệp MT940') }}</th>
+                                <th>{{ _('Thao tác') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stmt in statement_logs %}
+                            <tr>
+                                <td>{{ stmt.original_filename or 'N/A' }}</td>
+                                <td>
+                                    {% if stmt.bank_code %}
+                                    <span class="badge bg-primary">{{ stmt.bank_code }}</span>
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ stmt.accountno or '-' }}</td>
+                                <td class="small text-muted">
+                                    {% if stmt.processed_at %}
+                                        {{ stmt.processed_at.strftime('%H:%M:%S - %d/%m/%Y') }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if stmt.sftp_uploaded %}
+                                        <span class="badge bg-success" title="{{ _('Đã tải lên lúc') }} {{ stmt.sftp_uploaded_at.strftime('%d/%m/%Y %H:%M') if stmt.sftp_uploaded_at else 'N/A' }}">✓ {{ _('Đã tải lên') }} {{ stmt.sftp_uploaded_at.strftime('%d/%m %H:%M') if stmt.sftp_uploaded_at else '' }}</span>
+                                    {% elif stmt.sftp_upload_message and 'error' in stmt.sftp_upload_message.lower() %}
+                                        <span class="badge bg-danger" title="{{ stmt.sftp_upload_message }}">✗ {{ _('Lỗi') }}</span>
+                                    {% else %}
+                                        <button class="btn btn-sm btn-warning sftp-upload-btn"
+                                                data-log-id="{{ stmt.id }}"
+                                                data-filename="{{ stmt.mt940_filename }}">
+                                            👍 SFTP
+                                        </button>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('main.download_statement_mt940', log_id=stmt.id) }}"
+                                       class="btn btn-sm btn-outline-primary"
+                                       title="{{ _('Tải file MT940') }}">
+                                        {{ _('Tải MT940') }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('main.view_statement_detail', log_id=stmt.id, next=request.path) }}"
+                                       class="btn btn-sm btn-outline-secondary"
+                                       title="{{ _('Xem chi tiết') }}">
+                                        {{ _('Chi tiết') }}
+                                    </a>
+                                    <a href="{{ url_for('main.delete_statement_log', log_id=stmt.id, next=request.path) }}"
+                                       class="btn btn-sm btn-danger"
+                                       onclick="return confirm('{{ _('Xóa nhật ký Sổ phụ này?') }}')"
+                                       title="{{ _('Xóa bản ghi') }}">
+                                        {{ _('Xóa') }}
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                    <p class="text-muted text-center">{{ _('Chưa có sổ phụ đã phân tích') }}</p>
+                {% endif %}
+
+                {% if stmt_pagination and stmt_pagination.total_pages > 1 %}
+                <nav aria-label="{{ _('Phân trang sổ phụ') }}" class="mt-3">
+                    <ul class="pagination pagination-sm justify-content-end mb-0">
+                        <li class="page-item {% if not stmt_pagination.has_prev %}disabled{% endif %}">
+                            <a class="page-link" href="{{ url_for('admin.admin_upload_page', page=stmt_pagination.page-1, per_page=stmt_pagination.per_page, bank_filter=request.args.get('bank_filter', ''), sftp_filter=request.args.get('sftp_filter', ''), from_date=request.args.get('from_date', ''), to_date=request.args.get('to_date', '')) }}" aria-label="{{ _('Trang trước') }}">&laquo;</a>
+                        </li>{% set start_page = stmt_pagination.page - 2 if stmt_pagination.page - 2 > 1 else 1 %}{% set end_page = stmt_pagination.page + 2 if stmt_pagination.page + 2 < stmt_pagination.total_pages else stmt_pagination.total_pages %}
+                        {% for p in range(start_page, end_page + 1) %}
+                        <li class="page-item {% if p == stmt_pagination.page %}active{% endif %}"><a class="page-link" href="{{ url_for('admin.admin_upload_page', page=p, per_page=stmt_pagination.per_page, bank_filter=request.args.get('bank_filter', ''), sftp_filter=request.args.get('sftp_filter', ''), from_date=request.args.get('from_date', ''), to_date=request.args.get('to_date', '')) }}">{{ p }}</a></li>
+                        {% endfor %}
+                        <li class="page-item {% if not stmt_pagination.has_next %}disabled{% endif %}">
+                            <a class="page-link" href="{{ url_for('admin.admin_upload_page', page=stmt_pagination.page+1, per_page=stmt_pagination.per_page, bank_filter=request.args.get('bank_filter', ''), sftp_filter=request.args.get('sftp_filter', ''), from_date=request.args.get('from_date', ''), to_date=request.args.get('to_date', '')) }}" aria-label="{{ _('Trang sau') }}">&raquo;</a>
+                        </li>
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+console.log('Admin Upload - JS Loaded');
+
+if (typeof bootstrap !== 'undefined') {
+    console.log('Bootstrap OK');
+}
+
+let pendingUpload = null;
+
+function showUploadModal(logId, filename, btn) {
+    console.log('Show modal:', filename);
+    pendingUpload = { logId, filename, btn };
+
+    const msg = document.getElementById('sftpConfirmMessage');
+    if (msg) {
+        msg.innerHTML = 'Xác nhận gửi file MT940 <strong>"' + filename + '"</strong> qua SFTP server?';
+    }
+
+    const modalEl = document.getElementById('sftpConfirmModal');
+    if (!modalEl) {
+        console.error('Modal element not found!');
+        if (confirm('Xác nhận gửi file "' + filename + '" qua SFTP?')) {
+            handleSftpUpload(logId, filename, btn);
+        }
+        return;
+    }
+
+    if (typeof bootstrap === 'undefined') {
+        console.error('Bootstrap not loaded!');
+        if (confirm('Xác nhận gửi file "' + filename + '" qua SFTP?')) {
+            handleSftpUpload(logId, filename, btn);
+        }
+        return;
+    }
+
+    try {
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+        console.log('Modal shown successfully');
+    } catch (e) {
+        console.error('Modal error:', e);
+        if (confirm('Xác nhận gửi file "' + filename + '" qua SFTP?')) {
+            handleSftpUpload(logId, filename, btn);
+        }
+    }
+}
+
+function handleSftpUpload(logId, filename, btn) {
+    const orig = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = 'Đang tải lên...';
+
+    fetch('/statement/upload-to-sftp/' + logId, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert(' Tải lên thành công!\n' + data.message);
+            location.reload();
+        } else {
+            alert(' Tải lên thất bại!\n' + data.message);
+            btn.disabled = false;
+            btn.innerHTML = orig;
+        }
+    })
+    .catch(err => {
+        alert(' Lỗi: ' + err);
+        btn.disabled = false;
+        btn.innerHTML = orig;
+    });
+}
+
+function changePerPage(perPage) {
+    const params = new URLSearchParams(window.location.search);
+    params.set('per_page', perPage);
+    params.set('page', '1');
+    window.location.href = '{{ url_for("admin.admin_upload_page") }}?' + params.toString();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM Ready');
+
+    // Attach click handlers to all SFTP upload buttons
+    const buttons = document.querySelectorAll('.sftp-upload-btn');
+    console.log('Found', buttons.length, 'SFTP upload buttons');
+
+    buttons.forEach((btn, index) => {
+        console.log(`Attaching listener to button ${index + 1}:`, btn);
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const logId = this.getAttribute('data-log-id');
+            const filename = this.getAttribute('data-filename');
+            console.log('🎯 Button clicked:', logId, filename);
+            showUploadModal(logId, filename, this);
+        });
+    });
+
+    console.log('✅ Attached listeners to', buttons.length, 'buttons');
+
+    // Modal confirm button
+    const confirmBtn = document.getElementById('sftpConfirmBtn');
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', function() {
+            if (!pendingUpload) return;
+
+            const modalEl = document.getElementById('sftpConfirmModal');
+            if (modalEl) {
+                try {
+                    const m = bootstrap.Modal.getInstance(modalEl);
+                    if (m) m.hide();
+                } catch (e) {}
+            }
+
+            handleSftpUpload(pendingUpload.logId, pendingUpload.filename, pendingUpload.btn);
+            pendingUpload = null;
+        });
+    }
+
+    console.log('Handlers OK');
+});
+</script>
+{% endblock %}

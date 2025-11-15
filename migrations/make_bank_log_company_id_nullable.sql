@@ -5,7 +5,7 @@
 BEGIN;
 
 -- Remove NOT NULL constraint from company_id if it exists
-ALTER TABLE bank_log 
+ALTER TABLE bank_log
 ALTER COLUMN company_id DROP NOT NULL;
 
 COMMIT;

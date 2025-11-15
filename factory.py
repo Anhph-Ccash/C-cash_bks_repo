@@ -1,6 +1,6 @@
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, request, session, redirect, url_for, current_app
 from config import Config
-from extensions import db, login_manager, csrf
+from extensions import db, login_manager, csrf, babel
 from werkzeug.security import generate_password_hash
 from sqlalchemy.exc import SQLAlchemyError, OperationalError
 from flask_wtf.csrf import generate_csrf
@@ -9,11 +9,33 @@ from flask_wtf.csrf import generate_csrf
 def create_app():
     app = Flask(__name__, template_folder="templates")
     app.config.from_object(Config)
+    # i18n defaults
+    app.config.setdefault("LANGUAGES", ["vi", "en"])  # supported languages
+    app.config.setdefault("BABEL_DEFAULT_LOCALE", "vi")
+    app.config.setdefault("BABEL_DEFAULT_TIMEZONE", "Asia/Ho_Chi_Minh")
     db.init_app(app)
     login_manager.init_app(app)
     csrf.init_app(app)
     # Ensure csrf_token() is available in Jinja templates
     app.jinja_env.globals['csrf_token'] = generate_csrf
+
+    # Locale selector
+    def select_locale() -> str:
+        lang = session.get('lang')
+        if lang in app.config.get('LANGUAGES', []):
+            return lang
+        # Default to Vietnamese regardless of browser settings
+        return app.config.get('BABEL_DEFAULT_LOCALE', 'vi')
+
+    babel.init_app(app, locale_selector=select_locale)
+
+    # Expose helper to templates
+    @app.context_processor
+    def inject_i18n():
+        return {
+            'current_lang': session.get('lang', app.config.get('BABEL_DEFAULT_LOCALE', 'vi')),
+            'languages': app.config.get('LANGUAGES', ['vi', 'en'])
+        }
 
     # Register blueprint packages (API and UI)
     from blueprints.upload import upload_bp
@@ -33,6 +55,15 @@ def create_app():
     app.register_blueprint(bank_config_bp, url_prefix="/config")
     app.register_blueprint(bank_log_bp, url_prefix="/log")
 
+    # Simple route to switch language
+    @app.route('/i18n/set-lang/<lang>')
+    def set_language(lang: str):
+        if lang not in current_app.config.get('LANGUAGES', []):
+            lang = current_app.config.get('BABEL_DEFAULT_LOCALE', 'vi')
+        session['lang'] = lang
+        next_url = request.args.get('next') or request.referrer or url_for('main.user_dashboard')
+        return redirect(next_url)
+
     # login settings
     login_manager.login_view = 'auth.login'
     login_manager.login_message = 'Vui lòng đăng nhập trước khi truy cập trang này.'
@@ -43,7 +74,7 @@ def create_app():
         """Handle database connection errors"""
         db.session.rollback()
         app.logger.error(f"Database error: {error}")
-        return render_template('error.html', 
+        return render_template('error.html',
                              error_title="Lỗi kết nối Database",
                              error_message="Không thể kết nối đến database. Vui lòng thử lại sau."), 500
 

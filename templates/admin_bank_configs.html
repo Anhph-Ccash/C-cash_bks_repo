@@ -1,10 +1,10 @@
 {% extends "admin_base.html" %}
 
-{% block title %}Cấu hình Ngân hàng - Admin Panel{% endblock %}
+{% block title %}{{ _('Cấu hình Ngân hàng') }}{% endblock %}
 {% block nav_bank_configs %}active{% endblock %}
 
 {% block content %}
-<h3>⚙️ Cấu hình Ngân hàng</h3>
+<h3>⚙️ {{ _('Cấu hình Ngân hàng') }}</h3>
 
 <!-- Flash Messages -->
 {% with messages = get_flashed_messages(with_categories=true) %}
@@ -12,7 +12,7 @@
         {% for category, message in messages %}
         <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
             {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ _('Đóng') }}"></button>
         </div>
         {% endfor %}
     {% endif %}
@@ -23,14 +23,14 @@
     <div class="card-body">
         <form method="GET" action="{{ url_for('admin.manage_bank_configs') }}" class="row g-2">
             <div class="col-md-4">
-                <input type="text" name="bank_code" class="form-control" placeholder="Tìm kiếm theo mã ngân hàng..." value="{{ bank_code_filter or '' }}">
+                <input type="text" name="bank_code" class="form-control" placeholder="{{ _('Tìm kiếm theo mã ngân hàng...') }}" value="{{ bank_code_filter or '' }}">
             </div>
             <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100">🔍 Tìm kiếm</button>
+                <button type="submit" class="btn btn-primary w-100">🔍 {{ _('Tìm kiếm') }}</button>
             </div>
             {% if bank_code_filter %}
             <div class="col-md-2">
-                <a href="{{ url_for('admin.manage_bank_configs') }}" class="btn btn-secondary w-100">✖ Xóa bộ lọc</a>
+                <a href="{{ url_for('admin.manage_bank_configs') }}" class="btn btn-secondary w-100">✖ {{ _('Xóa bộ lọc') }}</a>
             </div>
             {% endif %}
         </form>
@@ -39,9 +39,9 @@
 
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center bg-success text-white">
-        <span>Bank Configs (A-Z) - Tổng: {{ bank_pagination.total }}</span>
+        <span>{{ _('Cấu hình Ngân hàng (A-Z)') }} - {{ _('Tổng') }}: {{ bank_pagination.total }}</span>
         <div class="d-flex gap-2">
-            <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#addBankConfigModal">➕ Thêm mới</button>
+            <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#addBankConfigModal">➕ {{ _('Thêm mới') }}</button>
         </div>
     </div>
     <div class="card-body p-0">
@@ -49,12 +49,12 @@
             <table class="table table-sm table-hover mb-0" id="bankConfigsTable">
                 <thead class="table-light">
                     <tr>
-                        <th>Mã NH</th>
-                        <th>Tên Ngân hàng</th>
-                        <th>Từ khóa</th>
-                        <th>Trạng thái</th>
-                        <th>Cập nhật</th>
-                        <th width="120">Thao tác</th>
+                        <th>{{ _('Mã Ngân hàng') }}</th>
+                        <th>{{ _('Tên Ngân hàng') }}</th>
+                        <th>{{ _('Từ khóa') }}</th>
+                        <th>{{ _('Trạng thái') }}</th>
+                        <th>{{ _('Cập nhật') }}</th>
+                        <th width="120">{{ _('Thao tác') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -69,9 +69,9 @@
                         </td>
                         <td>
                             {% if cfg.is_active %}
-                            <span class="badge bg-success">Active</span>
+                            <span class="badge bg-success">{{ _('Active') }}</span>
                             {% else %}
-                            <span class="badge bg-secondary">Inactive</span>
+                            <span class="badge bg-secondary">{{ _('Inactive') }}</span>
                             {% endif %}
                         </td>
                         <td><small class="text-muted">{{ cfg.updated_at.strftime('%d/%m/%Y %H:%M') if cfg.updated_at else '-' }}</small></td>
@@ -80,35 +80,35 @@
                                     data-id="{{ cfg.id }}"
                                     data-bank-code="{{ cfg.bank_code }}"
                                     data-bank-name="{{ cfg.bank_name or '' }}"
-                                    data-keywords="{{ (cfg.keywords|join(', '))|e }}" title="Sửa nhanh">✏️</button>
-                            <a href="{{ url_for('main.delete_bank_config', config_id=cfg.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('Xóa cấu hình {{ cfg.bank_code }}?')">🗑️</a>
+                                    data-keywords="{{ (cfg.keywords|join(', '))|e }}" title="{{ _('Sửa nhanh') }}">✏️</button>
+                            <a href="{{ url_for('main.delete_bank_config', config_id=cfg.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('{{ _('Xóa cấu hình %(bank_code)s?', bank_code=cfg.bank_code) }}')">🗑️</a>
                         </td>
                     </tr>
                     {% else %}
-                    <tr><td colspan="6" class="text-center text-muted">Chưa có cấu hình ngân hàng</td></tr>
+                    <tr><td colspan="6" class="text-center text-muted">{{ _('Chưa có cấu hình ngân hàng') }}</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
-    
+
     <!-- Bank Config Pagination -->
     {% if bank_pagination.total > 0 %}
     <div class="card-footer d-flex justify-content-between align-items-center">
         <div>
-            Hiển thị {{ ((bank_pagination.page - 1) * bank_pagination.per_page) + 1 }} - {{ [bank_pagination.page * bank_pagination.per_page, bank_pagination.total]|min }} / {{ bank_pagination.total }} mục
+            {{ _('Hiển thị') }} {{ ((bank_pagination.page - 1) * bank_pagination.per_page) + 1 }} - {{ [bank_pagination.page * bank_pagination.per_page, bank_pagination.total]|min }} / {{ bank_pagination.total }} {{ _('mục') }}
         </div>
         <div class="btn-group">
             {% if bank_pagination.has_prev %}
-                <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin.manage_bank_configs', page=bank_pagination.page - 1, per_page=bank_pagination.per_page, bank_code=bank_code_filter) }}">« Trước</a>
+                <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin.manage_bank_configs', page=bank_pagination.page - 1, per_page=bank_pagination.per_page, bank_code=bank_code_filter) }}">« {{ _('Trước') }}</a>
             {% else %}
-                <a class="btn btn-sm btn-outline-secondary disabled">« Trước</a>
+                <a class="btn btn-sm btn-outline-secondary disabled">« {{ _('Trước') }}</a>
             {% endif %}
-            <span class="btn btn-sm btn-outline-secondary disabled">Trang {{ bank_pagination.page }}/{{ bank_pagination.total_pages }}</span>
+            <span class="btn btn-sm btn-outline-secondary disabled">{{ _('Trang') }} {{ bank_pagination.page }}/{{ bank_pagination.total_pages }}</span>
             {% if bank_pagination.has_next %}
-                <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin.manage_bank_configs', page=bank_pagination.page + 1, per_page=bank_pagination.per_page, bank_code=bank_code_filter) }}">Sau »</a>
+                <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin.manage_bank_configs', page=bank_pagination.page + 1, per_page=bank_pagination.per_page, bank_code=bank_code_filter) }}">{{ _('Sau') }} »</a>
             {% else %}
-                <a class="btn btn-sm btn-outline-secondary disabled">Sau »</a>
+                <a class="btn btn-sm btn-outline-secondary disabled">{{ _('Sau') }} »</a>
             {% endif %}
         </div>
     </div>
@@ -120,28 +120,28 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-info text-white">
-                <h5 class="modal-title">➕ Thêm Cấu hình Ngân hàng</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                <h5 class="modal-title">➕ {{ _('Thêm Cấu hình Ngân hàng') }}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="{{ _('Đóng') }}"></button>
             </div>
             <form action="{{ url_for('main.add_bank_config') }}" method="POST">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Mã Ngân hàng</label>
+                        <label class="form-label">{{ _('Mã Ngân hàng') }}</label>
                         <input type="text" name="bank_code" class="form-control" placeholder="VD: VCB, TCB" title="Mã ngân hàng" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Tên Ngân hàng</label>
+                        <label class="form-label">{{ _('Tên Ngân hàng') }}</label>
                         <input type="text" name="bank_name" class="form-control" placeholder="VD: Vietcombank, Techcombank" title="Tên đầy đủ của ngân hàng">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Từ khóa (phân cách bằng dấu phẩy)</label>
+                        <label class="form-label">{{ _('Từ khóa (phân cách bằng dấu phẩy)') }}</label>
                         <input type="text" name="keywords" class="form-control" placeholder="keyword1, keyword2, keyword3" title="Từ khóa để nhận diện ngân hàng">
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                    <button type="submit" class="btn btn-success">Thêm</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Đóng') }}</button>
+                    <button type="submit" class="btn btn-success">{{ _('Thêm') }}</button>
                 </div>
             </form>
         </div>
@@ -153,22 +153,22 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-warning">
-                <h5 class="modal-title">✏️ Sửa Cấu hình Ngân hàng</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                <h5 class="modal-title">✏️ {{ _('Sửa Cấu hình Ngân hàng') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ _('Đóng') }}"></button>
             </div>
             <form id="editBankConfigForm" method="POST">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Mã Ngân hàng</label>
+                        <label class="form-label">{{ _('Mã Ngân hàng') }}</label>
                         <input type="text" id="edit_bank_code" name="bank_code" class="form-control" placeholder="VD: VCB, TCB" title="Mã ngân hàng" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Tên Ngân hàng</label>
+                        <label class="form-label">{{ _('Tên Ngân hàng') }}</label>
                         <input type="text" id="edit_bank_name" name="bank_name" class="form-control" placeholder="VD: Vietcombank, Techcombank" title="Tên đầy đủ của ngân hàng">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Từ khóa (phân cách bằng dấu phẩy)</label>
+                        <label class="form-label">{{ _('Từ khóa (phân cách bằng dấu phẩy)') }}</label>
                         <input type="text" id="edit_keywords" name="keywords" class="form-control" placeholder="keyword1, keyword2, keyword3" title="Từ khóa để nhận diện ngân hàng">
                     </div>
                 </div>
@@ -192,16 +192,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const bankCode = this.dataset.bankCode;
             const bankName = this.dataset.bankName;
             const keywords = this.dataset.keywords;
-            
+
             document.getElementById('edit_bank_code').value = bankCode;
             document.getElementById('edit_bank_name').value = bankName;
             document.getElementById('edit_keywords').value = keywords;
             document.getElementById('editBankConfigForm').action = `/user/bank-config/update/${configId}`;
-            
+
             new bootstrap.Modal(document.getElementById('editBankConfigModal')).show();
         });
     });
 });
 </script>
 {% endblock %}
-

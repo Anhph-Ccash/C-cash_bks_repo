@@ -1,27 +1,28 @@
 {% extends "admin_base.html" %}
 
-{% block title %}Quản lý Công ty - Admin Panel{% endblock %}
+{% block title %}{{ _('Quản lý Công ty') }}{% endblock %}
 {% block nav_companies %}active{% endblock %}
 
 {% block content %}
-<h3>🏢 Quản lý Công ty</h3>
+<h3>🏢 {{ _('Danh sách Công ty') }}</h3>
 
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center bg-info text-white">
-        <span>Danh sách Công ty - Tổng: {{ companies|length }}</span>
-        <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#addCompanyModal">➕ Thêm mới</button>
+        <span>{{ _('Tổng') }}: {{ companies|length }}</span>
+        <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#addCompanyModal">➕ {{ _('Thêm mới') }}</button>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-sm table-hover mb-0">
                 <thead class="table-light sticky-top">
                     <tr>
-                        <th>ID</th>
-                        <th>Tên công ty</th>
-                        <th>Địa chỉ</th>
-                        <th>Mã số thuế</th>
-                        <th>Trạng thái</th>
-                        <th width="120">Thao tác</th>
+                        <th>{{ _('ID') }}</th>
+                        <th>{{ _('Tên công ty') }}</th>
+                        <th>{{ _('Địa chỉ') }}</th>
+                        <th>{{ _('Mã số thuế') }}</th>
+                        <th>{{ _('SFTP') }}</th>
+                        <th>{{ _('Trạng thái') }}</th>
+                        <th width="120">{{ _('Thao tác') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -32,28 +33,41 @@
                         <td>{{ company.address or '-' }}</td>
                         <td>{{ company.tax_code or '-' }}</td>
                         <td>
-                            {% if company.is_active %}
-                            <span class="badge bg-success">Active</span>
+                            {% if company.sftp_host %}
+                            <span class="badge bg-success" title="{{ company.sftp_host }}:{{ company.sftp_port }}">✓ {{ _('Đã cấu hình') }}</span>
                             {% else %}
-                            <span class="badge bg-secondary">Inactive</span>
+                            <span class="badge bg-secondary">-</span>
                             {% endif %}
                         </td>
                         <td>
-                            <button class="btn btn-sm btn-outline-warning" 
-                                    data-bs-toggle="modal" 
+                            {% if company.is_active %}
+                            <span class="badge bg-success">{{ _('Active') }}</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ _('Inactive') }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-warning"
+                                    data-bs-toggle="modal"
                                     data-bs-target="#editCompanyModal"
                                     data-id="{{ company.id }}"
                                     data-name="{{ company.name }}"
                                     data-address="{{ company.address or '' }}"
                                     data-tax-code="{{ company.tax_code or '' }}"
+                                    data-sftp-host="{{ company.sftp_host or '' }}"
+                                    data-sftp-port="{{ company.sftp_port or 22 }}"
+                                    data-sftp-username="{{ company.sftp_username or '' }}"
+                                    data-sftp-password="{{ company.sftp_password or '' }}"
+                                    data-sftp-remote-path="{{ company.sftp_remote_path or '' }}"
+                                    data-sftp-private-key-path="{{ company.sftp_private_key_path or '' }}"
                                     data-is-active="{{ company.is_active }}">✏️</button>
-                            <a href="{{ url_for('admin.delete_company', company_id=company.id) }}" 
-                               class="btn btn-sm btn-danger" 
-                               onclick="return confirm('Xóa công ty {{ company.name }}?')">🗑️</a>
+                                     <a href="{{ url_for('admin.delete_company', company_id=company.id) }}"
+                                         class="btn btn-sm btn-danger"
+                                         onclick="return confirm('{{ _('Xóa công ty %(name)s?', name=company.name) }}')">🗑️</a>
                         </td>
                     </tr>
                     {% else %}
-                    <tr><td colspan="6" class="text-center text-muted">Chưa có công ty nào</td></tr>
+                    <tr><td colspan="7" class="text-center text-muted">{{ _('Chưa có công ty nào') }}</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -66,28 +80,64 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-info text-white">
-                <h5 class="modal-title">➕ Thêm Công ty mới</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                <h5 class="modal-title">➕ {{ _('Thêm Công ty mới') }}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="{{ _('Đóng') }}"></button>
             </div>
             <form action="{{ url_for('admin.add_company') }}" method="POST">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Tên công ty <span class="text-danger">*</span></label>
-                        <input name="name" type="text" class="form-control" placeholder="Tên công ty" title="Tên công ty" required>
+                        <label class="form-label">{{ _('Tên công ty') }} <span class="text-danger">*</span></label>
+                        <input name="name" type="text" class="form-control" placeholder="{{ _('Tên công ty') }}" title="{{ _('Tên công ty') }}" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Địa chỉ</label>
-                        <input name="address" type="text" class="form-control" placeholder="Địa chỉ công ty" title="Địa chỉ">
+                        <label class="form-label">{{ _('Địa chỉ') }}</label>
+                        <input name="address" type="text" class="form-control" placeholder="{{ _('Địa chỉ công ty') }}" title="{{ _('Địa chỉ') }}">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Mã số thuế</label>
-                        <input name="tax_code" type="text" class="form-control" placeholder="MST" title="Mã số thuế">
+                        <label class="form-label">{{ _('Mã số thuế') }}</label>
+                        <input name="tax_code" type="text" class="form-control" placeholder="{{ _('MST') }}" title="{{ _('Mã số thuế') }}">
+                    </div>
+
+                    <hr>
+                    <h6 class="text-info">🔒 {{ _('Thông tin SFTP (Tùy chọn)') }}</h6>
+
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label class="form-label">{{ _('SFTP Host') }}</label>
+                            <input name="sftp_host" type="text" class="form-control" placeholder="sftp.example.com">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">{{ _('Port') }}</label>
+                            <input name="sftp_port" type="number" class="form-control" placeholder="22" value="22">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">{{ _('Username') }}</label>
+                        <input name="sftp_username" type="text" class="form-control" placeholder="{{ _('SFTP username') }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">{{ _('Password') }}</label>
+                        <input name="sftp_password" type="password" class="form-control" placeholder="{{ _('SFTP password') }}">
+                        <small class="text-muted">{{ _('Để trống nếu sử dụng SSH key') }}</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">{{ _('Remote Path') }}</label>
+                        <input name="sftp_remote_path" type="text" class="form-control" placeholder="/upload/path">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">{{ _('Private Key Path') }}</label>
+                        <input name="sftp_private_key_path" type="text" class="form-control" placeholder="/path/to/key.pem">
+                        <small class="text-muted">{{ _('Đường dẫn tới SSH private key (nếu có)') }}</small>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                    <button type="submit" class="btn btn-info text-white">Thêm</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Đóng') }}</button>
+                    <button type="submit" class="btn btn-info text-white">{{ _('Thêm') }}</button>
                 </div>
             </form>
         </div>
@@ -99,28 +149,64 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-warning">
-                <h5 class="modal-title">✏️ Sửa Công ty</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                <h5 class="modal-title">✏️ {{ _('Sửa Công ty') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ _('Đóng') }}"></button>
             </div>
             <form id="editCompanyForm" method="POST">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Tên công ty <span class="text-danger">*</span></label>
-                        <input id="edit_name" name="name" type="text" class="form-control" placeholder="Tên công ty" title="Tên công ty" required>
+                        <label class="form-label">{{ _('Tên công ty') }} <span class="text-danger">*</span></label>
+                        <input id="edit_name" name="name" type="text" class="form-control" placeholder="{{ _('Tên công ty') }}" title="{{ _('Tên công ty') }}" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Địa chỉ</label>
-                        <input id="edit_address" name="address" type="text" class="form-control" placeholder="Địa chỉ công ty" title="Địa chỉ">
+                        <label class="form-label">{{ _('Địa chỉ') }}</label>
+                        <input id="edit_address" name="address" type="text" class="form-control" placeholder="{{ _('Địa chỉ công ty') }}" title="{{ _('Địa chỉ') }}">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Mã số thuế</label>
-                        <input id="edit_tax_code" name="tax_code" type="text" class="form-control" placeholder="MST" title="Mã số thuế">
+                        <label class="form-label">{{ _('Mã số thuế') }}</label>
+                        <input id="edit_tax_code" name="tax_code" type="text" class="form-control" placeholder="{{ _('MST') }}" title="{{ _('Mã số thuế') }}">
+                    </div>
+
+                    <hr>
+                    <h6 class="text-warning">🔒 {{ _('Thông tin SFTP (Tùy chọn)') }}</h6>
+
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label class="form-label">{{ _('SFTP Host') }}</label>
+                            <input id="edit_sftp_host" name="sftp_host" type="text" class="form-control" placeholder="sftp.example.com">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">{{ _('Port') }}</label>
+                            <input id="edit_sftp_port" name="sftp_port" type="number" class="form-control" placeholder="22" value="22">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">{{ _('Username') }}</label>
+                        <input id="edit_sftp_username" name="sftp_username" type="text" class="form-control" placeholder="{{ _('SFTP username') }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">{{ _('Password') }}</label>
+                        <input id="edit_sftp_password" name="sftp_password" type="password" class="form-control" placeholder="{{ _('SFTP password') }}">
+                        <small class="text-muted">{{ _('Để trống nếu không đổi hoặc sử dụng SSH key') }}</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">{{ _('Remote Path') }}</label>
+                        <input id="edit_sftp_remote_path" name="sftp_remote_path" type="text" class="form-control" placeholder="/upload/path">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">{{ _('Private Key Path') }}</label>
+                        <input id="edit_sftp_private_key_path" name="sftp_private_key_path" type="text" class="form-control" placeholder="/path/to/key.pem">
+                        <small class="text-muted">{{ _('Đường dẫn tới SSH private key (nếu có)') }}</small>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                    <button type="submit" class="btn btn-warning">Cập nhật</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Đóng') }}</button>
+                    <button type="submit" class="btn btn-warning">{{ _('Cập nhật') }}</button>
                 </div>
             </form>
         </div>
@@ -139,12 +225,26 @@ document.addEventListener('DOMContentLoaded', function() {
         const name = button.getAttribute('data-name');
         const address = button.getAttribute('data-address');
         const taxCode = button.getAttribute('data-tax-code');
-        
-        // Populate modal
+        const sftpHost = button.getAttribute('data-sftp-host');
+        const sftpPort = button.getAttribute('data-sftp-port');
+        const sftpUsername = button.getAttribute('data-sftp-username');
+        const sftpPassword = button.getAttribute('data-sftp-password');
+        const sftpRemotePath = button.getAttribute('data-sftp-remote-path');
+        const sftpPrivateKeyPath = button.getAttribute('data-sftp-private-key-path');
+
+        // Populate basic fields
         document.getElementById('edit_name').value = name;
         document.getElementById('edit_address').value = address;
         document.getElementById('edit_tax_code').value = taxCode;
-        
+
+        // Populate SFTP fields
+        document.getElementById('edit_sftp_host').value = sftpHost;
+        document.getElementById('edit_sftp_port').value = sftpPort;
+        document.getElementById('edit_sftp_username').value = sftpUsername;
+        document.getElementById('edit_sftp_password').value = sftpPassword;
+        document.getElementById('edit_sftp_remote_path').value = sftpRemotePath;
+        document.getElementById('edit_sftp_private_key_path').value = sftpPrivateKeyPath;
+
         // Set form action
         document.getElementById('editCompanyForm').action = `/admin/company/update/${companyId}`;
     });

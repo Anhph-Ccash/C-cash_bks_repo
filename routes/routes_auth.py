@@ -15,14 +15,14 @@ def login():
             session['user_id'] = user.id
             session['username'] = user.username
             session['role'] = user.role
-            
+
             # Get user's companies
             companies = user.get_companies()
             if companies:
                 # If user has companies, set the first one as default
                 session['company_id'] = companies[0].id
                 session['company_name'] = companies[0].name
-            
+
             flash('Đăng nhập thành công!', 'success')
             return redirect(url_for('admin.admin')) if user.role == 'admin' else redirect(url_for('main.user_dashboard'))
         else:
@@ -38,10 +38,10 @@ def logout():
 def switch_company(company_id):
     if 'user_id' not in session:
         return redirect(url_for('auth.login'))
-    
+
     from models import User, Company, UserCompany
     user = User.query.get(session['user_id'])
-    
+
     # Admin can access all companies, regular users need UserCompany permission
     if session.get('role') == 'admin':
         company = Company.query.get(company_id)
@@ -57,7 +57,7 @@ def switch_company(company_id):
             user_id=user.id,
             company_id=company_id
         ).first()
-        
+
         if user_company:
             company = Company.query.get(company_id)
             if company and company.is_active:
@@ -66,5 +66,42 @@ def switch_company(company_id):
                 flash(f'Đã chuyển sang công ty: {company.name}', 'success')
         else:
             flash('Bạn không có quyền truy cập công ty này!', 'danger')
-    
-    return redirect(request.referrer or url_for('main.user_dashboard'))
+
+    # Determine where to redirect
+    # Priority: 1) next parameter, 2) referrer analysis, 3) role-based default
+
+    # Check for 'next' parameter in URL
+    next_page = request.args.get('next')
+    if next_page:
+        print(f"DEBUG switch_company: Using next parameter = {next_page}")
+        return redirect(next_page)
+
+    # Analyze referrer
+    referrer = request.referrer
+    print(f"DEBUG switch_company: referrer = {referrer}, role = {session.get('role')}")
+
+    if referrer:
+        # Parse the referrer to determine which page to redirect to
+        if '/admin/upload' in referrer or 'admin-upload' in referrer:
+            print("DEBUG: Redirecting to admin_upload_page")
+            return redirect(url_for('admin.admin_upload_page'))
+        elif '/user/upload' in referrer or 'user-upload' in referrer:
+            print("DEBUG: Redirecting to user_upload_page")
+            return redirect(url_for('main.user_upload_page'))
+        elif '/dashboard' in referrer or '/user' in referrer:
+            print("DEBUG: Redirecting to user_dashboard")
+            return redirect(url_for('main.user_dashboard'))
+        elif '/admin' in referrer and session.get('role') == 'admin':
+            print("DEBUG: Redirecting to admin page")
+            return redirect(url_for('admin.admin'))
+        else:
+            # Default: try to go back to referrer
+            print("DEBUG: Redirecting to referrer directly")
+            return redirect(referrer)
+
+    # If no referrer, redirect based on role
+    print("DEBUG: No referrer, using role-based redirect")
+    if session.get('role') == 'admin':
+        return redirect(url_for('admin.admin_upload_page'))
+    else:
+        return redirect(url_for('main.user_dashboard'))

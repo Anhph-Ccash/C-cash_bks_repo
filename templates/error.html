@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ error_title or 'Lỗi' }}</title>
+    <title>{{ error_title or _('Lỗi') }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -41,11 +41,11 @@
 <body>
     <div class="error-container">
         <div class="error-icon">⚠️</div>
-        <div class="error-title">{{ error_title or 'Đã xảy ra lỗi' }}</div>
-        <div class="error-message">{{ error_message or 'Vui lòng thử lại sau.' }}</div>
+        <div class="error-title">{{ error_title or _('Đã xảy ra lỗi') }}</div>
+        <div class="error-message">{{ error_message or _('Vui lòng thử lại sau.') }}</div>
         <div class="d-grid gap-2">
-            <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg">🏠 Về trang chủ</a>
-            <button onclick="history.back()" class="btn btn-outline-secondary">← Quay lại</button>
+            <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg">🏠 {{ _('Về trang chủ') }}</a>
+            <button onclick="history.back()" class="btn btn-outline-secondary">← {{ _('Quay lại') }}</button>
         </div>
     </div>
 </body>

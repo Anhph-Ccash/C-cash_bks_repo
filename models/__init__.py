@@ -11,13 +11,13 @@ class User(db.Model, UserMixin):
 	# e.g. scrypt hashes can exceed 128 chars, so 512 gives a safe margin.
 	password_hash = db.Column(db.String(512), nullable=False)
 	role = db.Column(db.String(10), default='user')
-	
+
 	# Relationships
 	user_companies = db.relationship('UserCompany', back_populates='user', cascade='all, delete-orphan')
 
 	def check_password(self, password):
 		return check_password_hash(self.password_hash, password)
-	
+
 	def get_companies(self):
 		"""Get all companies this user belongs to"""
 		from .user_company import UserCompany

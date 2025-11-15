@@ -13,7 +13,7 @@ ALTER TABLE bank_statement_config ALTER COLUMN identify_info DROP NOT NULL;
 -- Ví dụ: CREATE UNIQUE INDEX idx_company_bank_identify ON bank_statement_config(company_id, bank_code, identify_info) WHERE identify_info IS NOT NULL;
 
 -- Hoặc giữ constraint đơn giản (cho phép nhiều NULL)
-ALTER TABLE bank_statement_config ADD CONSTRAINT unique_company_statement_config_field 
+ALTER TABLE bank_statement_config ADD CONSTRAINT unique_company_statement_config_field
     UNIQUE (company_id, bank_code, identify_info);
 
 -- Bước 4: Kiểm tra constraint cell_format (nếu có lỗi với giá trị 'text', 'number', 'date')

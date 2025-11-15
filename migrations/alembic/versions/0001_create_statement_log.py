@@ -1,7 +1,7 @@
 """Create statement_log table
 
 Revision ID: 0001_create_statement_log
-Revises: 
+Revises:
 Create Date: 2025-11-06 00:00:00.000000
 """
 from alembic import op

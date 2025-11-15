@@ -21,9 +21,9 @@ def detect_bank_and_process(session, file_path, original_filename, text, company
     if not matched_cfg:
         log = BankLog(user_id=user_id,
                       company_id=company_id,
-                      filename=file_path, 
+                      filename=file_path,
                       original_filename=original_filename,
-                      status="UNKNOWN", 
+                      status="UNKNOWN",
                       message="No matching bank",
                       processed_at=datetime.now())
         session.add(log)
