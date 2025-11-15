@@ -2,7 +2,7 @@ import os
 
 class Config:
     # Read secrets from environment for production (Render will provide DATABASE_URL)
-    SECRET_KEY = os.environ.get('SECRET_KEY', 'admin-Cash@123')
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'admin@123')
 
     # Database configuration
     # Để sử dụng local database, uncomment dòng dưới và comment dòng remote
