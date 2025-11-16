@@ -13,9 +13,6 @@ def create_app():
     app.config.setdefault("LANGUAGES", ["vi", "en"])  # supported languages
     app.config.setdefault("BABEL_DEFAULT_LOCALE", "vi")
     app.config.setdefault("BABEL_DEFAULT_TIMEZONE", "Asia/Ho_Chi_Minh")
-    db.init_app(app)
-    login_manager.init_app(app)
-    csrf.init_app(app)
     # Ensure csrf_token() is available in Jinja templates
     app.jinja_env.globals['csrf_token'] = generate_csrf
 
@@ -64,9 +61,19 @@ def create_app():
         next_url = request.args.get('next') or request.referrer or url_for('main.user_dashboard')
         return redirect(next_url)
 
-    # login settings
+    # Initialize login manager
+    login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
     login_manager.login_message = 'Vui lòng đăng nhập trước khi truy cập trang này.'
+
+    # User loader callback for Flask-Login
+    @login_manager.user_loader
+    def load_user(user_id):
+        try:
+            from models.user import User
+            return User.query.get(int(user_id))
+        except Exception:
+            return None
 
     # Error handlers
     @app.errorhandler(OperationalError)
@@ -88,22 +95,46 @@ def create_app():
 
     # create DB tables if necessary and seed default admin user
     with app.app_context():
-        from models import User  # ensure models are imported
+        # initialize extensions (db, login, babel, csrf, ...)
+        db.init_app(app)
+        csrf.init_app(app)
+
+        # ===== new: ensure admin user creation/check happens inside app context =====
         try:
-            db.create_all()
-            if not User.query.filter_by(username='admin').first():
-                admin = User(username='admin', email='admin@example.com',
-                             password_hash=generate_password_hash('admin123'),
-                             role='admin')
-                db.session.add(admin)
-                db.session.commit()
-                print("✅ Đã tạo admin mặc định.")
-        except OperationalError as e:
-            print("⚠️ Không thể kết nối database:", e)
-            print("💡 App sẽ chạy nhưng không có database connection.")
-        except SQLAlchemyError as e:
-            db.session.rollback()
-            print("⚠️ Lỗi khi tạo admin mặc định:", e)
+            # Lazy import User model to avoid circular imports
+            from models.user import User
+            # Only attempt DB query if db is configured
+            try:
+                existing = User.query.filter_by(username='admin').first()
+            except Exception as _qerr:
+                # DB not ready or migration not run yet; skip creating admin for now
+                app.logger.warning(f"Skipping admin creation - DB not ready: {_qerr}")
+                existing = None
+
+            if not existing:
+                # Create default admin user safely if model supports it
+                admin = User(username='admin', email='admin@example.com', role='admin')
+                # try to set password via helper if available, else set password_hash
+                if hasattr(admin, "set_password"):
+                    try:
+                        admin.set_password("ChangeMe123!")  # note: instruct to change after first login
+                    except Exception:
+                        from werkzeug.security import generate_password_hash
+                        admin.password_hash = generate_password_hash("ChangeMe123!")
+                else:
+                    from werkzeug.security import generate_password_hash
+                    admin.password_hash = generate_password_hash("ChangeMe123!")
+                try:
+                    db.session.add(admin)
+                    db.session.commit()
+                    app.logger.info("Default admin user created (username=admin). Please change password immediately.")
+                except Exception as e:
+                    db.session.rollback()
+                    app.logger.warning(f"Could not create default admin user: {e}")
+        except Exception as e:
+            # If model import fails or other unexpected error, log and continue startup
+            app.logger.warning(f"Admin-check skipped due to import/error: {e}")
+        # ===== end admin check =====
 
     return app
 

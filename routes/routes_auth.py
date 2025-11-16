@@ -1,32 +1,52 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from werkzeug.security import check_password_hash
-from models import User
 
 auth_bp = Blueprint('auth', __name__)
+
+# Lazy import helper to avoid circular import at module import time
+def _get_user_model():
+	"""
+	Lazy import User model to break circular imports between app.factory <-> routes.
+	Call this inside request handlers or functions that run after app is created.
+	"""
+	try:
+		# primary import path (models package at repo root)
+		from models.user import User
+	except Exception:
+		# fallback if models exposes User at top-level
+		from models import User
+	return User
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
+        try:
+            username = request.form.get('username')
+            password = request.form.get('password')
 
-        user = User.query.filter_by(username=username).first()
-        if user and check_password_hash(user.password_hash, password):
-            session['user_id'] = user.id
-            session['username'] = user.username
-            session['role'] = user.role
+            if not username or not password:
+                return render_template('login.html', error="Vui lòng nhập đầy đủ thông tin")
 
-            # Get user's companies
-            companies = user.get_companies()
-            if companies:
-                # If user has companies, set the first one as default
-                session['company_id'] = companies[0].id
-                session['company_name'] = companies[0].name
+            User = _get_user_model()
+            user = User.query.filter_by(username=username).first()
+            if user and check_password_hash(user.password_hash, password):
+                session['user_id'] = user.id
+                session['username'] = user.username
+                session['role'] = user.role
 
-            flash('Đăng nhập thành công!', 'success')
-            return redirect(url_for('admin.admin')) if user.role == 'admin' else redirect(url_for('main.user_dashboard'))
-        else:
-            return render_template('login.html', error="Sai tên đăng nhập hoặc mật khẩu")
+                # Get user's companies
+                companies = user.get_companies()
+                if companies:
+                    # If user has companies, set the first one as default
+                    session['company_id'] = companies[0].id
+                    session['company_name'] = companies[0].name
+
+                flash('Đăng nhập thành công!', 'success')
+                return redirect(url_for('admin.admin')) if user.role == 'admin' else redirect(url_for('main.user_dashboard'))
+            else:
+                return render_template('login.html', error="Sai tên đăng nhập hoặc mật khẩu")
+        except Exception as e:
+            return render_template('login.html', error=f"Lỗi đăng nhập: {str(e)}")
     return render_template('login.html')
 
 @auth_bp.route('/logout')
@@ -39,7 +59,7 @@ def switch_company(company_id):
     if 'user_id' not in session:
         return redirect(url_for('auth.login'))
 
-    from models import User, Company, UserCompany
+    from app.models import Company, UserCompany
     user = User.query.get(session['user_id'])
 
     # Admin can access all companies, regular users need UserCompany permission

@@ -627,7 +627,7 @@ def view_statement_detail(log_id):
 
 
 @main_bp.route('/user/statement-log/<int:log_id>/update-account', methods=['POST'])
-@user_required
+@login_required
 def update_statement_account(log_id):
     """Allow user to update account number for a parsed statement and (re)generate MT940."""
     from services.statement_service import build_mt940_strict
