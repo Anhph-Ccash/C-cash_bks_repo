@@ -1,5 +1,5 @@
 import uuid
-from flask import Blueprint, render_template, redirect, url_for, session, request, flash
+from flask import Blueprint, render_template, redirect, url_for, session, request, flash, jsonify
 from werkzeug.utils import secure_filename
 from functools import wraps
 import os
@@ -231,8 +231,8 @@ def user_upload():
                 try:
                     orig_inner = os.path.basename(ef)
                     inner_ext = orig_inner.rsplit('.', 1)[-1].lower() if '.' in orig_inner else ''
-                    text = read_file_to_text(ef, inner_ext)
-                    result = detect_bank_and_process(db.session, ef, orig_inner, text, company_id, user_id)
+                    # Detection now uses scan_ranges internally
+                    result = detect_bank_and_process(db.session, ef, orig_inner, None, company_id, user_id)
                     status = result.get('status', 'FAILED')
                     processed += 1
                     if status == 'SUCCESS' and result.get('bank_code'):
@@ -271,8 +271,8 @@ def user_upload():
                 flash(f"{fn}: {msg}", 'warning')
 
         else:
-            text = read_file_to_text(saved_path, ext)
-            result = detect_bank_and_process(db.session, saved_path, orig_name, text, company_id, user_id)
+            # Detection now uses scan_ranges internally, no need to read full text
+            result = detect_bank_and_process(db.session, saved_path, orig_name, None, company_id, user_id)
             status = result.get('status', 'FAILED')
             message = result.get('message', '')
             flash(f"Upload {status}: {message}", 'success' if status == 'SUCCESS' else 'danger')
@@ -777,6 +777,7 @@ def add_bank_config():
         bank_code = request.form.get('bank_code', '').strip().upper()
         bank_name = request.form.get('bank_name', '').strip()
         keywords = request.form.get('keywords', '').strip()
+        scan_ranges_str = request.form.get('scan_ranges', '').strip()
 
         # Validation
         if not bank_code:
@@ -804,12 +805,26 @@ def add_bank_config():
             flash("❌ Vui lòng nhập ít nhất một từ khóa hợp lệ!", 'danger')
             return redirect(url_for('admin.manage_bank_configs'))
 
+        # Parse scan_ranges JSON
+        scan_ranges = []
+        if scan_ranges_str:
+            try:
+                import json
+                scan_ranges = json.loads(scan_ranges_str)
+                # Validate scan_ranges structure
+                if not isinstance(scan_ranges, list):
+                    flash("❌ Scan ranges phải là một mảng JSON!", 'danger')
+                    return redirect(url_for('admin.manage_bank_configs'))
+            except json.JSONDecodeError:
+                flash("❌ Định dạng JSON không hợp lệ cho scan ranges!", 'danger')
+                return redirect(url_for('admin.manage_bank_configs'))
+
         config = BankConfig(
             company_id=company_id,
             bank_code=bank_code,
             bank_name=bank_name if bank_name else None,
             keywords=keywords_array,
-            scan_ranges=[],
+            scan_ranges=scan_ranges,
             is_active=True
         )
         db.session.add(config)
@@ -842,6 +857,7 @@ def update_bank_config(config_id):
         bank_code = request.form.get('bank_code', '').strip().upper()
         bank_name = request.form.get('bank_name', '').strip()
         keywords = request.form.get('keywords', '').strip()
+        scan_ranges_str = request.form.get('scan_ranges', '').strip()
 
         # Validation
         if not bank_code:
@@ -859,9 +875,24 @@ def update_bank_config(config_id):
             flash("❌ Vui lòng nhập ít nhất một từ khóa hợp lệ!", 'danger')
             return redirect(url_for('admin.manage_bank_configs'))
 
+        # Parse scan_ranges JSON
+        scan_ranges = []
+        if scan_ranges_str:
+            try:
+                import json
+                scan_ranges = json.loads(scan_ranges_str)
+                # Validate scan_ranges structure
+                if not isinstance(scan_ranges, list):
+                    flash("❌ Scan ranges phải là một mảng JSON!", 'danger')
+                    return redirect(url_for('admin.manage_bank_configs'))
+            except json.JSONDecodeError:
+                flash("❌ Định dạng JSON không hợp lệ cho scan ranges!", 'danger')
+                return redirect(url_for('admin.manage_bank_configs'))
+
         config.bank_code = bank_code
         config.bank_name = bank_name if bank_name else None
         config.keywords = keywords_array
+        config.scan_ranges = scan_ranges
         db.session.commit()
         flash(f"✅ Đã cập nhật cấu hình {bank_code} thành công!", 'success')
     except Exception as e:
@@ -869,6 +900,37 @@ def update_bank_config(config_id):
         flash(f"❌ Lỗi khi cập nhật: {str(e)}", 'danger')
 
     return redirect(url_for('admin.manage_bank_configs'))
+
+@main_bp.route('/user/bank-config/update-scan-ranges/<int:config_id>', methods=['POST'])
+@login_required
+def update_bank_config_scan_ranges(config_id):
+    """Admin-only: Update only scan_ranges for a bank config"""
+    if session.get('role') != 'admin':
+        return jsonify({"success": False, "message": "Chỉ Admin mới có quyền thực hiện thao tác này!"}), 403
+
+    from models.bank_config import BankConfig
+
+    company_id = session.get('company_id')
+    config = BankConfig.query.filter_by(id=config_id, company_id=company_id).first()
+
+    if not config:
+        return jsonify({"success": False, "message": "Không tìm thấy cấu hình hoặc bạn không có quyền!"}), 404
+
+    try:
+        data = request.get_json()
+        scan_ranges = data.get('scan_ranges', [])
+
+        # Validate scan_ranges structure
+        if not isinstance(scan_ranges, list):
+            return jsonify({"success": False, "message": "Scan ranges phải là một mảng!"}), 400
+
+        config.scan_ranges = scan_ranges
+        db.session.commit()
+
+        return jsonify({"success": True, "message": "Đã cập nhật scan ranges thành công!"})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": f"Lỗi: {str(e)}"}), 500
 
 @main_bp.route('/user/bank-config/delete/<int:config_id>')
 @login_required

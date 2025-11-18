@@ -45,7 +45,7 @@ def validate_statement_data(parsed_data):
     else:
         # Check each transaction for required fields
         missing_fields_summary = {
-            'credit_debit': 0,
+            'credit_debit_fee_vat': 0,
             'narrative': 0,
             'transaction_date': 0
         }
@@ -56,22 +56,29 @@ def validate_statement_data(parsed_data):
             # At least one of credit or debit must have value
             credit = txn.get('credit') or txn.get('creditmoney')
             debit = txn.get('debit') or txn.get('debitmoney')
-
-            has_credit_debit = False
-            if credit or debit:
+            transactionfee = txn.get('transactionfee')
+            transactionvat= txn.get('transactionvat')
+            has_credit_debit_fee_vat = False
+            if credit or debit or transactionfee or transactionvat:
                 try:
                     # Check if it's a valid number (not empty string)
                     if credit and str(credit).strip():
                         float(str(credit).replace(',', ''))
-                        has_credit_debit = True
+                        has_credit_debit_fee_vat = True
                     if debit and str(debit).strip():
                         float(str(debit).replace(',', ''))
-                        has_credit_debit = True
+                        has_credit_debit_fee_vat = True
+                    if transactionfee and str(transactionfee).strip():
+                        float(str(transactionfee).replace(',', ''))
+                        has_credit_debit_fee_vat = True
+                    if transactionvat and str(transactionvat).strip():
+                        float(str(transactionvat).replace(',', ''))
+                        has_credit_debit_fee_vat = True
                 except (ValueError, TypeError):
                     pass
 
-            if not has_credit_debit:
-                missing_fields_summary['credit_debit'] += 1
+            if not has_credit_debit_fee_vat:
+                missing_fields_summary['credit_debit_fee_vat'] += 1
 
             # Check narrative
             narrative = txn.get('narrative') or txn.get('detail') or txn.get('description')
@@ -79,20 +86,20 @@ def validate_statement_data(parsed_data):
                 missing_fields_summary['narrative'] += 1
 
             # Check transaction date
-            txn_date = txn.get('transactiondate') or txn.get('valuedate') or txn.get('date')
+            txn_date = txn.get('transactiondate') #or txn.get('valuedate') or txn.get('date')
             if not txn_date or not str(txn_date).strip():
                 missing_fields_summary['transaction_date'] += 1
 
             # Count as valid if it has all 4 required fields
-            if has_credit_debit and narrative and str(narrative).strip() and txn_date and str(txn_date).strip():
+            if has_credit_debit_fee_vat and narrative and str(narrative).strip() and txn_date and str(txn_date).strip():
                 valid_transactions += 1
 
         # Report summary of missing fields
         if valid_transactions == 0:
-            errors.append(f"❌ Không có giao dịch hợp lệ nào. Mỗi giao dịch phải có: Transaction Date, Narrative, và Credit/Debit")
+            errors.append(f"❌ Không có giao dịch hợp lệ nào. Mỗi giao dịch phải có: Transaction Date, Narrative, và Credit/Debit/Fee/VAT")
 
-        if missing_fields_summary['credit_debit'] > 0:
-            errors.append(f"⚠️ Thiếu thông tin Credit/Debit cho {missing_fields_summary['credit_debit']}/{len(transactions)} giao dịch")
+        if missing_fields_summary['credit_debit_fee_vat'] > 0:
+            errors.append(f"⚠️ Thiếu thông tin Credit/Debit/Fee/VAT cho {missing_fields_summary['credit_debit_fee_vat']}/{len(transactions)} giao dịch")
 
         if missing_fields_summary['narrative'] > 0:
             errors.append(f"⚠️ Thiếu thông tin Narrative (Diễn giải) cho {missing_fields_summary['narrative']}/{len(transactions)} giao dịch")
@@ -136,11 +143,14 @@ def _get_dataframe_sheets(path, ext):
         return {}
 
 
-def _find_value_in_df(df, keywords, col_keyword, col_value, row_start, row_end):
+def _find_value_in_df(df, keywords, col_keyword, col_value, row_start, row_end, identify_info):
     # df: pandas DataFrame
     # keywords: list
     # column selectors may be header names or column letters
+    # identify_info: field type for smart extraction (accountno, currency, openingbalance, closingbalance)
     # return first matched value or None
+    import re
+
     if df is None or df.shape[0] == 0:
         return None
 
@@ -175,24 +185,109 @@ def _find_value_in_df(df, keywords, col_keyword, col_value, row_start, row_end):
             if idx is not None and idx < len(df.columns):
                 val_col = df.columns[idx]
 
+    # Check if col_keyword == col_value (same column for both keyword and value)
+    same_column = (col_keyword == col_value) and col_keyword is not None
+
     # If no kw_col but val_col provided, we try to read first matching row by keywords anywhere
     for r in range(start, end + 1):
         row = df.iloc[r]
         row_text = ' '.join([str(x) for x in row.tolist() if x is not None])
         found = False
+        matched_keyword = None
+
         for kw in (keywords or []):
             if kw and kw.lower() in str(row_text).lower():
                 found = True
+                matched_keyword = kw
                 break
+
         if found:
             # pick value
+            raw_value = None
             if val_col:
-                return str(row.get(val_col, '')).strip()
+                raw_value = str(row.get(val_col, '')).strip()
             elif kw_col:
-                return str(row.get(kw_col, '')).strip()
+                raw_value = str(row.get(kw_col, '')).strip()
             else:
                 # return whole row as string
-                return row_text
+                raw_value = row_text
+
+            # SMART EXTRACTION when col_keyword == col_value (same column)
+            if same_column and identify_info and raw_value:
+                ident_lower = str(identify_info).lower().strip()
+
+                # Account Number: search for keywords then extract 4-20 digit pattern
+                if ident_lower == 'accountno':
+                    # If a keyword was matched, search near the keyword
+                    if matched_keyword:
+                        kw_lower = matched_keyword.lower()
+                        text_lower = raw_value.lower()
+                        kw_idx = text_lower.find(kw_lower)
+
+                        if kw_idx != -1:
+                            # Extract text after keyword
+                            after_keyword = raw_value[kw_idx + len(matched_keyword):]
+                            # Find first 4-20 consecutive digits after keyword
+                            match = re.search(r'\b(\d{4,20})\b', after_keyword)
+                            if match:
+                                return match.group(1)
+
+                    # Fallback: search entire raw_value for 4-20 digit pattern
+                    match = re.search(r'\b(\d{4,20})\b', raw_value)
+                    if match:
+                        return match.group(1)
+
+                    # Last resort: extract all digits and check length
+                    digits = re.sub(r'\D', '', raw_value)
+                    if 4 <= len(digits) <= 20:
+                        return digits
+
+                # Currency: extract 3 alphabetic characters (like VND, USD, EUR)
+                elif ident_lower == 'currency':
+                    # List of valid ISO 4217 currency codes (most common ones)
+                    valid_currencies = {
+                        'VND', 'USD', 'EUR', 'GBP', 'CAD', 'CNY', 'AUD', 'MYR',
+                        'IDR', 'THB', 'JPY', 'KRW', 'SGD', 'HKD', 'TWD', 'PHP',
+                        'INR', 'CHF', 'NZD', 'SEK', 'NOK', 'DKK', 'PLN', 'RUB',
+                        'BRL', 'MXN', 'ZAR', 'TRY', 'AED', 'SAR', 'QAR', 'KWD'
+                    }
+
+                    # Find 3 consecutive letters
+                    matches = re.findall(r'\b([A-Za-z]{3})\b', raw_value)
+                    for match in matches:
+                        currency_code = match.upper()
+                        if currency_code in valid_currencies:
+                            return currency_code
+
+                    # If no valid currency found in list, return None
+                    return None
+
+                # Opening/Closing Balance: extract number after keyword (exclude currency unit)
+                elif ident_lower in ('openingbalance', 'closingbalance'):
+                    if matched_keyword:
+                        # Find keyword position in text
+                        text_lower = raw_value.lower()
+                        kw_idx = text_lower.find(matched_keyword.lower())
+                        if kw_idx != -1:
+                            # Text after keyword
+                            after_keyword = raw_value[kw_idx + len(matched_keyword):]
+                            # Patterns to find numeric token (thousand separators allowed), avoid trailing currency code
+                            patterns = [
+                                r'[:\s]*([0-9][0-9,\.]*)'  # fallback
+                            ]
+                            for pat in patterns:
+                                match = re.search(pat, after_keyword)
+                                if match:
+                                    raw_num = match.group(1).strip()
+                                    # Remove thousand separators
+                                    cleaned = re.sub(r'[,.]', '', raw_num)
+                                    # Strip any trailing currency code remnants just in case
+                                    cleaned = re.sub(r'(VND|USD|EUR|GBP|CAD|CNY|AUD|MYR|IDR|THB|JPY|KRW|SGD|HKD|TWD|PHP|INR|CHF|NZD|SEK|NOK|DKK|PLN|RUB|BRL|MXN|ZAR|TRY|AED|SAR|QAR|KWD)$', '', cleaned, flags=re.I).strip()
+                                    if cleaned:
+                                        return cleaned
+
+            # Return raw value if no smart extraction applied or no match found
+            return raw_value
 
     return None
 
@@ -214,7 +309,7 @@ def parse_and_store_statement(session, file_path, original_filename, ext, compan
         header_fields = ['accountno', 'currency', 'openingbalance', 'closingbalance']
         detail_fields = ['transactiondate', 'narrative', 'debit', 'credit', 'flowcode', 'transactionfee', 'transactionvat', 'reference_number']
 
-        header = {k: None for k in header_fields}
+        header: dict[str, str | None] = {k: None for k in header_fields}
         # mapping identify_info -> list of configs (usually one)
         detail_mappings = {}
 
@@ -224,7 +319,7 @@ def parse_and_store_statement(session, file_path, original_filename, ext, compan
                 # try find value across sheets
                 val = None
                 for name, df in sheets.items():
-                    val = _find_value_in_df(df, cfg.keywords or [], cfg.col_keyword, cfg.col_value, cfg.row_start, cfg.row_end)
+                    val = _find_value_in_df(df, cfg.keywords or [], cfg.col_keyword, cfg.col_value, cfg.row_start, cfg.row_end, ident)
                     if val:
                         break
                 header[ident] = val
@@ -282,6 +377,11 @@ def parse_and_store_statement(session, file_path, original_filename, ext, compan
                     if any_value:
                         # Normalize/validate transaction date: parse and format to ddmmyyyy (day-first)
                         raw_td = trx.get('transactiondate')
+                        raw_narrative = trx.get('narrative')
+
+                        # STRICT FILTER: Only include rows where:
+                        # 1. transactiondate is a valid date/datetime format
+                        # 2. narrative is not empty
                         parsed_td = None
                         if raw_td and str(raw_td).strip():
                             try:
@@ -292,8 +392,13 @@ def parse_and_store_statement(session, file_path, original_filename, ext, compan
                             except Exception:
                                 parsed_td = None
 
-                        # Only append rows where parsed transaction date is valid (non-null)
-                        if parsed_td:
+                        # Check narrative is not empty
+                        has_valid_narrative = raw_narrative and str(raw_narrative).strip() != ''
+
+                        # Only append rows where BOTH conditions are met:
+                        # - parsed transaction date is valid (non-null)
+                        # - narrative is not empty
+                        if parsed_td and has_valid_narrative:
                             trx['transactiondate'] = parsed_td
                             details.append(trx)
 
@@ -405,7 +510,7 @@ def parse_and_store_statement(session, file_path, original_filename, ext, compan
         closing_val = float_safe(header.get('closingbalance') or 0)
 
         # If totals are None, we skip validation
-        if total_credit is not None:
+        if total_credit is not None and total_debit is not None and total_fee is not None and total_vat is not None:
             # Số dư phát sinh = Credit - Debit - Fee - VAT
             so_du_phat_sinh = total_credit - total_debit - total_fee - total_vat
             expected_closing = opening_val + so_du_phat_sinh
@@ -477,18 +582,18 @@ def parse_and_store_statement(session, file_path, original_filename, ext, compan
 
         # create StatementLog
         stmt_log = StatementLog(
-            user_id=user_id,
-            company_id=company_id,
-            bank_code=bank_code,
-            filename=file_path,
-            original_filename=original_filename,
-            status='SUCCESS',
-            message='Parsed statement',
-            accountno=account_norm,
-            currency=currency_norm,
-            opening_balance=opening_norm,
-            closing_balance=closing_norm,
-            details=details if details else None,
+            user_id=user_id, # type: ignore
+            company_id=company_id, # type: ignore
+            bank_code=bank_code, # type: ignore
+            filename=file_path, # type: ignore
+            original_filename=original_filename, # type: ignore
+            status='SUCCESS', # type: ignore
+            message='Parsed statement', # type: ignore
+            accountno=account_norm, # type: ignore
+            currency=currency_norm, # type: ignore
+            opening_balance=opening_norm, # type: ignore
+            closing_balance=closing_norm, # type: ignore
+            details=details if details else None, # type: ignore
         )
         session.add(stmt_log)
         session.commit()
@@ -516,13 +621,12 @@ def parse_and_store_statement(session, file_path, original_filename, ext, compan
         session.rollback()
         try:
             log = StatementLog(
-                user_id=user_id,
-                company_id=company_id,
-                bank_code=bank_code,
-                filename=file_path,
-                original_filename=original_filename,
-                status='FAILED',
-                message=str(e)
+                user_id=user_id, # type: ignore
+                company_id=company_id, # type: ignore
+                bank_code=bank_code, # type: ignore
+                original_filename=original_filename, # type: ignore
+                status='FAILED', # type: ignore
+                message=str(e) # type: ignore
             )
             session.add(log)
             session.commit()
@@ -594,7 +698,7 @@ def build_mt940_strict(stmt_log):
     # Only include transactions that have a transactiondate and a non-empty narrative
     # filtered_details already computed above; reuse if available
     try:
-        filtered_details
+        filtered_details # type: ignore
     except NameError:
         filtered_details = [d for d in (stmt_log.details or []) if d.get('transactiondate') and (d.get('narrative') and str(d.get('narrative')).strip())]
     for d in filtered_details:
@@ -693,6 +797,17 @@ def build_mt940_strict(stmt_log):
 
 
 def float_safe(s):
+    """Safely convert string to float, handling various formats.
+
+    Supports:
+    - Plain numbers: "1234.56"
+    - Thousand separators: "7,529,778,893" or "7.529.778.893"
+    - Currency symbols: "7,529,778,893 VND"
+    - Descriptive text: "Opening Balance: 7,529,778,893 VND"
+    - Accounting negatives: "(1234.56)"
+    """
+    import re
+
     try:
         s = str(s)
         if not s:
@@ -700,14 +815,42 @@ def float_safe(s):
         s = s.strip()
         if s == '':
             return 0.0
+
+        # Try to extract amount from descriptive text first
+        # Pattern to find numbers with optional commas/dots as thousands separators
+        patterns = [
+            r':\s*([\d,\.]+)\s*VND',  # After colon, before VND
+            r':\s*([\d,\.]+)',         # After colon
+            r'([\d,\.]+)\s*VND',       # Before VND
+            r'\b(\d{1,3}(?:[,\.]\d{3})+)\b',  # Numbers with thousand separators
+            r'\b(\d+)\b',              # Plain numbers
+        ]
+
+        for pattern in patterns:
+            match = re.search(pattern, s)
+            if match:
+                num_str = match.group(1)
+                # Remove all commas and dots that are thousand separators
+                cleaned = re.sub(r'[,\.]', '', num_str)
+                try:
+                    return float(cleaned)
+                except ValueError:
+                    continue
+
+        # Fallback to simple parsing
         # handle parentheses (accounting negative format)
         negative = False
         if s.startswith('(') and s.endswith(')'):
             negative = True
             s = s[1:-1]
+
         # remove common currency symbols, non-breaking space and normal spaces
-        for ch in ['$', '€', '£', '\xa0', ' ']:
+        for ch in ['$', '€', '£', '\xa0', ' ', 'VND', 'USD', 'EUR','GBP', 'CAD', 'CNY', 'AUD', 'MYR',
+                        'IDR', 'THB', 'JPY', 'KRW', 'SGD', 'HKD', 'TWD', 'PHP',
+                        'INR', 'CHF', 'NZD', 'SEK', 'NOK', 'DKK', 'PLN', 'RUB',
+                        'BRL', 'MXN', 'ZAR', 'TRY', 'AED', 'SAR', 'QAR', 'KWD']:
             s = s.replace(ch, '')
+
         # remove thousands separators commonly using comma
         s = s.replace(',', '')
         v = float(s)

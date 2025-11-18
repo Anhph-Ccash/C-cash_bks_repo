@@ -1,38 +1,74 @@
 {
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Debug Flask App",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "app.py",
-            "cwd": "${workspaceFolder}",
-            "jinja": true,
-            "env": {
-                "FLASK_ENV": "development",
-                "FLASK_APP": "app.py",
-                "PYTHONPATH": "${workspaceFolder}"
-            },
-            "args": [
-                "run",
-                "--no-debugger",
-                "--no-reload"
-            ],
-            "autoStartBrowser": false
-        },
-        {
-            "name": "Debug via app.py",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${workspaceFolder}/app.py",
-            "cwd": "${workspaceFolder}",
-            "jinja": true,
-            "env": {
-                "PYTHONPATH": "${workspaceFolder}",
-                "FLASK_ENV": "development"
-            },
-            "console": "integratedTerminal",
-            "justMyCode": true
-        }
-    ]
+  "version": "0.2.0",
+  "configurations": [
+    {
+        "type": "vscode-edge-devtools.debug",
+        "request": "launch",
+        "name": "Launch Microsoft Edge and open the Edge DevTools",
+        "url": "http://127.0.0.1:5000",
+        "webRoot": "${workspaceFolder}"
+    },
+    {
+      "name": "Python Debugger: Flask",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "flask",
+      "env": { "FLASK_APP": "app.py", "FLASK_DEBUG": "1" },
+      "args": ["run", "--no-debugger", "--no-reload"],
+      "jinja": true,
+      "autoStartBrowser": false,
+      "justMyCode": false
+    },
+    {
+      "name": "Debug Flask App",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "app.py",
+      "cwd": "${workspaceFolder}",
+      "jinja": true,
+      "env": {
+        "FLASK_ENV": "development",
+        "FLASK_APP": "app.py",
+        "PYTHONPATH": "${workspaceFolder}"
+      },
+      "args": ["run", "--no-debugger", "--no-reload"],
+      "autoStartBrowser": false
+    },
+    {
+      "name": "Debug via app.py",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/app.py",
+      "cwd": "${workspaceFolder}",
+      "jinja": true,
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}",
+        "FLASK_ENV": "development"
+      },
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "Debug Statement Service",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/debug_statement_service.py",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      }
+    },
+    {
+      "name": "Advanced Debug Statement Service",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/advanced_debug_statement.py",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      }
+    }
+  ]
 }

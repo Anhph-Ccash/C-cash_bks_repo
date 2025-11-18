@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-11-15 11:47+0700\n"
+"POT-Creation-Date: 2025-11-19 00:05+0700\n"
 "PO-Revision-Date: 2025-11-14 01:00+0700\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: vi\n"
@@ -92,7 +92,7 @@ msgid "Giữ Ctrl để chọn nhiều"
 msgstr "Giữ Ctrl để chọn nhiều"
 
 #: templates/admin.html:135 templates/admin.html:373
-#: templates/admin_bank_configs.html:144 templates/admin_companies.html:140
+#: templates/admin_bank_configs.html:191 templates/admin_companies.html:140
 #: templates/admin_statement_configs.html:160 templates/admin_users.html:23
 msgid "Thêm"
 msgstr "Thêm"
@@ -108,7 +108,7 @@ msgid "Xóa user này?"
 msgstr "Xóa user này?"
 
 #: templates/admin.html:181 templates/admin.html:267
-#: templates/admin_bank_configs.html:99 templates/admin_logs.html:134
+#: templates/admin_bank_configs.html:141 templates/admin_logs.html:134
 #: templates/admin_statement_configs.html:97 templates/admin_users.html:78
 #: templates/logs.html:138
 msgid "Hiển thị"
@@ -119,14 +119,14 @@ msgid "users"
 msgstr "Người dùng"
 
 #: templates/admin.html:184 templates/admin.html:275
-#: templates/admin_bank_configs.html:107 templates/admin_logs.html:142
+#: templates/admin_bank_configs.html:149 templates/admin_logs.html:142
 #: templates/admin_statement_configs.html:105 templates/admin_users.html:86
 #: templates/logs.html:146 templates/user_logs.html:134
 msgid "Trang"
 msgstr "Trang"
 
 #: templates/admin.html:188 templates/admin.html:271
-#: templates/admin_bank_configs.html:103 templates/admin_bank_configs.html:105
+#: templates/admin_bank_configs.html:145 templates/admin_bank_configs.html:147
 #: templates/admin_statement_configs.html:101
 #: templates/admin_statement_configs.html:103 templates/admin_users.html:82
 #: templates/admin_users.html:84 templates/logs.html:142
@@ -136,7 +136,7 @@ msgid "Trước"
 msgstr "Trước"
 
 #: templates/admin.html:193 templates/admin.html:277
-#: templates/admin_bank_configs.html:109 templates/admin_bank_configs.html:111
+#: templates/admin_bank_configs.html:151 templates/admin_bank_configs.html:153
 #: templates/admin_statement_configs.html:107
 #: templates/admin_statement_configs.html:109 templates/admin_users.html:88
 #: templates/admin_users.html:90 templates/logs.html:148
@@ -173,7 +173,7 @@ msgid "Mã NH"
 msgstr "Mã NH"
 
 #: templates/admin.html:220 templates/admin_bank_configs.html:53
-#: templates/admin_bank_configs.html:134 templates/admin_bank_configs.html:167
+#: templates/admin_bank_configs.html:176 templates/admin_bank_configs.html:214
 msgid "Tên Ngân hàng"
 msgstr "Tên Ngân hàng"
 
@@ -183,7 +183,7 @@ msgstr "Tên Ngân hàng"
 msgid "Từ khóa"
 msgstr "Từ khóa"
 
-#: templates/admin.html:222 templates/admin_bank_configs.html:55
+#: templates/admin.html:222 templates/admin_bank_configs.html:56
 #: templates/admin_companies.html:24 templates/admin_logs.html:22
 #: templates/admin_logs.html:65 templates/admin_upload.html:84
 #: templates/logs.html:26 templates/logs.html:69 templates/logs.html:174
@@ -193,13 +193,13 @@ msgstr "Từ khóa"
 msgid "Trạng thái"
 msgstr "Trạng thái"
 
-#: templates/admin.html:223 templates/admin_bank_configs.html:56
+#: templates/admin.html:223 templates/admin_bank_configs.html:57
 #: templates/admin_companies.html:209
 #: templates/admin_statement_configs.html:211 templates/admin_users.html:189
 msgid "Cập nhật"
 msgstr "Cập nhật"
 
-#: templates/admin.html:224 templates/admin_bank_configs.html:57
+#: templates/admin.html:224 templates/admin_bank_configs.html:58
 #: templates/admin_companies.html:25 templates/admin_statement_configs.html:49
 #: templates/admin_upload.html:225 templates/user_upload.html:52
 #: templates/user_upload.html:122 templates/users.html:50
@@ -212,30 +212,30 @@ msgstr "Thao tác"
 msgid "Chọn cấu hình %(code)s"
 msgstr "Chọn cấu hình %(code)s"
 
-#: templates/admin.html:240 templates/admin_bank_configs.html:72
+#: templates/admin.html:240 templates/admin_bank_configs.html:112
 #: templates/admin_companies.html:44
 msgid "Active"
 msgstr "Đang kích hoạt"
 
-#: templates/admin.html:242 templates/admin_bank_configs.html:74
+#: templates/admin.html:242 templates/admin_bank_configs.html:114
 #: templates/admin_companies.html:46
 msgid "Inactive"
 msgstr "Không kích hoạt"
 
-#: templates/admin.html:251 templates/admin_bank_configs.html:83
+#: templates/admin.html:251 templates/admin_bank_configs.html:125
 msgid "Sửa nhanh"
 msgstr "Sửa nhanh"
 
-#: templates/admin.html:252 templates/admin_bank_configs.html:84
+#: templates/admin.html:252 templates/admin_bank_configs.html:126
 #, python-format
 msgid "Xóa cấu hình %(bank_code)s?"
 msgstr "Xóa cấu hình %(bank_code)s?"
 
-#: templates/admin.html:256 templates/admin_bank_configs.html:88
+#: templates/admin.html:256 templates/admin_bank_configs.html:130
 msgid "Chưa có cấu hình ngân hàng"
 msgstr "Chưa có cấu hình ngân hàng"
 
-#: templates/admin.html:267 templates/admin_bank_configs.html:99
+#: templates/admin.html:267 templates/admin_bank_configs.html:141
 #: templates/admin_logs.html:134 templates/admin_statement_configs.html:97
 #: templates/logs.html:138
 msgid "mục"
@@ -249,8 +249,8 @@ msgstr "Cấu hình Sổ phụ Ngân hàng"
 msgid "Chưa có cấu hình sổ phụ"
 msgstr "Chưa có cấu hình sổ phụ"
 
-#: templates/admin_bank_configs.html:15 templates/admin_bank_configs.html:124
-#: templates/admin_bank_configs.html:143 templates/admin_bank_configs.html:157
+#: templates/admin_bank_configs.html:15 templates/admin_bank_configs.html:166
+#: templates/admin_bank_configs.html:190 templates/admin_bank_configs.html:204
 #: templates/admin_companies.html:84 templates/admin_companies.html:139
 #: templates/admin_companies.html:153 templates/admin_companies.html:208
 #: templates/admin_statement_configs.html:122
@@ -276,8 +276,8 @@ msgstr "Tìm kiếm"
 msgid "Xóa bộ lọc"
 msgstr "Xóa bộ lọc"
 
-#: templates/admin_bank_configs.html:52 templates/admin_bank_configs.html:130
-#: templates/admin_bank_configs.html:163 templates/admin_logs.html:17
+#: templates/admin_bank_configs.html:52 templates/admin_bank_configs.html:172
+#: templates/admin_bank_configs.html:210 templates/admin_logs.html:17
 #: templates/admin_logs.html:64 templates/admin_statement_configs.html:25
 #: templates/admin_statement_configs.html:233 templates/admin_upload.html:82
 #: templates/admin_upload.html:220 templates/logs.html:21
@@ -285,17 +285,32 @@ msgstr "Xóa bộ lọc"
 msgid "Mã Ngân hàng"
 msgstr "Mã Ngân hàng"
 
-#: templates/admin_bank_configs.html:123
+#: templates/admin_bank_configs.html:55
+msgid "Phạm vi quét"
+msgstr ""
+
+#: templates/admin_bank_configs.html:165
 msgid "Thêm Cấu hình Ngân hàng"
 msgstr "Thêm Cấu hình Ngân hàng"
 
-#: templates/admin_bank_configs.html:138 templates/admin_bank_configs.html:171
+#: templates/admin_bank_configs.html:180 templates/admin_bank_configs.html:218
 #: templates/admin_statement_configs.html:133
 #: templates/admin_statement_configs.html:184
 msgid "Từ khóa (phân cách bằng dấu phẩy)"
 msgstr "Từ khóa (phân cách bằng dấu phẩy)"
 
-#: templates/admin_bank_configs.html:156
+#: templates/admin_bank_configs.html:184 templates/admin_bank_configs.html:222
+msgid "Scan Ranges (JSON format)"
+msgstr ""
+
+#: templates/admin_bank_configs.html:186 templates/admin_bank_configs.html:224
+#, python-brace-format
+msgid ""
+"Định dạng: [{\"range\": \"A1:O5\", \"sheet_name\": \"Sheet1\"}] hoặc "
+"[{\"name\": \"Header\", \"start_row\": 1, \"end_row\": 10}]"
+msgstr ""
+
+#: templates/admin_bank_configs.html:203
 msgid "Sửa Cấu hình Ngân hàng"
 msgstr "Sửa Cấu hình Ngân hàng"
 
@@ -455,7 +470,7 @@ msgstr "Sửa Công ty"
 msgid "Để trống nếu không đổi hoặc sử dụng SSH key"
 msgstr "Để trống nếu không đổi hoặc sử dụng SSH key"
 
-#: templates/admin_logs.html:3
+#: templates/admin_logs.html:3 templates/logs.html:7
 msgid "Nhật ký Tải lên"
 msgstr "Nhật ký Tải lên"
 
@@ -464,6 +479,7 @@ msgid "📋 Nhật ký tải lên"
 msgstr "📋 Nhật ký tải lên"
 
 #: templates/admin_logs.html:11 templates/logs.html:11 templates/logs.html:15
+#: templates/user_logs.html:11
 msgid "Nhật ký tải lên"
 msgstr "Nhật ký tải lên"
 
@@ -772,10 +788,7 @@ msgid ""
 "Upload 11 dòng cho VCB (account_number, currency, opening_balance, "
 "closing_balance, narrative, transaction_date, debit, credit, flow_code, "
 "transaction_fee, transaction_vat)"
-msgstr "\"
-\"Upload 11 dòng cho VCB (account_number, currency, opening_balance, \"
-\"closing_balance, narrative, transaction_date, debit, credit, flow_code, \"
-\"transaction_fee, transaction_vat)"
+msgstr "\\"
 
 #: templates/admin_statement_configs.html:265
 msgid "Tải file mẫu với đầy đủ 11 trường"
@@ -797,9 +810,7 @@ msgstr "Các từ khóa ngăn cách bằng dấu phẩy"
 msgid ""
 "(Tùy chọn) Loại trường để dễ quản lý (account_number, currency, "
 "opening_balance...)"
-msgstr "\"
-\"(Tùy chọn) Loại trường để dễ quản lý (account_number, currency, \"
-\"opening_balance...)"
+msgstr "\\"
 
 #: templates/admin_statement_configs.html:273
 msgid "Cột keyword (VD: A, B)"
@@ -821,9 +832,7 @@ msgstr "Phạm vi dòng (số)"
 msgid ""
 "Mỗi dòng = 1 cấu hình cho 1 trường. Có thể có nhiều dòng cho cùng 1 "
 "bank_code."
-msgstr "\"
-\"Mỗi dòng = 1 cấu hình cho 1 trường. Có thể có nhiều dòng cho cùng 1 \"
-\"bank_code."
+msgstr "\\"
 
 #: templates/admin_upload.html:12
 msgid "Xác nhận tải lên SFTP"
@@ -1127,10 +1136,6 @@ msgstr "Đăng nhập"
 msgid "Đăng nhập hệ thống"
 msgstr "Đăng nhập hệ thống"
 
-#: templates/logs.html:7
-msgid "Lịch sử Tải lên"
-msgstr "Lịch sử Tải lên"
-
 #: templates/logs.html:51
 msgid "Tổng số"
 msgstr "Tổng số"
@@ -1280,16 +1285,14 @@ msgid "Lỗi kết nối! Vui lòng thử lại."
 msgstr "Lỗi kết nối! Vui lòng thử lại."
 
 #: templates/user_logs.html:3
-msgid "Lịch sử Upload - User"
+#, fuzzy
+msgid "Nhật ký Upload - User"
 msgstr "Lịch sử Upload - User"
 
-#: templates/user_logs.html:11
-msgid "Lịch sử tải lên"
-msgstr "Lịch sử tải lên"
-
 #: templates/user_logs.html:15
-msgid "Bộ lọc lịch sử tải lên"
-msgstr "Bộ lọc lịch sử tải lên"
+#, fuzzy
+msgid "Bộ lọc nhật ký tải lên"
+msgstr "📋 Nhật ký tải lên"
 
 #: templates/user_logs.html:31
 msgid "Khoảng thời gian"
@@ -1567,3 +1570,12 @@ msgstr "Đang tải..."
 
 #~ msgid "Quản lý - User Panel"
 #~ msgstr "Quản lý - User Panel"
+
+#~ msgid "Lịch sử Tải lên"
+#~ msgstr "Lịch sử Tải lên"
+
+#~ msgid "Lịch sử tải lên"
+#~ msgstr "Lịch sử tải lên"
+
+#~ msgid "Bộ lọc lịch sử tải lên"
+#~ msgstr "Bộ lọc lịch sử tải lên"

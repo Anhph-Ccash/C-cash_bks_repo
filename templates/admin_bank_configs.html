@@ -52,6 +52,7 @@
                         <th>{{ _('Mã Ngân hàng') }}</th>
                         <th>{{ _('Tên Ngân hàng') }}</th>
                         <th>{{ _('Từ khóa') }}</th>
+                        <th>{{ _('Phạm vi quét') }}</th>
                         <th>{{ _('Trạng thái') }}</th>
                         <th>{{ _('Cập nhật') }}</th>
                         <th width="120">{{ _('Thao tác') }}</th>
@@ -68,6 +69,45 @@
                             {% endfor %}
                         </td>
                         <td>
+                            <div class="scan-ranges-display" id="scan-ranges-display-{{ cfg.id }}">
+                                {% if cfg.scan_ranges and cfg.scan_ranges|length > 0 %}
+                                    {% for range in cfg.scan_ranges %}
+                                    <span class="badge bg-warning text-dark me-1"
+                                          title="{% if range.description %}{{ range.description }}{% elif range.sheet_name %}Sheet: {{ range.sheet_name }}{% endif %}"
+                                          data-bs-toggle="tooltip" data-bs-placement="top">
+                                        {% if range.name %}
+                                            {{ range.name }}
+                                            {% if range.start_row and range.end_row %}
+                                                <small>({{ range.start_row }}-{{ range.end_row }})</small>
+                                            {% endif %}
+                                        {% elif range.range %}
+                                            {{ range.range }}
+                                            {% if range.sheet_name %}
+                                                <small>({{ range.sheet_name }})</small>
+                                            {% endif %}
+                                        {% else %}
+                                            Range {{ loop.index }}
+                                        {% endif %}
+                                    </span>
+                                    {% endfor %}
+                                    <br><small class="text-muted">{{ cfg.scan_ranges|length }} vùng quét</small>
+
+                                {% else %}
+                                <span class="text-muted">Chưa cấu hình</span>
+                                <button class="btn btn-sm btn-link text-primary p-0 ms-2" onclick="editScanRanges({{ cfg.id }}, '[]')">
+                                    <small>➕ Thêm</small>
+                                </button>
+                                {% endif %}
+                            </div>
+                            <div class="scan-ranges-edit d-none" id="scan-ranges-edit-{{ cfg.id }}">
+                                <textarea class="form-control form-control-sm mb-1" id="scan-ranges-input-{{ cfg.id }}" rows="3"></textarea>
+                                <div class="d-flex gap-1">
+                                    <button class="btn btn-sm btn-success" onclick="saveScanRanges({{ cfg.id }})">💾 Lưu</button>
+                                    <button class="btn btn-sm btn-secondary" onclick="cancelEditScanRanges({{ cfg.id }})">✖ Hủy</button>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
                             {% if cfg.is_active %}
                             <span class="badge bg-success">{{ _('Active') }}</span>
                             {% else %}
@@ -80,12 +120,14 @@
                                     data-id="{{ cfg.id }}"
                                     data-bank-code="{{ cfg.bank_code }}"
                                     data-bank-name="{{ cfg.bank_name or '' }}"
-                                    data-keywords="{{ (cfg.keywords|join(', '))|e }}" title="{{ _('Sửa nhanh') }}">✏️</button>
+                                    data-keywords="{{ (cfg.keywords|join(', '))|e }}"
+                                    data-scan-ranges='{{ cfg.scan_ranges|tojson }}'
+                                    title="{{ _('Sửa nhanh') }}">✏️</button>
                             <a href="{{ url_for('main.delete_bank_config', config_id=cfg.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('{{ _('Xóa cấu hình %(bank_code)s?', bank_code=cfg.bank_code) }}')">🗑️</a>
                         </td>
                     </tr>
                     {% else %}
-                    <tr><td colspan="6" class="text-center text-muted">{{ _('Chưa có cấu hình ngân hàng') }}</td></tr>
+                    <tr><td colspan="7" class="text-center text-muted">{{ _('Chưa có cấu hình ngân hàng') }}</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -138,6 +180,11 @@
                         <label class="form-label">{{ _('Từ khóa (phân cách bằng dấu phẩy)') }}</label>
                         <input type="text" name="keywords" class="form-control" placeholder="keyword1, keyword2, keyword3" title="Từ khóa để nhận diện ngân hàng">
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ _('Scan Ranges (JSON format)') }}</label>
+                        <textarea name="scan_ranges" class="form-control" rows="3" placeholder='[{"range": "A1:O5", "sheet_name": "Sheet1"}]' title="Các vùng quét dữ liệu dưới dạng JSON"></textarea>
+                        <small class="form-text text-muted">{{ _('Định dạng: [{"range": "A1:O5", "sheet_name": "Sheet1"}] hoặc [{"name": "Header", "start_row": 1, "end_row": 10}]') }}</small>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Đóng') }}</button>
@@ -171,6 +218,11 @@
                         <label class="form-label">{{ _('Từ khóa (phân cách bằng dấu phẩy)') }}</label>
                         <input type="text" id="edit_keywords" name="keywords" class="form-control" placeholder="keyword1, keyword2, keyword3" title="Từ khóa để nhận diện ngân hàng">
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ _('Scan Ranges (JSON format)') }}</label>
+                        <textarea id="edit_scan_ranges" name="scan_ranges" class="form-control" rows="3" placeholder='[{"range": "A1:O5", "sheet_name": "Sheet1"}]' title="Các vùng quét dữ liệu dưới dạng JSON"></textarea>
+                        <small class="form-text text-muted">{{ _('Định dạng: [{"range": "A1:O5", "sheet_name": "Sheet1"}] hoặc [{"name": "Header", "start_row": 1, "end_row": 10}]') }}</small>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
@@ -185,6 +237,12 @@
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Bootstrap tooltips for scan_ranges
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
     // Inline edit buttons
     document.querySelectorAll('.btn-inline-edit-bank').forEach(btn => {
         btn.addEventListener('click', function() {
@@ -192,15 +250,100 @@ document.addEventListener('DOMContentLoaded', function() {
             const bankCode = this.dataset.bankCode;
             const bankName = this.dataset.bankName;
             const keywords = this.dataset.keywords;
+            const scanRanges = this.dataset.scanRanges;
 
             document.getElementById('edit_bank_code').value = bankCode;
             document.getElementById('edit_bank_name').value = bankName;
             document.getElementById('edit_keywords').value = keywords;
+
+            // Handle scan_ranges JSON data
+            try {
+                // scanRanges is already a JSON string from data-scan-ranges attribute
+                if (scanRanges && scanRanges !== '[]' && scanRanges !== '') {
+                    const scanRangesData = JSON.parse(scanRanges);
+                    document.getElementById('edit_scan_ranges').value = JSON.stringify(scanRangesData);
+                } else {
+                    document.getElementById('edit_scan_ranges').value = '';
+                }
+            } catch (e) {
+                console.error('Error parsing scan_ranges:', e);
+                console.log('Raw scanRanges:', scanRanges);
+                document.getElementById('edit_scan_ranges').value = '';
+            }
+
             document.getElementById('editBankConfigForm').action = `/user/bank-config/update/${configId}`;
 
             new bootstrap.Modal(document.getElementById('editBankConfigModal')).show();
         });
     });
 });
+
+// Inline edit scan_ranges functions
+function editScanRanges(configId, scanRangesJson) {
+    const displayDiv = document.getElementById('scan-ranges-display-' + configId);
+    const editDiv = document.getElementById('scan-ranges-edit-' + configId);
+    const textarea = document.getElementById('scan-ranges-input-' + configId);
+
+    // Parse and format JSON
+    try {
+        const data = JSON.parse(scanRangesJson);
+        textarea.value = JSON.stringify(data, null, 2);
+    } catch (e) {
+        textarea.value = scanRangesJson;
+    }
+
+    displayDiv.classList.add('d-none');
+    editDiv.classList.remove('d-none');
+}
+
+function cancelEditScanRanges(configId) {
+    const displayDiv = document.getElementById('scan-ranges-display-' + configId);
+    const editDiv = document.getElementById('scan-ranges-edit-' + configId);
+
+    displayDiv.classList.remove('d-none');
+    editDiv.classList.add('d-none');
+}
+
+function saveScanRanges(configId) {
+    const textarea = document.getElementById('scan-ranges-input-' + configId);
+    const scanRangesValue = textarea.value.trim();
+
+    // Validate JSON
+    try {
+        if (scanRangesValue) {
+            JSON.parse(scanRangesValue);
+        }
+    } catch (e) {
+        alert('❌ Định dạng JSON không hợp lệ!\n\n' + e.message);
+        return;
+    }
+
+    // Send AJAX request to update
+    const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+
+    fetch(`/user/bank-config/update-scan-ranges/${configId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({
+            scan_ranges: scanRangesValue ? JSON.parse(scanRangesValue) : []
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Reload page to show updated data
+            location.reload();
+        } else {
+            alert('❌ Lỗi: ' + (data.message || 'Không thể cập nhật'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('❌ Có lỗi xảy ra khi cập nhật!');
+    });
+}
 </script>
 {% endblock %}

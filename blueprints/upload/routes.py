@@ -108,8 +108,8 @@ def process_upload():
                 try:
                     orig_inner = os.path.basename(ef)
                     inner_ext = orig_inner.rsplit('.', 1)[-1].lower() if '.' in orig_inner else ''
-                    text = read_file_to_text(ef, inner_ext)
-                    result = detect_bank_and_process(db.session, ef, orig_inner, text, company_id, user_id)
+                    # Detection now uses scan_ranges internally
+                    result = detect_bank_and_process(db.session, ef, orig_inner, None, company_id, user_id)
                     status = result.get('status', 'FAILED')
                     processed += 1
                     if status == 'SUCCESS' and result.get('bank_code'):
@@ -148,8 +148,8 @@ def process_upload():
                 flash(f"{fn}: {msg}", 'warning')
 
         else:
-            text = read_file_to_text(saved_path, ext)
-            result = detect_bank_and_process(db.session, saved_path, orig_name, text, company_id, user_id)
+            # Detection now uses scan_ranges internally, no need to read full text
+            result = detect_bank_and_process(db.session, saved_path, orig_name, None, company_id, user_id)
             status = result.get('status', 'FAILED')
             message = result.get('message', '')
             flash(f"Upload {status}: {message}", 'success' if status == 'SUCCESS' else 'danger')
