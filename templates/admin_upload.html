@@ -219,6 +219,7 @@
                                 <th>{{ _('Tệp') }}</th>
                                 <th>{{ _('Mã Ngân hàng') }}</th>
                                 <th>{{ _('Số tài khoản') }}</th>
+                                <th>{{ _('Tiền tệ') }}</th>
                                 <th>{{ _('Thời gian') }}</th>
                                 <th>{{ _('Gửi qua SFTP') }}</th>
                                 <th>{{ _('Tệp MT940') }}</th>
@@ -237,6 +238,13 @@
                                     {% endif %}
                                 </td>
                                 <td>{{ stmt.accountno or '-' }}</td>
+                                <td>
+                                    {% if stmt.currency %}
+                                        <span class="badge bg-info">{{ stmt.currency }}</span>
+                                    {% else %}
+                                        <span class="text-danger">-</span>
+                                    {% endif %}
+                                </td>
                                 <td class="small text-muted">
                                     {% if stmt.processed_at %}
                                         {{ stmt.processed_at.strftime('%H:%M:%S - %d/%m/%Y') }}

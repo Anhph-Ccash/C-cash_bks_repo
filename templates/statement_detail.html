@@ -37,7 +37,20 @@
                 </form>
                 {% endif %}
             </div>
-            <div class="col-md-2"><strong>{{ _('Tiền tệ') }}</strong><div>{{ stmt.currency or '-' }}</div></div>
+            <div class="col-md-2">
+                <strong>{{ _('Tiền tệ') }}</strong>
+                <div>{{ stmt.currency or '-' }}</div>
+                {% if not stmt.currency or not stmt.mt940_filename %}
+                <form action="{{ url_for('main.update_statement_currency', log_id=stmt.id) }}" method="POST" class="mt-2">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                    <div class="input-group input-group-sm">
+                        <input type="text" name="currency" class="form-control text-uppercase" placeholder="{{ _('VD: VND, USD') }}" value="{{ stmt.currency or '' }}" maxlength="3">
+                        <button class="btn btn-sm btn-primary" type="submit">{{ _('Cập nhật') }}</button>
+                    </div>
+                    <small class="text-muted d-block mt-1">ISO 4217: VND, USD, EUR, GBP, CNY...</small>
+                </form>
+                {% endif %}
+            </div>
             <div class="col-md-3"><strong>{{ _('Số dư đầu kỳ') }}</strong><div>{{ stmt.opening_balance or '-' }}</div></div>
             <div class="col-md-3"><strong>{{ _('Số dư cuối kỳ') }}</strong><div>{{ stmt.closing_balance or '-' }}</div></div>
             <div class="col-md-3"><strong>{{ _('Ngân hàng') }}</strong><div>{{ stmt.bank_code or '-' }}</div></div>

@@ -112,7 +112,68 @@ Chức năng chính:
 
 ---
 
-## 7. Quy trình upload (tóm tắt)
+## 7. Nhập Currency khi thiếu thông tin (Currency Input Feature)
+
+### Khi nào form nhập Currency xuất hiện?
+Sau khi upload và phân tích file, nếu hệ thống **không tìm thấy thông tin loại tiền (Currency)** từ file, một form sẽ hiện lên trên trang chi tiết sổ (Statement Detail). Form này cho phép nhập mã tiền tệ trước khi tạo file MT940.
+
+### Các mã tiền tệ hợp lệ (ISO 4217 Standard)
+Hệ thống chỉ nhận mã tiền tệ quốc tế chuẩn:
+- **VND** (Vietnamese Đồng)
+- **USD** (US Dollar)
+- **EUR** (Euro)
+- **JPY** (Japanese Yen)
+- **GBP** (British Pound)
+- **AUD** (Australian Dollar)
+- **CAD** (Canadian Dollar)
+- **CHF** (Swiss Franc)
+- **CNY** (Chinese Yuan)
+- **INR** (Indian Rupee)
+- **SGD** (Singapore Dollar)
+- **HKD** (Hong Kong Dollar)
+- **THB** (Thai Baht)
+- **MYR** (Malaysian Ringgit)
+- **PHP** (Philippine Peso)
+- **IDR** (Indonesian Rupiah)
+- **KRW** (South Korean Won)
+- **TWD** (Taiwan Dollar)
+- **RUB** (Russian Ruble)
+- **BRL** (Brazilian Real)
+- **MXN** (Mexican Peso)
+- **ZAR** (South African Rand)
+- **AED** (UAE Dirham)
+- **SAR** (Saudi Riyal)
+- **QAR** (Qatari Riyal)
+- **KWD** (Kuwaiti Dinar)
+- **BHD** (Bahraini Dinar)
+- **OMR** (Omani Rial)
+- **JOD** (Jordanian Dinar)
+- **ILS** (Israeli Shekel)
+- **PKR** (Pakistani Rupee)
+- **LKR** (Sri Lankan Rupee)
+
+### Quy trình nhập Currency
+1. Vào trang **Chi tiết sổ** (Statement Detail).
+2. Tìm form **"Nhập mã tiền tệ"** (Currency Input Form).
+3. Nhập **3 ký tự chữ hoa** là mã tiền tệ (ví dụ: VND, USD, EUR).
+4. Nhấn nút **"Cập nhật"** (Update).
+5. Hệ thống sẽ:
+   - Xác thực mã tiền tệ có hợp lệ hay không.
+   - Nếu hợp lệ → lưu vào database, tự động tạo file MT940 mới, hiển thị **"✓ Cập nhật thành công"**.
+   - Nếu không hợp lệ → hiển thị lỗi **"Mã tiền tệ không hợp lệ"**, yêu cầu nhập lại.
+
+### Ví dụ
+- **Input:** USD → Output: "✓ Cập nhật thành công" + MT940 file được tạo tự động.
+- **Input:** XYZ → Output: "❌ Mã tiền tệ không hợp lệ (chỉ nhận ISO 4217 standard codes)".
+
+### Tại sao cần Currency?
+- **MT940 format** yêu cầu thông tin loại tiền để định dạng đúng số tiền (ví dụ: 1.000.000 VND).
+- **Báo cáo tài chính** cần biết loại tiền để tính toán đúng.
+- **Kiểm tra số dư** sử dụng currency để đối chiếu với sổ cái của ngân hàng.
+
+---
+
+## 8. Quy trình upload (tóm tắt)
 1. User upload -> lưu tạm.
 2. Detection Service phân tích, xác định cấu hình ngân hàng (bank_code).
 3. Parse header + details theo configs.
@@ -123,7 +184,7 @@ Chức năng chính:
 
 ---
 
-## 8. MT940 generation (service)
+## 9. MT940 generation (service)
 - Hàm: build_mt940_strict(stmt_log)
 - Tags chính: :20:, :25:, :28C:, :60F:, :61:/:86:, :62F:
 - Ghi chú:
@@ -133,7 +194,7 @@ Chức năng chính:
 
 ---
 
-## 9. Chạy và viết unit tests
+## 10. Chạy và viết unit tests
 - Thư mục tests/ chứa test_*.py
 - Cài pytest và pytest-cov (requirements-dev.txt)
 - Chạy toàn bộ tests:
@@ -143,14 +204,14 @@ Chức năng chính:
 
 ---
 
-## 10. Troubleshooting (thường gặp)
+## 11. Troubleshooting (thường gặp)
 - ModuleNotFoundError (ví dụ flask_babel): cài package bằng pip install flask-babel hoặc cập nhật requirements.txt.
 - ScopeMismatch với fixtures (base_url): set fixture scope="session" trong tests/conftest.py hoặc dùng pytest-base-url flag.
 - Lỗi validation: kiểm tra file mẫu, cấu hình bank_statement_config.
 
 ---
 
-## 11. Tạo file Word từ Markdown
+## 12. Tạo file Word từ Markdown
 - Script đã có: tools/generate_user_guide.py (sử dụng python-docx).
 - Chạy:
   - pip install python-docx
@@ -160,7 +221,9 @@ Chức năng chính:
 ---
 
 
-## 12. Thông tin dev / mở rộng
+---
+
+## 13. Thông tin dev / mở rộng
 - Thêm định dạng file mới:
   1. Update ALLOWED_EXTENSIONS trong config.py
   2. Thêm reader trong app/readers/
@@ -177,7 +240,7 @@ Chức năng chính:
 
 ---
 
-## 13. Liên hệ & ghi chú
+## 14. Liên hệ & ghi chú
 - Ghi chú nội bộ: giữ logging chi tiết cho upload/parse để dễ gỡ lỗi.
 - Backup db trước khi thay đổi migration/config quan trọng.
 

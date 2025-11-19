@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-11-19 00:05+0700\n"
+"POT-Creation-Date: 2025-11-19 22:21+0700\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -98,7 +98,7 @@ msgstr ""
 
 #: templates/admin.html:148 templates/admin_logs.html:68
 #: templates/admin_upload.html:85 templates/admin_users.html:35
-#: templates/logs.html:72 templates/statement_logs.html:62
+#: templates/logs.html:72 templates/statement_logs.html:63
 msgid "Hành động"
 msgstr ""
 
@@ -186,7 +186,7 @@ msgstr ""
 #: templates/admin_companies.html:24 templates/admin_logs.html:22
 #: templates/admin_logs.html:65 templates/admin_upload.html:84
 #: templates/logs.html:26 templates/logs.html:69 templates/logs.html:174
-#: templates/statement_logs.html:28 templates/statement_logs.html:59
+#: templates/statement_logs.html:28 templates/statement_logs.html:60
 #: templates/user_logs.html:22 templates/user_logs.html:76
 #: templates/user_upload.html:51 templates/users.html:49
 msgid "Trạng thái"
@@ -195,14 +195,15 @@ msgstr ""
 #: templates/admin.html:223 templates/admin_bank_configs.html:57
 #: templates/admin_companies.html:209
 #: templates/admin_statement_configs.html:211 templates/admin_users.html:189
+#: templates/statement_detail.html:48
 msgid "Cập nhật"
 msgstr ""
 
 #: templates/admin.html:224 templates/admin_bank_configs.html:58
 #: templates/admin_companies.html:25 templates/admin_statement_configs.html:49
-#: templates/admin_upload.html:225 templates/user_upload.html:52
-#: templates/user_upload.html:122 templates/users.html:50
-#: templates/users.html:123
+#: templates/admin_upload.html:226 templates/user_upload.html:52
+#: templates/user_upload.html:123 templates/users.html:50
+#: templates/users.html:124
 msgid "Thao tác"
 msgstr ""
 
@@ -330,7 +331,7 @@ msgid "Công ty"
 msgstr ""
 
 #: templates/admin_base.html:26 templates/admin_upload.html:178
-#: templates/base_layout.html:29 templates/statement_detail.html:43
+#: templates/base_layout.html:29 templates/statement_detail.html:56
 msgid "Ngân hàng"
 msgstr ""
 
@@ -386,8 +387,8 @@ msgstr ""
 msgid "Mã số thuế"
 msgstr ""
 
-#: templates/admin_companies.html:23 templates/statement_logs.html:60
-#: templates/user_upload.html:120 templates/users.html:121
+#: templates/admin_companies.html:23 templates/statement_logs.html:61
+#: templates/user_upload.html:121 templates/users.html:122
 msgid "SFTP"
 msgstr ""
 
@@ -512,22 +513,22 @@ msgstr ""
 
 #: templates/admin_logs.html:26 templates/admin_logs.html:95
 #: templates/admin_logs.html:173 templates/admin_upload.html:112
-#: templates/admin_upload.html:251 templates/error.html:6
+#: templates/admin_upload.html:259 templates/error.html:6
 #: templates/logs.html:30 templates/logs.html:99 templates/logs.html:177
-#: templates/statement_logs.html:80 templates/user_logs.html:26
+#: templates/statement_logs.html:88 templates/user_logs.html:26
 #: templates/user_logs.html:106 templates/user_upload.html:79
-#: templates/user_upload.html:148 templates/users.html:80
-#: templates/users.html:143
+#: templates/user_upload.html:156 templates/users.html:80
+#: templates/users.html:151
 msgid "Lỗi"
 msgstr ""
 
 #: templates/admin_logs.html:30 templates/admin_logs.html:62
-#: templates/admin_upload.html:83 templates/admin_upload.html:222
+#: templates/admin_upload.html:83 templates/admin_upload.html:223
 #: templates/logs.html:34 templates/logs.html:66 templates/logs.html:181
-#: templates/statement_logs.html:61 templates/user_logs.html:30
+#: templates/statement_logs.html:62 templates/user_logs.html:30
 #: templates/user_logs.html:73 templates/user_upload.html:50
-#: templates/user_upload.html:119 templates/users.html:48
-#: templates/users.html:120
+#: templates/user_upload.html:120 templates/users.html:48
+#: templates/users.html:121
 msgid "Thời gian"
 msgstr ""
 
@@ -763,8 +764,8 @@ msgstr ""
 msgid "Bạn có chắc chắn muốn xóa TẤT CẢ cấu hình của ngân hàng này?"
 msgstr ""
 
-#: templates/admin_statement_configs.html:240 templates/admin_upload.html:277
-#: templates/statement_logs.html:93 templates/users.html:167
+#: templates/admin_statement_configs.html:240 templates/admin_upload.html:285
+#: templates/statement_logs.html:101 templates/users.html:175
 msgid "Xóa"
 msgstr ""
 
@@ -879,7 +880,7 @@ msgid "Tải tệp Excel gốc"
 msgstr ""
 
 #: templates/admin_upload.html:121 templates/user_upload.html:88
-#: templates/users.html:89 templates/users.html:191
+#: templates/users.html:89 templates/users.html:199
 msgid "Tải tệp"
 msgstr ""
 
@@ -887,13 +888,13 @@ msgstr ""
 msgid "Phân trang lịch sử"
 msgstr ""
 
-#: templates/admin_upload.html:133 templates/admin_upload.html:293
-#: templates/statement_logs.html:106
+#: templates/admin_upload.html:133 templates/admin_upload.html:301
+#: templates/statement_logs.html:114
 msgid "Trang trước"
 msgstr ""
 
-#: templates/admin_upload.html:141 templates/admin_upload.html:299
-#: templates/statement_logs.html:117
+#: templates/admin_upload.html:141 templates/admin_upload.html:307
+#: templates/statement_logs.html:125
 msgid "Trang sau"
 msgstr ""
 
@@ -929,9 +930,9 @@ msgstr ""
 msgid "Tất cả trạng thái"
 msgstr ""
 
-#: templates/admin_upload.html:193 templates/admin_upload.html:249
-#: templates/statement_logs.html:76 templates/user_upload.html:146
-#: templates/users.html:141
+#: templates/admin_upload.html:193 templates/admin_upload.html:257
+#: templates/statement_logs.html:84 templates/user_upload.html:154
+#: templates/users.html:149
 msgid "Đã tải lên"
 msgstr ""
 
@@ -957,51 +958,57 @@ msgstr ""
 msgid "Số tài khoản"
 msgstr ""
 
-#: templates/admin_upload.html:223 templates/statement_logs.html:163
-#: templates/statement_logs.html:170
+#: templates/admin_upload.html:222 templates/statement_detail.html:41
+#: templates/statement_logs.html:59 templates/user_upload.html:119
+#: templates/users.html:120
+msgid "Tiền tệ"
+msgstr ""
+
+#: templates/admin_upload.html:224 templates/statement_logs.html:171
+#: templates/statement_logs.html:178
 msgid "Gửi qua SFTP"
 msgstr ""
 
-#: templates/admin_upload.html:224
+#: templates/admin_upload.html:225
 msgid "Tệp MT940"
 msgstr ""
 
-#: templates/admin_upload.html:249 templates/users.html:141
+#: templates/admin_upload.html:257 templates/users.html:149
 msgid "Đã tải lên lúc"
 msgstr ""
 
-#: templates/admin_upload.html:263 templates/user_upload.html:160
+#: templates/admin_upload.html:271 templates/user_upload.html:168
 msgid "Tải file MT940"
 msgstr ""
 
-#: templates/admin_upload.html:264 templates/statement_detail.html:16
-#: templates/statement_logs.html:89 templates/user_upload.html:161
-#: templates/users.html:156
+#: templates/admin_upload.html:272 templates/statement_detail.html:16
+#: templates/statement_logs.html:97 templates/user_upload.html:169
+#: templates/users.html:164
 msgid "Tải MT940"
 msgstr ""
 
-#: templates/admin_upload.html:270
+#: templates/admin_upload.html:278
 msgid "Xem chi tiết"
 msgstr ""
 
-#: templates/admin_upload.html:271 templates/statement_logs.html:87
-#: templates/user_upload.html:167 templates/users.html:162
+#: templates/admin_upload.html:279 templates/statement_logs.html:95
+#: templates/user_upload.html:175 templates/users.html:170
 msgid "Chi tiết"
 msgstr ""
 
-#: templates/admin_upload.html:275
+#: templates/admin_upload.html:283
 msgid "Xóa nhật ký Sổ phụ này?"
 msgstr ""
 
-#: templates/admin_upload.html:276
+#: templates/admin_upload.html:284
 msgid "Xóa bản ghi"
 msgstr ""
 
-#: templates/admin_upload.html:286 templates/user_upload.html:176
+#: templates/admin_upload.html:294 templates/user_upload.html:184
 msgid "Chưa có sổ phụ đã phân tích"
 msgstr ""
 
-#: templates/admin_upload.html:290
+#: templates/admin_upload.html:298
 msgid "Phân trang sổ phụ"
 msgstr ""
 
@@ -1177,23 +1184,23 @@ msgstr ""
 msgid "Cập nhật & Sinh MT940"
 msgstr ""
 
-#: templates/statement_detail.html:40
-msgid "Tiền tệ"
+#: templates/statement_detail.html:47
+msgid "VD: VND, USD"
 msgstr ""
 
-#: templates/statement_detail.html:41
+#: templates/statement_detail.html:54
 msgid "Số dư đầu kỳ"
 msgstr ""
 
-#: templates/statement_detail.html:42
+#: templates/statement_detail.html:55
 msgid "Số dư cuối kỳ"
 msgstr ""
 
-#: templates/statement_detail.html:46
+#: templates/statement_detail.html:59
 msgid "Chi tiết giao dịch"
 msgstr ""
 
-#: templates/statement_detail.html:70
+#: templates/statement_detail.html:83
 msgid "Không có giao dịch để hiển thị."
 msgstr ""
 
@@ -1241,43 +1248,43 @@ msgstr ""
 msgid "Đến"
 msgstr ""
 
-#: templates/statement_logs.html:91
+#: templates/statement_logs.html:99
 msgid "Upload file MT940 lên SFTP server"
 msgstr ""
 
-#: templates/statement_logs.html:93
+#: templates/statement_logs.html:101
 msgid "Xóa bản ghi sổ phụ này?"
 msgstr ""
 
-#: templates/statement_logs.html:103
+#: templates/statement_logs.html:111
 msgid "Phân trang"
 msgstr ""
 
-#: templates/statement_logs.html:123
+#: templates/statement_logs.html:131
 msgid "Không có bản ghi."
 msgstr ""
 
-#: templates/statement_logs.html:138
+#: templates/statement_logs.html:146
 msgid "Bạn có chắc muốn tải tệp MT940 này lên SFTP server?"
 msgstr ""
 
-#: templates/statement_logs.html:144
+#: templates/statement_logs.html:152
 msgid "Đang tải lên..."
 msgstr ""
 
-#: templates/statement_logs.html:157
+#: templates/statement_logs.html:165
 msgid "Upload thành công!"
 msgstr ""
 
-#: templates/statement_logs.html:157
+#: templates/statement_logs.html:165
 msgid "Đường dẫn:"
 msgstr ""
 
-#: templates/statement_logs.html:161
+#: templates/statement_logs.html:169
 msgid "Upload thất bại!"
 msgstr ""
 
-#: templates/statement_logs.html:168
+#: templates/statement_logs.html:176
 msgid "Lỗi kết nối! Vui lòng thử lại."
 msgstr ""
 
@@ -1330,35 +1337,35 @@ msgstr ""
 msgid "Sổ phụ đã phân tích (gần đây)"
 msgstr ""
 
-#: templates/user_upload.html:121 templates/users.html:122
+#: templates/user_upload.html:122 templates/users.html:123
 msgid "MT940"
 msgstr ""
 
-#: templates/user_upload.html:146
+#: templates/user_upload.html:154
 msgid "Đã tải lúc"
 msgstr ""
 
-#: templates/user_upload.html:192
+#: templates/user_upload.html:200
 msgid "Upload file"
 msgstr ""
 
-#: templates/user_upload.html:192 templates/users.html:191
+#: templates/user_upload.html:200 templates/users.html:199
 msgid "lên SFTP server?"
 msgstr ""
 
-#: templates/user_upload.html:198
+#: templates/user_upload.html:206
 msgid "Đang upload..."
 msgstr ""
 
-#: templates/user_upload.html:209 templates/users.html:198
+#: templates/user_upload.html:217 templates/users.html:206
 msgid "Tải lên thành công!"
 msgstr ""
 
-#: templates/user_upload.html:212 templates/users.html:199
+#: templates/user_upload.html:220 templates/users.html:207
 msgid "Tải lên thất bại!"
 msgstr ""
 
-#: templates/user_upload.html:218 templates/users.html:201
+#: templates/user_upload.html:226 templates/users.html:209
 msgid "Lỗi kết nối:"
 msgstr ""
 
@@ -1370,18 +1377,18 @@ msgstr ""
 msgid "Chưa có log nào"
 msgstr ""
 
-#: templates/users.html:155
+#: templates/users.html:163
 msgid "Tải tệp MT940"
 msgstr ""
 
-#: templates/users.html:166
+#: templates/users.html:174
 msgid "Xóa nhật ký sổ phụ này?"
 msgstr ""
 
-#: templates/users.html:176
+#: templates/users.html:184
 msgid "Chưa có sổ phụ nào được phân tích"
 msgstr ""
 
-#: templates/users.html:194
+#: templates/users.html:202
 msgid "Đang tải..."
 msgstr ""

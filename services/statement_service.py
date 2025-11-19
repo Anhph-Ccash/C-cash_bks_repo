@@ -1,4 +1,5 @@
 import os
+import re
 import pandas as pd
 from datetime import datetime
 from flask import current_app
@@ -147,10 +148,7 @@ def _find_value_in_df(df, keywords, col_keyword, col_value, row_start, row_end, 
     # df: pandas DataFrame
     # keywords: list
     # column selectors may be header names or column letters
-    # identify_info: field type for smart extraction (accountno, currency, openingbalance, closingbalance)
-    # return first matched value or None
-    import re
-
+    # identif
     if df is None or df.shape[0] == 0:
         return None
 

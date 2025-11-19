@@ -689,6 +689,81 @@ def update_statement_account(log_id):
     return redirect(url_for('main.view_statement_detail', log_id=log_id))
 
 
+@main_bp.route('/user/statement-log/<int:log_id>/update-currency', methods=['POST'])
+@login_required
+def update_statement_currency(log_id):
+    """Allow user to update currency for a parsed statement and (re)generate MT940."""
+    from services.statement_service import build_mt940_strict
+    stmt = StatementLog.query.filter_by(id=log_id).first()
+    if not stmt:
+        flash('Không tìm thấy bản ghi.', 'danger')
+        return redirect(url_for('main.user_dashboard'))
+
+    # permission: owner, company, or admin
+    allowed = False
+    if session.get('role') == 'admin':
+        allowed = True
+    elif stmt.user_id and stmt.user_id == session.get('user_id'):
+        allowed = True
+    elif stmt.company_id and stmt.company_id == session.get('company_id'):
+        allowed = True
+
+    if not allowed:
+        flash('Bạn không có quyền cập nhật.', 'danger')
+        return redirect(url_for('main.user_dashboard'))
+
+    new_currency = request.form.get('currency', '').strip().upper()
+    if not new_currency:
+        flash('Vui lòng nhập mã tiền tệ hợp lệ.', 'warning')
+        return redirect(url_for('main.view_statement_detail', log_id=log_id))
+
+    # Validate currency against ISO 4217
+    valid_currencies = {
+        'VND', 'USD', 'EUR', 'GBP', 'CAD', 'CNY', 'AUD', 'MYR',
+        'IDR', 'THB', 'JPY', 'KRW', 'SGD', 'HKD', 'TWD', 'PHP',
+        'INR', 'CHF', 'NZD', 'SEK', 'NOK', 'DKK', 'PLN', 'RUB',
+        'BRL', 'MXN', 'ZAR', 'TRY', 'AED', 'SAR', 'QAR', 'KWD'
+    }
+
+    if new_currency not in valid_currencies:
+        flash(f'Mã tiền tệ "{new_currency}" không hợp lệ. Vui lòng nhập mã ISO 4217 (VD: VND, USD, EUR, GBP...)', 'warning')
+        return redirect(url_for('main.view_statement_detail', log_id=log_id))
+
+    try:
+        stmt.currency = new_currency
+        # remove old mt940 file if exists
+        if stmt.mt940_filename:
+            try:
+                old_path = os.path.join(current_app.config.get('UPLOAD_FOLDER', 'uploads'), stmt.mt940_filename)
+                if os.path.exists(old_path):
+                    os.remove(old_path)
+            except Exception:
+                pass
+
+        # regenerate mt940 and write file
+        mt_text = build_mt940_strict(stmt)
+        mt_dir = os.path.join(current_app.config.get('UPLOAD_FOLDER', 'uploads'), 'mt940')
+        os.makedirs(mt_dir, exist_ok=True)
+        ts = datetime.utcnow().strftime('%Y%m%d%H%M%S')
+        safe_name = (stmt.original_filename or 'statement').rsplit('.', 1)[0]
+        mt_filename = f"{safe_name}_{stmt.bank_code}_{ts}.mt940.txt"
+        mt_path = os.path.join(mt_dir, mt_filename)
+        with open(mt_path, 'w', encoding='utf-8') as f:
+            f.write(mt_text)
+
+        rel_path = os.path.relpath(mt_path, current_app.config.get('UPLOAD_FOLDER', 'uploads'))
+        stmt.mt940_filename = rel_path.replace('\\', '/')
+        stmt.status = 'SUCCESS'
+        stmt.message = 'MT940 generated after currency update'
+        db.session.commit()
+        flash('Đã cập nhật mã tiền tệ và sinh MT940 thành công.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Lỗi khi cập nhật: {e}', 'danger')
+
+    return redirect(url_for('main.view_statement_detail', log_id=log_id))
+
+
 @main_bp.route('/user/statement-log/delete/<int:log_id>')
 @login_required
 def delete_statement_log(log_id):
@@ -1235,7 +1310,7 @@ def download_statement_config_template():
 
     # Create sample data with multiple configs for same bank_code
     template_data = {
-        'bank_code': ['VCB', 'VCB', 'VCB', 'VCB', 'VCB', 'VCB', 'VCB', 'VCB', 'VCB', 'VCB', 'VCB', 'VCB'],
+        'bank_code': ['VCB', 'VCB', 'VCB', 'VCB', 'VCB', 'VCB', 'VCB', 'VCB', 'VCB', 'VCB', 'VCB'],
         'keywords': [
             'Số tài khoản,Account Number,Account No',
             'Loại tiền,Currency',
@@ -1247,13 +1322,12 @@ def download_statement_config_template():
             'Số tiền ghi có,Credit,Cr',
             'Mã luồng,Flow Code',
             'Phí giao dịch,Transaction Fee,Fee',
-            'VAT,Transaction VAT',
-            'Thông tin định danh,Identify Info'
+            'VAT,Transaction VAT'
         ],
-        'col_keyword': ['A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A'],
-        'col_value': ['B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B'],
-        'row_start': [1, 2, 3, 4, 10, 10, 10, 10, 10, 10, 10, 10],
-        'row_end': [1, 2, 3, 4, 100, 100, 100, 100, 100, 100, 100, 100],
+        'col_keyword': ['A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A'],
+        'col_value': ['B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B'],
+        'row_start': [1, 2, 3, 4, 10, 10, 10, 10, 10, 10, 10],
+        'row_end': [1, 2, 3, 4, None, None, None, None, None, None, None],
         'identify_info': [
             'accountno',
             'currency',
@@ -1265,10 +1339,8 @@ def download_statement_config_template():
             'credit',
             'flowcode',
             'transactionfee',
-            'transactionvat',
-            'identify_info'
-        ],
-        'cell_format': ['Text', 'Text', 'Number', 'Number', 'Text', 'Date', 'Number', 'Number', 'Text', 'Number', 'Number', 'Text']
+            'transactionvat'
+        ]
     }
 
     df = pd.DataFrame(template_data)

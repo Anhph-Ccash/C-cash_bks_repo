@@ -56,6 +56,7 @@
                         <th>{{ _('Tệp') }}</th>
                         <th>{{ _('Mã ngân hàng') }}</th>
                         <th>{{ _('Số tài khoản') }}</th>
+                        <th>{{ _('Tiền tệ') }}</th>
                         <th>{{ _('Trạng thái') }}</th>
                         <th>{{ _('SFTP') }}</th>
                         <th>{{ _('Thời gian') }}</th>
@@ -69,6 +70,13 @@
                             <td>{{ l.original_filename or '-' }}</td>
                             <td>{{ l.bank_code or '-' }}</td>
                             <td>{{ l.accountno or '-' }}</td>
+                            <td>
+                                {% if l.currency %}
+                                    <span class="badge bg-info">{{ l.currency }}</span>
+                                {% else %}
+                                    <span class="text-danger">-</span>
+                                {% endif %}
+                            </td>
                             <td>{{ l.status }}</td>
                             <td>
                                 {% if l.sftp_uploaded %}
