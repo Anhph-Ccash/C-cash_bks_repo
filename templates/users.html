@@ -169,11 +169,6 @@
                                            class="btn btn-sm btn-outline-secondary">
                                             {{ _('Chi tiết') }}
                                         </a>
-                                        <a href="{{ url_for('main.delete_statement_log', log_id=stmt.id, next=request.path) }}"
-                                           class="btn btn-sm btn-danger"
-                                           onclick="return confirm('{{ _('Xóa nhật ký sổ phụ này?') }}')">
-                                            {{ _('Xóa') }}
-                                        </a>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -189,6 +184,7 @@
     </div>
 </div>
 {% endblock %}
+
 {% block extra_scripts %}
 <script>
 // SFTP Upload Handler

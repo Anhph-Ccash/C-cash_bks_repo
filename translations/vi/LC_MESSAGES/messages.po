@@ -288,7 +288,7 @@ msgstr "Mã Ngân hàng"
 
 #: templates/admin_bank_configs.html:55
 msgid "Phạm vi quét"
-msgstr ""
+msgstr "Phạm vi quét"
 
 #: templates/admin_bank_configs.html:165
 msgid "Thêm Cấu hình Ngân hàng"
@@ -302,14 +302,16 @@ msgstr "Từ khóa (phân cách bằng dấu phẩy)"
 
 #: templates/admin_bank_configs.html:184 templates/admin_bank_configs.html:222
 msgid "Scan Ranges (JSON format)"
-msgstr ""
+msgstr "Scan Ranges (JSON format)"
 
 #: templates/admin_bank_configs.html:186 templates/admin_bank_configs.html:224
 #, python-brace-format
 msgid ""
 "Định dạng: [{\"range\": \"A1:O5\", \"sheet_name\": \"Sheet1\"}] hoặc "
 "[{\"name\": \"Header\", \"start_row\": 1, \"end_row\": 10}]"
-msgstr ""
+msgstr "
+"Định dạng: [{\"range\": \"A1:O5\", \"sheet_name\": \"Sheet1\"}] hoặc "
+"[{\"name\": \"Header\", \"start_row\": 1, \"end_row\": 10}]""
 
 #: templates/admin_bank_configs.html:203
 msgid "Sửa Cấu hình Ngân hàng"
@@ -1189,7 +1191,7 @@ msgstr "Cập nhật & Sinh MT940"
 
 #: templates/statement_detail.html:47
 msgid "VD: VND, USD"
-msgstr ""
+msgstr "VD: VND, USD"
 
 #: templates/statement_detail.html:54
 msgid "Số dư đầu kỳ"

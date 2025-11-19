@@ -61,8 +61,8 @@
                     {{ _('🗑️ Xóa mục đã chọn') }}
                 </button>
                 <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteLogsModal"
-                        {% if not pagination or pagination.total == 0 %}disabled{% endif %} id="deleteAllBtn">
-                    {{ _('🗑️ Xóa Nhật ký theo Bộ lọc') }}
+                        id="deleteAllBtn" disabled>
+                    {{ _('🗑️ Xóa nhật ký tải lên') }}
                 </button>
             </div>
         </div>
@@ -127,16 +127,12 @@
                         </td>
                         <td><small>{{ log.message }}</small></td>
                         <td>
-                            <div class="btn-group btn-group-sm" role="group">
+                            <div class="d-flex gap-1">
                                 {% if log.filename %}
-                                <a class="btn btn-outline-primary" href="{{ url_for('main.download_bank_log_file', log_id=log.id) }}" title="{{ _('Tải Tệp gốc') }}">
+                                <a class="btn btn-sm btn-outline-primary" href="{{ url_for('main.download_bank_log_file', log_id=log.id) }}" title="{{ _('Tải Tệp gốc') }}">
                                     {{ _('📥 Tải') }}
                                 </a>
                                 {% endif %}
-                                <button type="button" class="btn btn-outline-danger delete-single-btn" data-log-id="{{ log.id }}"
-                                        data-log-name="{{ log.original_filename or 'N/A' }}" title="{{ _('Xóa nhật ký này') }}">
-                                    {{ _('🗑️') }}
-                                </button>
                             </div>
                         </td>
                     </tr>
@@ -226,15 +222,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('❌ Hủy') }}</button>
-                <form id="deleteForm" method="POST" class="d-inline">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <input type="hidden" name="delete_type" id="deleteType" value="filter">
-                    <input type="hidden" name="bank_code" value="{{ request.args.get('bank_code', '') }}">
-                    <input type="hidden" name="status" value="{{ request.args.get('status', '') }}">
-                    <input type="hidden" name="days" value="{{ request.args.get('days', '7') }}">
-                    <input type="hidden" name="log_ids" id="selectedLogIds">
-                    <button type="submit" class="btn btn-danger">{{ _('🗑️ Xác nhận xóa') }}</button>
-                </form>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">{{ _('🗑️ Xác nhận xóa') }}</button>
             </div>
         </div>
     </div>
@@ -281,56 +269,27 @@ document.addEventListener('DOMContentLoaded', function() {
         updateSelectionUI();
     });
 
-    // Handle single row delete buttons
-    document.querySelectorAll('.delete-single-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            const logId = this.dataset.logId;
-            const logName = this.dataset.logName;
-
-            // Update modal for single item deletion
-            const filterDeleteInfo = document.getElementById('filterDeleteInfo');
-            const selectedItemsInfo = document.getElementById('selectedItemsInfo');
-            const deleteWarningText = document.getElementById('deleteWarningText');
-            const selectedLogsList = document.getElementById('selectedLogsList');
-            const selectedLogsCount = document.getElementById('selectedLogsCount');
-
-            filterDeleteInfo.style.display = 'none';
-            selectedItemsInfo.style.display = 'block';
-
-            deleteWarningText.textContent = '{{ _('Bạn đang xóa nhật ký này:') }}';
-
-            // Show single item
-            selectedLogsList.innerHTML = `<li><small>${logName}</small></li>`;
-            selectedLogsCount.textContent = '1';
-
-            // Set form fields
-            document.getElementById('deleteType').value = 'selected';
-            document.getElementById('selectedLogIds').value = JSON.stringify([logId]);
-            document.getElementById('deleteForm').action = '{{ url_for('upload.delete_logs_selected') }}';
-
-            // Show modal
-            const deleteModal = new bootstrap.Modal(document.getElementById('deleteLogsModal'));
-            deleteModal.show();
-        });
-    });
-
     function updateSelectionUI() {
         const selectedCheckboxes = document.querySelectorAll('.log-checkbox:checked');
         const count = selectedCheckboxes.length;
         selectedCount.textContent = count;
 
-        // Update button visibility
+        // Update button visibility and state
         if (count > 0) {
-            deleteSelectedBtn.classList.remove('d-none');
+            // Show select/deselect buttons when checkboxes selected
             selectAllBtn.classList.remove('d-none');
             deselectAllBtn.classList.remove('d-none');
-            deleteAllBtn.classList.add('d-none');
-        } else {
+            // Hide individual delete selected button - use main button instead
             deleteSelectedBtn.classList.add('d-none');
+            // Enable delete button when checkboxes are selected
+            deleteAllBtn.disabled = false;
+        } else {
+            // Hide select/deselect buttons when no checkboxes selected
             selectAllBtn.classList.add('d-none');
             deselectAllBtn.classList.add('d-none');
-            deleteAllBtn.classList.remove('d-none');
+            deleteSelectedBtn.classList.add('d-none');
+            // Disable delete button when no checkboxes are selected
+            deleteAllBtn.disabled = true;
         }
     }
 
@@ -375,21 +334,116 @@ document.addEventListener('DOMContentLoaded', function() {
     deleteAllBtn.addEventListener('click', function(e) {
         e.preventDefault();
 
-        // Update modal content for filter-based deletion
+        const selectedCheckboxes = document.querySelectorAll('.log-checkbox:checked');
         const filterDeleteInfo = document.getElementById('filterDeleteInfo');
         const selectedItemsInfo = document.getElementById('selectedItemsInfo');
         const deleteWarningText = document.getElementById('deleteWarningText');
 
-        filterDeleteInfo.style.display = 'block';
-        selectedItemsInfo.style.display = 'none';
+        // Store delete info for later use in confirm button
+        window.deleteInfo = {
+            selectedCount: selectedCheckboxes.length,
+            selectedLogIds: Array.from(selectedCheckboxes).map(cb => cb.value),
+            isFilter: selectedCheckboxes.length === 0
+        };
 
-        deleteWarningText.textContent = '{{ _('Bạn đang xóa nhật ký theo bộ lọc hiện tại:') }}';
+        // If checkboxes selected: delete selected items only
+        if (selectedCheckboxes.length > 0) {
+            filterDeleteInfo.style.display = 'none';
+            selectedItemsInfo.style.display = 'block';
 
-        // Set form fields
-        document.getElementById('deleteType').value = 'filter';
-        document.getElementById('selectedLogIds').value = '';
-        document.getElementById('deleteForm').action = '{{ url_for('upload.delete_logs') }}';
+            deleteWarningText.textContent = '{{ _('Bạn đang xóa các nhật ký được chọn:') }}';
+
+            // Build list of selected items
+            const selectedLogsList = document.getElementById('selectedLogsList');
+            const selectedLogsCount = document.getElementById('selectedLogsCount');
+            selectedLogsList.innerHTML = '';
+            selectedCheckboxes.forEach(checkbox => {
+                const row = checkbox.closest('tr');
+                const filename = row.cells[2].textContent.trim();
+                const timestamp = row.cells[1].textContent.trim();
+                const li = document.createElement('li');
+                li.innerHTML = `<small>${filename} (${timestamp})</small>`;
+                selectedLogsList.appendChild(li);
+            });
+
+            selectedLogsCount.textContent = selectedCheckboxes.length;
+        }
+        // If no checkboxes selected: delete by filter
+        else {
+            filterDeleteInfo.style.display = 'block';
+            selectedItemsInfo.style.display = 'none';
+
+            deleteWarningText.textContent = '{{ _('Bạn đang xóa nhật ký theo bộ lọc hiện tại:') }}';
+        }
     });
+
+    // Handle confirm delete button click
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+
+            if (!window.deleteInfo) return;
+
+            const deleteInfo = window.deleteInfo;
+            const url = deleteInfo.isFilter ? '{{ url_for("upload.delete_logs") }}' : '{{ url_for("upload.delete_logs_selected") }}';
+
+            const formData = new FormData();
+            formData.append('csrf_token', '{{ csrf_token() }}');
+            formData.append('delete_type', deleteInfo.isFilter ? 'filter' : 'selected');
+
+            if (deleteInfo.isFilter) {
+                formData.append('bank_code', '{{ request.args.get("bank_code", "") }}');
+                formData.append('status', '{{ request.args.get("status", "") }}');
+                formData.append('days', '{{ request.args.get("days", "7") }}');
+            } else {
+                formData.append('log_ids', JSON.stringify(deleteInfo.selectedLogIds));
+            }
+
+            // Disable button and show loading
+            confirmDeleteBtn.disabled = true;
+            const originalText = confirmDeleteBtn.textContent;
+            confirmDeleteBtn.textContent = '{{ _("Đang xóa...") }}';
+
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('deleteLogsModal'));
+                    if (modal) modal.hide();
+
+                    // Show success message
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-success alert-dismissible fade show';
+                    alertDiv.setAttribute('role', 'alert');
+                    alertDiv.innerHTML = `
+                        ✅ {{ _('Đã xóa thành công!') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    `;
+                    document.querySelector('.card-body').insertBefore(alertDiv, document.querySelector('.card-body').firstChild);
+
+                    // Reload table after short delay
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    alert('{{ _("Lỗi khi xóa!") }}');
+                    confirmDeleteBtn.disabled = false;
+                    confirmDeleteBtn.textContent = originalText;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('{{ _("Lỗi khi xóa!") }}');
+                confirmDeleteBtn.disabled = false;
+                confirmDeleteBtn.textContent = originalText;
+            });
+        });
+    }
 });
 </script>
 

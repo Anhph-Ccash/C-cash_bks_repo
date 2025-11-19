@@ -288,7 +288,7 @@ msgstr "Bank Code"
 
 #: templates/admin_bank_configs.html:55
 msgid "Phạm vi quét"
-msgstr ""
+msgstr "Phạm vi quét"
 
 #: templates/admin_bank_configs.html:165
 msgid "Thêm Cấu hình Ngân hàng"
@@ -302,14 +302,16 @@ msgstr "Keywords (comma-separated)"
 
 #: templates/admin_bank_configs.html:184 templates/admin_bank_configs.html:222
 msgid "Scan Ranges (JSON format)"
-msgstr ""
+msgstr "Scan Ranges (JSON format)"
 
 #: templates/admin_bank_configs.html:186 templates/admin_bank_configs.html:224
 #, python-brace-format
 msgid ""
 "Định dạng: [{\"range\": \"A1:O5\", \"sheet_name\": \"Sheet1\"}] hoặc "
 "[{\"name\": \"Header\", \"start_row\": 1, \"end_row\": 10}]"
-msgstr ""
+msgstr "
+"Định dạng: [{\"range\": \"A1:O5\", \"sheet_name\": \"Sheet1\"}] hoặc "
+"[{\"name\": \"Header\", \"start_row\": 1, \"end_row\": 10}]""
 
 #: templates/admin_bank_configs.html:203
 msgid "Sửa Cấu hình Ngân hàng"
@@ -787,7 +789,10 @@ msgid ""
 "Upload 11 dòng cho VCB (account_number, currency, opening_balance, "
 "closing_balance, narrative, transaction_date, debit, credit, flow_code, "
 "transaction_fee, transaction_vat)"
-msgstr ""
+msgstr "
+"Upload 11 dòng cho VCB (account_number, currency, opening_balance, "
+"closing_balance, narrative, transaction_date, debit, credit, flow_code, "
+"transaction_fee, transaction_vat)""
 "Upload 11 rows for VCB (account_number, currency, opening_balance, "
 "closing_balance, narrative, transaction_date, debit, credit, flow_code, "
 "transaction_fee, transaction_vat)"
@@ -812,7 +817,9 @@ msgstr "Keywords separated by commas"
 msgid ""
 "(Tùy chọn) Loại trường để dễ quản lý (account_number, currency, "
 "opening_balance...)"
-msgstr ""
+msgstr "
+"(Tùy chọn) Loại trường để dễ quản lý (account_number, currency, "
+"opening_balance...)""
 "(Optional) Field type for easy management (account_number, currency, "
 "opening_balance...)"
 
@@ -836,7 +843,9 @@ msgstr "Row range (number)"
 msgid ""
 "Mỗi dòng = 1 cấu hình cho 1 trường. Có thể có nhiều dòng cho cùng 1 "
 "bank_code."
-msgstr ""
+msgstr "
+"Mỗi dòng = 1 cấu hình cho 1 trường. Có thể có nhiều dòng cho cùng 1 "
+"bank_code.""
 "Each row = 1 config for 1 field. Can have multiple rows for the same "
 "bank_code."
 
@@ -1194,7 +1203,7 @@ msgstr "Update & Generate MT940"
 
 #: templates/statement_detail.html:47
 msgid "VD: VND, USD"
-msgstr ""
+msgstr "VD: VND, USD"
 
 #: templates/statement_detail.html:54
 msgid "Số dư đầu kỳ"
@@ -1326,7 +1335,7 @@ msgstr "Delete Selected"
 
 #: templates/user_logs.html:62
 msgid "Chỉ xóa được các bản ghi do bạn tải lên (và thuộc công ty đang chọn)"
-msgstr ""
+msgstr "Chỉ xóa được các bản ghi do bạn tải lên (và thuộc công ty đang chọn)"
 "Can only delete records uploaded by you (and belonging to selected "
 "company)"
 

@@ -312,12 +312,21 @@ def delete_logs():
         flash(f'❌ Lỗi khi xóa logs: {str(e)}', 'error')
 
     # Preserve filters on redirect back to logs page
-    return redirect(url_for(
-        'upload.view_logs',
-        bank_code=bank_code or '',
-        status=status or '',
-        days=days if days is not None else 7
-    ))
+    # If user is admin, redirect to admin view logs, otherwise to user view
+    if session.get('role') == 'admin':
+        return redirect(url_for(
+            'admin.admin_view_logs',
+            bank_code=bank_code or '',
+            status=status or '',
+            days=days if days is not None else 7
+        ))
+    else:
+        return redirect(url_for(
+            'upload.view_logs',
+            bank_code=bank_code or '',
+            status=status or '',
+            days=days if days is not None else 7
+        ))
 
 
 @upload_bp.route("/logs/delete-selected", methods=["POST"])
@@ -364,7 +373,11 @@ def delete_logs_selected():
         flash(f'❌ Lỗi khi xóa logs: {str(e)}', 'error')
 
     # Redirect back to logs page
-    return redirect(url_for('upload.view_logs'))
+    # If user is admin, redirect to admin view logs, otherwise to user view
+    if session.get('role') == 'admin':
+        return redirect(url_for('admin.admin_view_logs'))
+    else:
+        return redirect(url_for('upload.view_logs'))
 
 
 @upload_bp.route("/statement-logs")

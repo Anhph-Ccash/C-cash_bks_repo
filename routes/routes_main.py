@@ -1,4 +1,5 @@
 import uuid
+import json
 from flask import Blueprint, render_template, redirect, url_for, session, request, flash, jsonify
 from werkzeug.utils import secure_filename
 from functools import wraps
@@ -832,6 +833,182 @@ def delete_statement_log(log_id):
             return redirect(url_for('admin.admin_upload_page'))
     else:
         return redirect(url_for('main.user_dashboard'))
+
+@main_bp.route('/statement/delete-multiple', methods=['POST'])
+@login_required
+def delete_multiple_statements():
+    """Delete multiple statement logs via AJAX (admin only)"""
+    import json
+
+    # Only admin can delete
+    if session.get('role') != 'admin':
+        return jsonify({'status': 'error', 'message': 'Không có quyền xóa'}), 403
+
+    try:
+        # Handle both JSON and FormData
+        statement_ids = []
+
+        if request.is_json:
+            data = request.get_json() or {}
+            statement_ids = data.get('statement_ids', [])
+        else:
+            statement_ids_str = request.form.get('statement_ids', '[]')
+            try:
+                statement_ids = json.loads(statement_ids_str)
+            except json.JSONDecodeError:
+                return jsonify({'status': 'error', 'message': 'Invalid statement_ids format'}), 400
+
+        if not statement_ids:
+            return jsonify({'status': 'error', 'message': 'Không có ID nào để xóa'}), 400
+
+        # Convert to integers
+        try:
+            statement_ids = [int(id) for id in statement_ids]
+        except (ValueError, TypeError):
+            return jsonify({'status': 'error', 'message': 'Invalid ID format'}), 400
+
+        deleted_count = 0
+        upload_folder = current_app.config.get('UPLOAD_FOLDER', 'uploads')
+
+        # Delete each statement
+        for stmt_id in statement_ids:
+            stmt = StatementLog.query.filter_by(id=stmt_id).first()
+            if stmt:
+                # Delete the original Excel file
+                try:
+                    if stmt.filename:
+                        file_path = os.path.join(upload_folder, stmt.filename)
+                        if os.path.exists(file_path):
+                            os.remove(file_path)
+                            current_app.logger.info(f"Deleted statement file: {file_path}")
+                except Exception as e:
+                    current_app.logger.warning(f"Could not delete statement file: {e}")
+
+                # Delete the MT940 file
+                try:
+                    if stmt.mt940_filename:
+                        mt_path = os.path.join(upload_folder, stmt.mt940_filename)
+                        if os.path.exists(mt_path):
+                            os.remove(mt_path)
+                            current_app.logger.info(f"Deleted MT940 file: {mt_path}")
+                except Exception as e:
+                    current_app.logger.warning(f"Could not delete MT940 file: {e}")
+
+                # Delete the database record
+                try:
+                    db.session.delete(stmt)
+                    deleted_count += 1
+                except Exception as e:
+                    current_app.logger.error(f"Error deleting statement record {stmt_id}: {e}")
+                    db.session.rollback()
+
+        db.session.commit()
+        current_app.logger.info(f"Admin {session.get('username')} deleted {deleted_count} statement logs")
+
+        return jsonify({
+            'status': 'success',
+            'message': f'Đã xóa {deleted_count} sổ phụ',
+            'deleted_count': deleted_count
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error deleting statements: {str(e)}", exc_info=True)
+        return jsonify({'status': 'error', 'message': f'Lỗi: {str(e)}'}), 500
+
+@main_bp.route('/statement/delete-multiple-user', methods=['POST'])
+@login_required
+def delete_multiple_statements_user():
+    """Delete multiple statement logs for regular users/companies"""
+    import json
+
+    user_id = session.get('user_id')
+    company_id = session.get('company_id')
+
+    try:
+        # Handle both JSON and FormData
+        statement_ids = []
+
+        if request.is_json:
+            data = request.get_json() or {}
+            statement_ids = data.get('statement_ids', [])
+        else:
+            statement_ids_str = request.form.get('statement_ids', '[]')
+            try:
+                statement_ids = json.loads(statement_ids_str)
+            except json.JSONDecodeError:
+                return jsonify({'status': 'error', 'message': 'Invalid statement_ids format'}), 400
+
+        if not statement_ids:
+            return jsonify({'status': 'error', 'message': 'Không có ID nào để xóa'}), 400
+
+        # Convert to integers
+        try:
+            statement_ids = [int(id) for id in statement_ids]
+        except (ValueError, TypeError):
+            return jsonify({'status': 'error', 'message': 'Invalid ID format'}), 400
+
+        deleted_count = 0
+        upload_folder = current_app.config.get('UPLOAD_FOLDER', 'uploads')
+
+        # Delete each statement
+        for stmt_id in statement_ids:
+            stmt = StatementLog.query.filter_by(id=stmt_id).first()
+            if not stmt:
+                continue
+
+            # Check permissions: user must be owner or company owner
+            allowed = False
+            if stmt.user_id and stmt.user_id == user_id:
+                allowed = True
+            elif stmt.company_id and stmt.company_id == company_id:
+                allowed = True
+
+            if not allowed:
+                current_app.logger.warning(f"User {user_id} tried to delete statement {stmt_id} without permission")
+                continue
+
+            # Delete the original Excel file
+            try:
+                if stmt.filename:
+                    file_path = os.path.join(upload_folder, stmt.filename)
+                    if os.path.exists(file_path):
+                        os.remove(file_path)
+                        current_app.logger.info(f"Deleted statement file: {file_path}")
+            except Exception as e:
+                current_app.logger.warning(f"Could not delete statement file: {e}")
+
+            # Delete the MT940 file
+            try:
+                if stmt.mt940_filename:
+                    mt_path = os.path.join(upload_folder, stmt.mt940_filename)
+                    if os.path.exists(mt_path):
+                        os.remove(mt_path)
+                        current_app.logger.info(f"Deleted MT940 file: {mt_path}")
+            except Exception as e:
+                current_app.logger.warning(f"Could not delete MT940 file: {e}")
+
+            # Delete the database record
+            try:
+                db.session.delete(stmt)
+                deleted_count += 1
+            except Exception as e:
+                current_app.logger.error(f"Error deleting statement record {stmt_id}: {e}")
+                db.session.rollback()
+
+        db.session.commit()
+        current_app.logger.info(f"User {session.get('username')} deleted {deleted_count} statement logs")
+
+        return jsonify({
+            'status': 'success',
+            'message': f'Đã xóa {deleted_count} sổ phụ',
+            'deleted_count': deleted_count
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error deleting statements: {str(e)}", exc_info=True)
+        return jsonify({'status': 'error', 'message': f'Lỗi: {str(e)}'}), 500
 
 @main_bp.route('/user/bank-config/add', methods=['POST'])
 @login_required
