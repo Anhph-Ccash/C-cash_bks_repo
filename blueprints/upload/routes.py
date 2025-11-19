@@ -320,6 +320,53 @@ def delete_logs():
     ))
 
 
+@upload_bp.route("/logs/delete-selected", methods=["POST"])
+@login_required
+def delete_logs_selected():
+    """Delete selected logs by their IDs (admin only)"""
+
+    # Check if user is admin
+    user_role = session.get('role')
+    if user_role != 'admin':
+        flash('Chỉ admin mới được phép xóa logs!', 'error')
+        return redirect(url_for('upload.view_logs'))
+
+    try:
+        import json
+        # Get selected log IDs from form
+        log_ids_json = request.form.get('log_ids', '[]')
+        log_ids = json.loads(log_ids_json)
+
+        if not log_ids or len(log_ids) == 0:
+            flash('Không tìm thấy logs nào được chọn để xóa!', 'warning')
+            return redirect(url_for('upload.view_logs'))
+
+        # Convert to integers for safety
+        log_ids = [int(lid) for lid in log_ids]
+
+        # Delete selected logs by IDs
+        deleted_count = BankLog.query.filter(BankLog.id.in_(log_ids)).delete(synchronize_session=False)
+        db.session.commit()
+
+        # Log the deletion action
+        current_app.logger.info(f"Admin {session.get('username')} deleted {deleted_count} selected logs with IDs: {log_ids}")
+
+        flash(f'✅ Đã xóa thành công {deleted_count} log(s)!', 'success')
+
+    except (json.JSONDecodeError, ValueError) as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error parsing log IDs: {str(e)}")
+        flash('❌ Lỗi: ID nhật ký không hợp lệ', 'error')
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error deleting selected logs: {str(e)}")
+        flash(f'❌ Lỗi khi xóa logs: {str(e)}', 'error')
+
+    # Redirect back to logs page
+    return redirect(url_for('upload.view_logs'))
+
+
 @upload_bp.route("/statement-logs")
 @login_required
 def list_statement_logs():

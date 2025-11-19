@@ -45,10 +45,23 @@
         <div class="d-flex justify-content-between align-items-center mb-3">
             <div>
                 <strong>{{ _('Tổng số:') }} {{ pagination.total if pagination else 0 }} {{ _('log(s)') }}</strong>
+                <span class="ms-3">
+                    <small class="text-muted">{{ _('Đã chọn:') }} <span id="selectedCount">0</span></small>
+                </span>
             </div>
             <div>
+                <button type="button" class="btn btn-warning btn-sm me-2" id="selectAllBtn" style="display:none;">
+                    {{ _('✓ Chọn tất cả') }}
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm me-2" id="deselectAllBtn" style="display:none;">
+                    {{ _('✗ Bỏ chọn tất cả') }}
+                </button>
                 <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteLogsModal"
-                        {% if not pagination or pagination.total == 0 %}disabled{% endif %}>
+                        id="deleteSelectedBtn" style="display:none;">
+                    {{ _('🗑️ Xóa mục đã chọn') }}
+                </button>
+                <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteLogsModal"
+                        {% if not pagination or pagination.total == 0 %}disabled{% endif %} id="deleteAllBtn">
                     {{ _('🗑️ Xóa Nhật ký theo Bộ lọc') }}
                 </button>
             </div>
@@ -56,9 +69,12 @@
 
         <!-- Logs Table -->
         <div class="table-responsive">
-            <table class="table table-sm table-hover mb-0">
+            <table class="table table-sm table-hover mb-0" id="logsTable">
                 <thead class="table-light">
                     <tr>
+                        <th>
+                            <input type="checkbox" id="selectAllCheckbox" class="form-check-input" title="{{ _('Chọn tất cả trên trang này') }}">
+                        </th>
                         <th>{{ _('Thời gian') }}</th>
                         <th>{{ _('Tệp gốc') }}</th>
                         <th>{{ _('Mã Ngân hàng') }}</th>
@@ -71,6 +87,9 @@
                 <tbody>
                     {% for log in logs %}
                     <tr>
+                        <td>
+                            <input type="checkbox" class="form-check-input log-checkbox" value="{{ log.id }}" data-log-id="{{ log.id }}" title="{{ _('Chọn nhật ký này') }}">
+                        </td>
                         <td>
                             <small>
                             {% if log.processed_at %}
@@ -108,18 +127,22 @@
                         </td>
                         <td><small>{{ log.message }}</small></td>
                         <td>
-                            {% if log.filename %}
-                            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('main.download_bank_log_file', log_id=log.id) }}" title="{{ _('Tải Tệp gốc') }}">
-                                {{ _('📥 Tải Tệp') }}
-                            </a>
-                            {% else %}
-                            <span class="text-muted">-</span>
-                            {% endif %}
+                            <div class="btn-group btn-group-sm" role="group">
+                                {% if log.filename %}
+                                <a class="btn btn-outline-primary" href="{{ url_for('main.download_bank_log_file', log_id=log.id) }}" title="{{ _('Tải Tệp gốc') }}">
+                                    {{ _('📥 Tải') }}
+                                </a>
+                                {% endif %}
+                                <button type="button" class="btn btn-outline-danger delete-single-btn" data-log-id="{{ log.id }}"
+                                        data-log-name="{{ log.original_filename or 'N/A' }}" title="{{ _('Xóa nhật ký này') }}">
+                                    {{ _('🗑️') }}
+                                </button>
+                            </div>
                         </td>
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="7" class="text-center text-muted">{{ _('Không tìm thấy nhật ký nào') }}</td>
+                        <td colspan="8" class="text-center text-muted">{{ _('Không tìm thấy nhật ký nào') }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -160,32 +183,41 @@
             </div>
             <div class="modal-body">
                 <div class="alert alert-warning">
-                    <strong>{{ _('⚠️ Cảnh báo:') }}</strong> {{ _('Bạn đang xóa nhật ký theo bộ lọc hiện tại:') }}
+                    <strong>{{ _('⚠️ Cảnh báo:') }}</strong>
+                    <span id="deleteWarningText"></span>
                 </div>
 
-                <ul class="list-unstyled">
-                    <li><strong>{{ _('Mã Ngân hàng:') }}</strong>
-                        <span class="badge bg-info">{{ request.args.get('bank_code') if request.args.get('bank_code') else _('Tất cả') }}</span>
-                    </li>
-                    <li><strong>{{ _('Trạng thái:') }}</strong>
-                        <span class="badge bg-info">
-                            {% if request.args.get('status') == 'SUCCESS' %}{{ _('Thành công') }}
-                            {% elif request.args.get('status') == 'ERROR' %}{{ _('Lỗi') }}
-                            {% else %}{{ _('Tất cả') }}{% endif %}
-                        </span>
-                    </li>
-                    <li><strong>{{ _('Thời gian:') }}</strong>
-                        <span class="badge bg-info">
-                            {% if request.args.get('days') == '30' %}{{ _('30 ngày') }}
-                            {% elif request.args.get('days') == '90' %}{{ _('90 ngày') }}
-                            {% elif request.args.get('days') == '0' %}{{ _('Tất cả') }}
-                            {% else %}{{ _('7 ngày') }}{% endif %}
-                        </span>
-                    </li>
-                    <li><strong>{{ _('Số lượng sẽ xóa:') }}</strong>
-                        <span class="badge bg-danger text-white">{{ pagination.total if pagination else 0 }} {{ _('log(s)') }}</span>
-                    </li>
-                </ul>
+                <div id="filterDeleteInfo" class="mb-3">
+                    <ul class="list-unstyled">
+                        <li><strong>{{ _('Mã Ngân hàng:') }}</strong>
+                            <span class="badge bg-info">{{ request.args.get('bank_code') if request.args.get('bank_code') else _('Tất cả') }}</span>
+                        </li>
+                        <li><strong>{{ _('Trạng thái:') }}</strong>
+                            <span class="badge bg-info">
+                                {% if request.args.get('status') == 'SUCCESS' %}{{ _('Thành công') }}
+                                {% elif request.args.get('status') == 'ERROR' %}{{ _('Lỗi') }}
+                                {% else %}{{ _('Tất cả') }}{% endif %}
+                            </span>
+                        </li>
+                        <li><strong>{{ _('Thời gian:') }}</strong>
+                            <span class="badge bg-info">
+                                {% if request.args.get('days') == '30' %}{{ _('30 ngày') }}
+                                {% elif request.args.get('days') == '90' %}{{ _('90 ngày') }}
+                                {% elif request.args.get('days') == '0' %}{{ _('Tất cả') }}
+                                {% else %}{{ _('7 ngày') }}{% endif %}
+                            </span>
+                        </li>
+                        <li><strong>{{ _('Số lượng sẽ xóa:') }}</strong>
+                            <span class="badge bg-danger text-white">{{ pagination.total if pagination else 0 }} {{ _('log(s)') }}</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div id="selectedItemsInfo" class="mb-3">
+                    <strong>{{ _('Các nhật ký đã chọn:') }}</strong>
+                    <ul class="list-unstyled" id="selectedLogsList"></ul>
+                    <p class="text-muted small">{{ _('Số lượng sẽ xóa:') }} <span id="selectedLogsCount" class="badge bg-danger text-white">0</span></p>
+                </div>
 
                 <hr>
                 <p class="text-danger mb-0">
@@ -194,16 +226,171 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('❌ Hủy') }}</button>
-                <form method="POST" action="{{ url_for('upload.delete_logs') }}" class="d-inline">
+                <form id="deleteForm" method="POST" class="d-inline">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="delete_type" id="deleteType" value="filter">
                     <input type="hidden" name="bank_code" value="{{ request.args.get('bank_code', '') }}">
                     <input type="hidden" name="status" value="{{ request.args.get('status', '') }}">
                     <input type="hidden" name="days" value="{{ request.args.get('days', '7') }}">
+                    <input type="hidden" name="log_ids" id="selectedLogIds">
                     <button type="submit" class="btn btn-danger">{{ _('🗑️ Xác nhận xóa') }}</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    const logCheckboxes = document.querySelectorAll('.log-checkbox');
+    const selectedCount = document.getElementById('selectedCount');
+    const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+    const deselectAllBtn = document.getElementById('deselectAllBtn');
+    const selectAllBtn = document.getElementById('selectAllBtn');
+    const deleteAllBtn = document.getElementById('deleteAllBtn');
+
+    // Handle individual checkbox changes
+    logCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectionUI);
+    });
+
+    // Handle select all checkbox
+    selectAllCheckbox.addEventListener('change', function() {
+        logCheckboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+        updateSelectionUI();
+    });
+
+    // Handle select all button
+    selectAllBtn.addEventListener('click', function() {
+        logCheckboxes.forEach(checkbox => {
+            checkbox.checked = true;
+        });
+        selectAllCheckbox.checked = true;
+        updateSelectionUI();
+    });
+
+    // Handle deselect all button
+    deselectAllBtn.addEventListener('click', function() {
+        logCheckboxes.forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        selectAllCheckbox.checked = false;
+        updateSelectionUI();
+    });
+
+    // Handle single row delete buttons
+    document.querySelectorAll('.delete-single-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const logId = this.dataset.logId;
+            const logName = this.dataset.logName;
+
+            // Update modal for single item deletion
+            const filterDeleteInfo = document.getElementById('filterDeleteInfo');
+            const selectedItemsInfo = document.getElementById('selectedItemsInfo');
+            const deleteWarningText = document.getElementById('deleteWarningText');
+            const selectedLogsList = document.getElementById('selectedLogsList');
+            const selectedLogsCount = document.getElementById('selectedLogsCount');
+
+            filterDeleteInfo.style.display = 'none';
+            selectedItemsInfo.style.display = 'block';
+
+            deleteWarningText.textContent = '{{ _('Bạn đang xóa nhật ký này:') }}';
+
+            // Show single item
+            selectedLogsList.innerHTML = `<li><small>${logName}</small></li>`;
+            selectedLogsCount.textContent = '1';
+
+            // Set form fields
+            document.getElementById('deleteType').value = 'selected';
+            document.getElementById('selectedLogIds').value = JSON.stringify([logId]);
+            document.getElementById('deleteForm').action = '{{ url_for('upload.delete_logs_selected') }}';
+
+            // Show modal
+            const deleteModal = new bootstrap.Modal(document.getElementById('deleteLogsModal'));
+            deleteModal.show();
+        });
+    });
+
+    function updateSelectionUI() {
+        const selectedCheckboxes = document.querySelectorAll('.log-checkbox:checked');
+        const count = selectedCheckboxes.length;
+        selectedCount.textContent = count;
+
+        // Update button visibility
+        if (count > 0) {
+            deleteSelectedBtn.classList.remove('d-none');
+            selectAllBtn.classList.remove('d-none');
+            deselectAllBtn.classList.remove('d-none');
+            deleteAllBtn.classList.add('d-none');
+        } else {
+            deleteSelectedBtn.classList.add('d-none');
+            selectAllBtn.classList.add('d-none');
+            deselectAllBtn.classList.add('d-none');
+            deleteAllBtn.classList.remove('d-none');
+        }
+    }
+
+    // Handle delete selected button click
+    deleteSelectedBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const selectedCheckboxes = document.querySelectorAll('.log-checkbox:checked');
+        const logIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+
+        // Update modal content for selected items
+        const filterDeleteInfo = document.getElementById('filterDeleteInfo');
+        const selectedItemsInfo = document.getElementById('selectedItemsInfo');
+        const deleteWarningText = document.getElementById('deleteWarningText');
+        const selectedLogsList = document.getElementById('selectedLogsList');
+        const selectedLogsCount = document.getElementById('selectedLogsCount');
+
+        filterDeleteInfo.style.display = 'none';
+        selectedItemsInfo.style.display = 'block';
+
+        deleteWarningText.textContent = '{{ _('Bạn đang xóa các nhật ký được chọn:') }}';
+
+        // Build list of selected items
+        selectedLogsList.innerHTML = '';
+        selectedCheckboxes.forEach(checkbox => {
+            const row = checkbox.closest('tr');
+            const filename = row.cells[2].textContent.trim();
+            const timestamp = row.cells[1].textContent.trim();
+            const li = document.createElement('li');
+            li.innerHTML = `<small>${filename} (${timestamp})</small>`;
+            selectedLogsList.appendChild(li);
+        });
+
+        selectedLogsCount.textContent = logIds.length;
+
+        // Set form fields
+        document.getElementById('deleteType').value = 'selected';
+        document.getElementById('selectedLogIds').value = JSON.stringify(logIds);
+        document.getElementById('deleteForm').action = '{{ url_for('upload.delete_logs_selected') }}';
+    });
+
+    // Handle delete all button click
+    deleteAllBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+
+        // Update modal content for filter-based deletion
+        const filterDeleteInfo = document.getElementById('filterDeleteInfo');
+        const selectedItemsInfo = document.getElementById('selectedItemsInfo');
+        const deleteWarningText = document.getElementById('deleteWarningText');
+
+        filterDeleteInfo.style.display = 'block';
+        selectedItemsInfo.style.display = 'none';
+
+        deleteWarningText.textContent = '{{ _('Bạn đang xóa nhật ký theo bộ lọc hiện tại:') }}';
+
+        // Set form fields
+        document.getElementById('deleteType').value = 'filter';
+        document.getElementById('selectedLogIds').value = '';
+        document.getElementById('deleteForm').action = '{{ url_for('upload.delete_logs') }}';
+    });
+});
+</script>
 
 {% endblock %}
