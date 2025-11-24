@@ -94,8 +94,8 @@ def check_users_table(db_url, db_name):
     except Exception as e:
         print(f"[✗] Lỗi kiểm tra bảng users: {e}")
 
-def check_user_companies_table(db_url, db_name):
-    """Kiểm tra bảng user_companies"""
+def check_user_company_table(db_url, db_name):
+    """Kiểm tra bảng user_company"""
     try:
         engine = create_engine(db_url, poolclass=NullPool)
 
@@ -104,22 +104,22 @@ def check_user_companies_table(db_url, db_name):
             result = conn.execute(text("""
                 SELECT EXISTS (
                     SELECT FROM information_schema.tables
-                    WHERE table_name = 'user_companies'
+                    WHERE table_name = 'user_company'
                 )
             """))
 
             table_exists = result.first()[0]
 
             if not table_exists:
-                print(f"[!] {db_name}: Bảng 'user_companies' không tồn tại")
+                print(f"[!] {db_name}: Bảng 'user_company' không tồn tại")
                 return
 
             # Get count
-            result = conn.execute(text("SELECT COUNT(*) FROM user_companies"))
+            result = conn.execute(text("SELECT COUNT(*) FROM user_company"))
             count = result.first()[0]
 
-            print(f"[✓] {db_name}: Bảng 'user_companies' OK")
-            print(f"    Total user_companies: {count}")
+            print(f"[✓] {db_name}: Bảng 'user_company' OK")
+            print(f"    Total user_company: {count}")
 
         engine.dispose()
     except Exception as e:
@@ -161,7 +161,7 @@ def main():
         print("="*80)
         test_connection(LOCAL_DB_URL, "Local DB")
         check_users_table(LOCAL_DB_URL, "Local DB")
-        check_user_companies_table(LOCAL_DB_URL, "Local DB")
+        check_user_company_table(LOCAL_DB_URL, "Local DB")
 
     if args.render or args.all:
         print("\n" + "="*80)
@@ -169,7 +169,7 @@ def main():
         print("="*80)
         test_connection(RENDER_DB_URL, "Render DB")
         check_users_table(RENDER_DB_URL, "Render DB")
-        check_user_companies_table(RENDER_DB_URL, "Render DB")
+        check_user_company_table(RENDER_DB_URL, "Render DB")
 
     print("\n" + "="*80)
     print("CHECK COMPLETED")
