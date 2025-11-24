@@ -5,17 +5,19 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY', 'admin@123')
 
     # Database configuration
-    # Để sử dụng local database, uncomment dòng dưới và comment dòng remote
-    # SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:11223344@localhost:5432/FlaskWebPostgreSQL'
+    # Production: Use DATABASE_URL environment variable (set on Render Dashboard)
+    # Local development: Falls back to local PostgreSQL
     SQLALCHEMY_DATABASE_URI = os.environ.get(
         'DATABASE_URL',
         'postgresql://postgres:11223344@localhost:5432/FlaskWebPostgreSQL'
     )
-    # Remote database (Render)
-    # SQLALCHEMY_DATABASE_URI = os.environ.get(
-    #     'DATABASE_URL',
-    #     'postgresql://flaskwebpostgresql_user:nrDeXdaJQ2GA9Bv04ISC2rdNpI7EKhYr@dpg-d47l9824d50c7388ofsg-a.singapore-postgres.render.com/flaskwebpostgresql'
-    # )
+
+    # Ensure we have a valid database URL
+    if not SQLALCHEMY_DATABASE_URI:
+        raise RuntimeError(
+            "DATABASE_URL environment variable not set. "
+            "Please set DATABASE_URL on Render Dashboard or use local PostgreSQL."
+        )
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
