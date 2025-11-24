@@ -2,7 +2,7 @@ from extensions import db
 from sqlalchemy.sql import func
 
 class UserCompany(db.Model):
-    __tablename__ = 'user_company'
+    __tablename__ = 'user_companies'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     company_id = db.Column(db.Integer, db.ForeignKey('company.id', ondelete='CASCADE'), nullable=False)

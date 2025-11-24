@@ -1,0 +1,79 @@
+[
+  {
+    "id": 3,
+    "username": "admin",
+    "email": "admin@example.com",
+    "password_hash": "scrypt:32768:8:1$Zf8B6eZKp2wshaP4$bcb75b4e731b10485983a048189bc0755b9b2d6a35db35841366db05e4c3b7f673be449328f550a77942329a5d8c5242e244abec7985c6ab6c8071a2e397a60a",
+    "role": "admin"
+  },
+  {
+    "id": 5,
+    "username": "user21",
+    "email": "user2@gmail.com",
+    "password_hash": "scrypt:32768:8:1$KDMhTxOYrBazPna2$c9c537eb93f697144dff08b2ba4a5c3e285bc407b3fcf9c068ac8d4b78eb3217ff604aa8f17784a993f138e1f7b9cbe77780477d9c93b96c22cc7d8c8bb0781a",
+    "role": "user"
+  },
+  {
+    "id": 6,
+    "username": "user3",
+    "email": "user3@gmail.com",
+    "password_hash": "scrypt:32768:8:1$aoTRGR6vv5RTPaiV$a2ff9bdd460999b13b4c396459678705f3fd5c03f7a7d1bc61e46110fa2f8f1e2cf62d32445ef02d713438839adb8d3522fb991546b44b064fab74b52daf9338",
+    "role": "user"
+  },
+  {
+    "id": 7,
+    "username": "user4",
+    "email": "user4@gmail.com",
+    "password_hash": "scrypt:32768:8:1$1G1iOt7ZDoK8aMDZ$538c3691a0c5e1a70f9cf12863259ec455bb1300ca4252c67f6633d8dcedeb42972d89c60227a6a95dd0a21a5f8e79ee077a957bdba483b9a7e3ce4860d1fa82",
+    "role": "user"
+  },
+  {
+    "id": 8,
+    "username": "user5",
+    "email": "user5@gmail.com",
+    "password_hash": "scrypt:32768:8:1$w3TgK7KPyYvHsBzV$74268ab6e90499e6036f744620659bf252580b5e5a98b711655aff129fcae2e98fde8e86a728667001073f94043c4b27598b6b2ac0d803eeb015dc2555b14fea",
+    "role": "user"
+  },
+  {
+    "id": 9,
+    "username": "user33",
+    "email": "anh.33@gmail.com",
+    "password_hash": "scrypt:32768:8:1$gINrXrcVcLkvq8rX$8a5b81ba2678ba052a19c8b31e2230a2e088551f38ba6cb9225f5aa2f3fc9aebbba50352fee5da2e0ad52ed80344a85d8270f0c13a8ebcb83ad2b1d9ff2cb456",
+    "role": "user"
+  },
+  {
+    "id": 10,
+    "username": "user32",
+    "email": "user32@gmail.com",
+    "password_hash": "scrypt:32768:8:1$bMehrmDrK7RQX0ro$7d22e7b5f8db087fc9177cb8fa667d3c9958087932c4e1e9c5d672ca78724cb0967c330e4e7333b7fbbeafc86bdc916cde065e36c76824b0745fb434e01c6e31",
+    "role": "user"
+  },
+  {
+    "id": 11,
+    "username": "Tri01",
+    "email": "tri01@gmail.com",
+    "password_hash": "scrypt:32768:8:1$ivYGhxmmqFBOvQE6$c391805ce8d752811f27e9d5ad3368a1875c61d918d50252877f8ea5a9ee53dbf33566b4786ca352a37aef2d519c6e38fa05c0ed35997e1472c274bc9b03c719",
+    "role": "user"
+  },
+  {
+    "id": 12,
+    "username": "testuser",
+    "email": "test@test.com",
+    "password_hash": "scrypt:32768:8:1$u4GCnCVhJFnhlG91$b38f1dc42eab4520d43549ccd2c3c66fae3c840d5376a19d98f8b319b5922ac7c98f1469c027b94d51d366abb3cbbff38dc94c224e19cd823aaf77082450803e",
+    "role": "user"
+  },
+  {
+    "id": 13,
+    "username": "anhph9",
+    "email": "anhph9@gmail.com",
+    "password_hash": "scrypt:32768:8:1$F3DCeDmzyHHaGJWr$ba00d22c886e5f13eb3b27a99a6ffdbe5a61398a28c4c82d61cd9e731e58447d1b8570fef01b2530f2438a139f6e50631d703b76d63a810cd61ee33ee4b7897c",
+    "role": "admin"
+  },
+  {
+    "id": 14,
+    "username": "anh.pham",
+    "email": "anh.pham@c-cashglobal.com",
+    "password_hash": "scrypt:32768:8:1$71oPVXur1Wx7cGuQ$35bf6aab149eefddc9250172bbc0d1eaac30ad6dbaf017c930e5260b62f13c5a3d69547ef2eabdf94180de1d1388c51a5d53e0e5a1217e68d07843a028a66ea4",
+    "role": "admin"
+  }
+]
