@@ -24,9 +24,10 @@
                     </button>
                 </form>
                 {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% for category, msg in messages %}
+                    {% if messages %}
+                        {% set category, msg = messages[0] %}
                         <div class="alert alert-{{ category }} mt-3">{{ msg }}</div>
-                    {% endfor %}
+                    {% endif %}
                 {% endwith %}
             </div>
         </div>
@@ -36,7 +37,7 @@
     <div class="col-md-6 mb-4">
         <div class="card">
             <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0">📋 {{ _('Nhật ký gần đây') }}</h5>
+                <h5 class="card-title mb-0">📋 {{ _('Lịch sử giao dịch') }}</h5>
                 <a href="{{ url_for('main.user_logs') }}" class="btn btn-sm btn-light">{{ _('Xem tất cả') }}</a>
             </div>
             <div class="card-body scroll-300">
@@ -104,7 +105,7 @@
     <div class="col-12 mb-4">
         <div class="card">
             <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0">📥 {{ _('Sổ phụ đã phân tích (gần đây)') }}</h5>
+                <h5 class="card-title mb-0">📥 {{ _('Sổ phụ đã tải lên') }}</h5>
                 <a href="{{ url_for('main.list_statement_logs') }}" class="btn btn-sm btn-light">{{ _('Xem tất cả') }}</a>
             </div>
             <div class="card-body scroll-300">
@@ -223,7 +224,8 @@ document.querySelectorAll('.sftp-upload-btn').forEach(btn => {
             }
         })
         .catch(error => {
-            alert('❌ {{ _('Lỗi kết nối:') }} ' + error);
+            //alert('❌ {{ _('Lỗi kết nối:') }} ' + error);
+            alert('❌ {{ _('Tải lên thất bại do lỗi kết nối!') }}');
             this.disabled = false;
             this.innerHTML = originalText;
         });

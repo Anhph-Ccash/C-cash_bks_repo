@@ -10,9 +10,11 @@
 <body>
 <nav class="navbar navbar-expand-lg navbar-dark bg-success">
     <div class="container-fluid">
-        <a class="navbar-brand" href="{% if session.get('role') == 'admin' %}{{ url_for('admin.admin') }}{% else %}{{ url_for('main.user_dashboard') }}{% endif %}">
-            {% if session.get('role') == 'admin' %}👑 {{ _('Quản lý') }}{% else %}👤 {{ _('Người dùng') }}{% endif %}
+        {% if session.get('role') == 'admin' %}
+        <a class="navbar-brand" href="{{ url_for('admin.admin') }}">
+            👑 {{ _('Quản lý') }}
         </a>
+        {% endif %}
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" title="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -41,9 +43,6 @@
                 <!-- User Menu -->
                 <li class="nav-item">
                     <a class="nav-link {% block nav_home %}{% endblock %}" href="{{ url_for('main.user_dashboard') }}">🏠 {{ _('Trang chủ') }}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% block nav_user_upload %}{% endblock %}" href="{{ url_for('main.user_upload_page') }}">📂 {{ _('Tải lên') }}</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link {% block nav_user_logs %}{% endblock %}" href="{{ url_for('main.user_logs') }}">📋 {{ _('Nhật ký') }}</a>

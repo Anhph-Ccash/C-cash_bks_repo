@@ -86,14 +86,14 @@ def detect_bank_and_process(session, file_path, original_filename, text, company
             filename=file_path,
             original_filename=original_filename,
             status="UNKNOWN",
-            message="Không tìm thấy ngân hàng phù hợp trong các vùng quét",
+            message="Không tìm thấy ngân hàng phù hợp trong các vùng quét.Vui lòng liên hệ với đôi ngũ hỗ trợ C-Cash để yêu cầu bổ sung thêm mẫu.",
             processed_at=datetime.now()
         )
         session.add(log)
         session.commit()
         return {
             "status": "UNKNOWN",
-            "message": "Mẫu file không hợp lệ - không tìm thấy thông tin ngân hàng trong các vùng quét",
+            "message": "Mẫu sao kê không tồn tại. Vui lòng liên hệ với đôi ngũ hỗ trợ C-Cash để yêu cầu bổ sung thêm mẫu.",
             "log_id": log.id
         }
 

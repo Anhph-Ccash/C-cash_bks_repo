@@ -163,7 +163,7 @@ def process_upload():
                     if parse_result.get('status') == 'INVALID':
                         # Validation failed - show detailed errors
                         errors = parse_result.get('errors', [])
-                        error_msg = parse_result.get('message', 'Mẫu sổ phụ không hợp lệ')
+                        error_msg = parse_result.get('message', 'Mẫu sao kê không tồn tài và phải cấu hình thêm')
                         flash(error_msg, 'danger')
                         for err in errors[:5]:  # Show first 5 errors
                             flash(f"• {err}", 'warning')

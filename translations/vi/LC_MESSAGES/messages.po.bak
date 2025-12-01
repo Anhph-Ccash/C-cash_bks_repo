@@ -214,12 +214,12 @@ msgstr ""
 #: templates/admin.html:240 templates/admin_bank_configs.html:72
 #: templates/admin_companies.html:44
 msgid "Active"
-msgstr "Đang kích hoạt"
+msgstr "Đã kích hoạt"
 
 #: templates/admin.html:242 templates/admin_bank_configs.html:74
 #: templates/admin_companies.html:46
 msgid "Inactive"
-msgstr "Không kích hoạt"
+msgstr "Chưa kích hoạt"
 
 #: templates/admin.html:251 templates/admin_bank_configs.html:83
 msgid "Sửa nhanh"
@@ -461,12 +461,12 @@ msgstr \"\"
 #: templates/admin.html:240 templates/admin_bank_configs.html:72
 #: templates/admin_companies.html:44
 msgid \"Active\"
-msgstr \"Đang kích hoạt\"
+msgstr \"Đã kích hoạt\"
 
 #: templates/admin.html:242 templates/admin_bank_configs.html:74
 #: templates/admin_companies.html:46
 msgid \"Inactive\"
-msgstr \"Không kích hoạt\"
+msgstr \"Chưa kích hoạt\"
 
 #: templates/admin.html:251 templates/admin_bank_configs.html:83
 msgid \"Sửa nhanh\"
@@ -1455,7 +1455,7 @@ msgstr ""
 
 #: templates/admin_upload.html:72 templates/user_upload.html:39
 #: templates/users.html:37
-msgid "Nhật ký gần đây"
+msgid "Lịch sử giao dịch"
 msgstr ""
 
 #: templates/admin_upload.html:73
@@ -1503,7 +1503,7 @@ msgid "Chưa có nhật ký nào"
 msgstr ""
 
 #: templates/admin_upload.html:157 templates/statement_logs.html:12
-msgid "Danh sách Sổ phụ đã phân tích"
+msgid "Sổ phụ đã tải lên"
 msgstr ""
 
 #: templates/admin_upload.html:160
@@ -1941,7 +1941,7 @@ msgid "Xem tất cả"
 msgstr ""
 
 #: templates/user_upload.html:107 templates/users.html:108
-msgid "Sổ phụ đã phân tích (gần đây)"
+msgid "Sổ phụ đã tải lên"
 msgstr ""
 
 #: templates/user_upload.html:121 templates/users.html:122

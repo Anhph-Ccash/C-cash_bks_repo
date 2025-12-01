@@ -27,7 +27,7 @@
                 </div>
                 <div class="col-md-3">
                     <button type="submit" class="btn btn-sm btn-primary">🔍 {{ _('Lọc') }}</button>
-                    <a href="{{ url_for('admin.manage_statement_configs') }}" class="btn btn-sm btn-secondary">🔄 {{ _('Xóa lọc') }}</a>
+                    <a id="clearFilterBtn" href="{{ url_for('admin.manage_statement_configs') }}" class="btn btn-sm btn-secondary">🔄 {{ _('Xóa lọc') }}</a>
                 </div>
             </div>
         </form>
@@ -337,18 +337,26 @@ document.addEventListener('DOMContentLoaded', function() {
 document.addEventListener('DOMContentLoaded', function() {
     const bankCodeInput = document.getElementById('bank_code_filter');
     const filterForm = bankCodeInput.closest('form');
-    const clearFilterBtn = document.querySelector('a[href="{{ url_for("admin.manage_statement_configs") }}"]');
+    const clearFilterBtn = document.getElementById('clearFilterBtn');
 
     // Get current bank_code from URL parameter
     const urlParams = new URLSearchParams(window.location.search);
     const urlBankCode = urlParams.get('bank_code');
+
+    // Check if we just clicked "Clear Filter" - don't auto-restore
+    const justCleared = sessionStorage.getItem('statement_config_just_cleared');
+    if (justCleared) {
+        sessionStorage.removeItem('statement_config_just_cleared');
+        localStorage.removeItem('statement_config_bank_code_filter');
+        return; // Don't auto-restore
+    }
 
     // Restore saved bank_code on page load and redirect if needed
     if (!urlBankCode) {
         // No URL parameter, check localStorage
         const savedBankCode = localStorage.getItem('statement_config_bank_code_filter');
         if (savedBankCode) {
-            // Redirect to URL with saved filter (no page reload)
+            // Redirect to URL with saved filter
             const newUrl = new URL(window.location.href);
             newUrl.searchParams.set('bank_code', savedBankCode);
             window.location.href = newUrl.toString();
@@ -370,10 +378,16 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Clear localStorage when "Xóa lọc" button is clicked
-    clearFilterBtn.addEventListener('click', function() {
-        localStorage.removeItem('statement_config_bank_code_filter');
-        bankCodeInput.value = '';
-    });
+    if (clearFilterBtn) {
+        clearFilterBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            localStorage.removeItem('statement_config_bank_code_filter');
+            sessionStorage.setItem('statement_config_just_cleared', 'true');
+            bankCodeInput.value = '';
+            // Redirect to clean URL
+            window.location.href = this.href;
+        });
+    }
 
     // Also save on input change (for better UX)
     bankCodeInput.addEventListener('input', function() {

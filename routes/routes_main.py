@@ -241,7 +241,22 @@ def user_upload():
 
                         if parse_result.get('status') == 'INVALID':
                             # Validation failed
-                            failures.append(f"{orig_inner}: {parse_result.get('message', 'Không hợp lệ')}")
+                            error_msg = parse_result.get('message', 'Không hợp lệ')
+                            failures.append(f"{orig_inner}: {error_msg}")
+
+                            # Ghi log lỗi validation vào BankLog để hiển thị trong Lịch sử tải lên
+                            error_log = BankLog(
+                                user_id=user_id,
+                                company_id=company_id,
+                                bank_code=result.get('bank_code'),
+                                filename=ef,
+                                original_filename=orig_inner,
+                                status="ERROR",
+                                message=error_msg,
+                                processed_at=datetime.now()
+                            )
+                            db.session.add(error_log)
+                            db.session.commit()
                         elif parse_result.get('status') == 'SUCCESS':
                             successes += 1
                             # if the parsed statement was created but account is missing, remember it
@@ -287,10 +302,24 @@ def user_upload():
                     if parse_result.get('status') == 'INVALID':
                         # Validation failed - show detailed errors
                         errors = parse_result.get('errors', [])
-                        error_msg = parse_result.get('message', 'Mẫu sổ phụ không hợp lệ')
+                        error_msg = parse_result.get('message', 'Mẫu sao kê không tồn tài và phải cấu hình thêm')
                         flash(error_msg, 'danger')
                         for err in errors[:5]:  # Show first 5 errors
                             flash(f"• {err}", 'warning')
+
+                        # Ghi log lỗi validation vào BankLog để hiển thị trong Lịch sử tải lên
+                        error_log = BankLog(
+                            user_id=user_id,
+                            company_id=company_id,
+                            bank_code=result.get('bank_code'),
+                            filename=saved_path,
+                            original_filename=orig_name,
+                            status="ERROR",
+                            message=error_msg,
+                            processed_at=datetime.now()
+                        )
+                        db.session.add(error_log)
+                        db.session.commit()
                     elif parse_result.get('status') == 'SUCCESS':
                         flash('Sổ phụ đã được phân tích và MT940 sẵn sàng để tải xuống.', 'success')
                         # if account missing on the created StatementLog, redirect user to edit it

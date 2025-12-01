@@ -2,11 +2,22 @@
   "version": "0.2.0",
   "configurations": [
     {
-        "type": "vscode-edge-devtools.debug",
-        "request": "launch",
-        "name": "Launch Microsoft Edge and open the Edge DevTools",
-        "url": "http://127.0.0.1:5000",
-        "webRoot": "${workspaceFolder}"
+      "name": "Python Debugger: Flask",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "flask",
+      "env": { "FLASK_APP": "app.py", "FLASK_DEBUG": "1" },
+      "args": ["run", "--no-debugger", "--no-reload"],
+      "jinja": true,
+      "autoStartBrowser": false
+    },
+
+    {
+      "type": "chrome",
+      "request": "launch",
+      "name": "Launch Microsoft Edge and open the Edge DevTools",
+      "url": "http://127.0.0.1:5000",
+      "webRoot": "${workspaceFolder}"
     },
     {
       "name": "Python Debugger: Flask",

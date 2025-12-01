@@ -9,7 +9,7 @@
 {% block content %}
 <div class="card">
     <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">📚 {{ _('Danh sách Sổ phụ đã phân tích') }}</h5>
+        <h5 class="mb-0">📚 {{ _('Sổ phụ đã tải lên') }}</h5>
         <a href="{{ url_for('main.user_dashboard') if session.get('role') != 'admin' else url_for('upload.admin_upload_page') }}" class="btn btn-sm btn-light">{{ _('Quay lại') }}</a>
     </div>
     <div class="card-body">
@@ -35,11 +35,11 @@
             </div>
             <div class="col-auto">
                 <label for="filter-from" class="visually-hidden">{{ _('Từ ngày') }}</label>
-                <input id="filter-from" type="date" name="from" class="form-control" value="{{ request.args.get('from', '') }}" title="{{ _('Từ ngày (YYYY-MM-DD)') }}" placeholder="{{ _('Từ') }}" />
+                <input id="filter-from" type="text" name="from" class="form-control" value="{{ request.args.get('from', '') }}" title="{{ _('Từ ngày (DD/MM/YYYY)') }}" placeholder="{{ _('Từ ngày') }}" />
             </div>
             <div class="col-auto">
                 <label for="filter-to" class="visually-hidden">{{ _('Đến ngày') }}</label>
-                <input id="filter-to" type="date" name="to" class="form-control" value="{{ request.args.get('to', '') }}" title="{{ _('Đến ngày (YYYY-MM-DD)') }}" placeholder="{{ _('Đến') }}" />
+                <input id="filter-to" type="text" name="to" class="form-control" value="{{ request.args.get('to', '') }}" title="{{ _('Đến ngày (DD/MM/YYYY)') }}" placeholder="{{ _('Đến ngày') }}" />
             </div>
             <div class="col-auto">
                 <button type="submit" class="btn btn-primary">🔍 {{ _('Lọc') }}</button>
@@ -80,12 +80,11 @@
                             <td>{{ l.status }}</td>
                             <td>
                                 {% if l.sftp_uploaded %}
-                                <span class="badge bg-success" title="{{ l.sftp_upload_message }}">
-                                    ✓ {{ _('Đã tải lên') }}<br>
-                                    <small>{{ l.sftp_uploaded_at.strftime('%d/%m/%Y %H:%M') if l.sftp_uploaded_at else '' }}</small>
-                                </span>
+                                <span class="badge bg-success" title="{{ l.sftp_upload_message }}">✓ {{ _('Đã tải lên') }} {{ l.sftp_uploaded_at.strftime('%d/%m %H:%M') if l.sftp_uploaded_at else '' }}</span>
                                 {% elif l.sftp_upload_message %}
                                 <span class="badge bg-danger" title="{{ l.sftp_upload_message }}">✗ {{ _('Lỗi') }}</span>
+                                {% elif l.mt940_filename %}
+                                <button class="btn btn-sm btn-warning upload-sftp-btn" data-log-id="{{ l.id }}" title="{{ _('Upload file MT940 lên SFTP server') }}">📤 SFTP</button>
                                 {% else %}
                                 <span class="text-muted">-</span>
                                 {% endif %}
@@ -95,9 +94,6 @@
                                 <a href="{{ url_for('main.view_statement_detail', log_id=l.id) }}" class="btn btn-sm btn-outline-secondary">{{ _('Chi tiết') }}</a>
                                 {% if l.mt940_filename %}
                                 <a href="{{ url_for('main.download_statement_mt940', log_id=l.id) }}" class="btn btn-sm btn-outline-primary">{{ _('Tải MT940') }}</a>
-                                {% if not l.sftp_uploaded %}
-                                <button class="btn btn-sm btn-warning upload-sftp-btn" data-log-id="{{ l.id }}" title="{{ _('Upload file MT940 lên SFTP server') }}">📤 SFTP</button>
-                                {% endif %}
                                 <a href="{{ url_for('main.delete_statement_log', log_id=l.id, next=request.path) }}" class="btn btn-sm btn-danger" onclick="return confirm('{{ _('Xóa bản ghi sổ phụ này?') }}')">{{ _('Xóa') }}</a>
                                 {% endif %}
                             </td>

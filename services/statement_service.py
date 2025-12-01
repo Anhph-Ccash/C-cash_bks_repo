@@ -12,105 +12,108 @@ import os
 
 def validate_statement_data(parsed_data):
     """
-    Validate parsed statement data for required fields
+    Validate parsed statement data for required fields.
+    Returns only the FIRST error encountered (sequential validation).
 
     Args:
         parsed_data: Dictionary containing parsed statement information
 
     Returns:
-        tuple: (is_valid: bool, errors: list of error messages)
+        tuple: (is_valid: bool, errors: list with single error message or empty)
     """
-    errors = []
+    # Sequential validation - return immediately on first error
 
-    # Check required header fields
-    if not parsed_data.get('opening_balance'):
-        errors.append("❌ Thiếu thông tin Số dư đầu kỳ (Opening Balance)")
-
-    if not parsed_data.get('closing_balance'):
-        errors.append("❌ Thiếu thông tin Số dư cuối kỳ (Closing Balance)")
-
-    if not parsed_data.get('currency'):
-        errors.append("❌ Thiếu thông tin Loại tiền (Currency)")
-
+    # 1. Check bank_code first
     if not parsed_data.get('bank_code'):
-        errors.append("❌ Thiếu thông tin Tên ngân hàng (Bank Code)")
+        return False, ["❌ Thiếu thông tin Tên ngân hàng (Bank Code)"]
+
+    # 2. Check opening_balance
+    if not parsed_data.get('opening_balance'):
+        return False, ["❌ Thiếu thông tin Số dư đầu kỳ (Opening Balance)"]
+
+    # 3. Check closing_balance
+    if not parsed_data.get('closing_balance'):
+        return False, ["❌ Thiếu thông tin Số dư cuối kỳ (Closing Balance)"]
+
+    # 4. Check currency
+    if not parsed_data.get('currency'):
+        return False, ["❌ Thiếu thông tin Loại tiền (Currency)"]
 
     # Note: Account number is now optional - if missing, user will be prompted to enter it
     # This is intentional to allow manual entry
 
-    # Check transaction data
+    # 5. Check transaction data
     transactions = parsed_data.get('transactions', [])
 
     if not transactions or len(transactions) == 0:
-        errors.append("❌ Không tìm thấy giao dịch nào trong file. Phải có tối thiểu 1 giao dịch hợp lệ.")
-    else:
-        # Check each transaction for required fields
-        missing_fields_summary = {
-            'credit_debit_fee_vat': 0,
-            'narrative': 0,
-            'transaction_date': 0
-        }
+        return False, ["❌ Không tìm thấy giao dịch nào trong file. Phải có tối thiểu 1 giao dịch hợp lệ."]
 
-        valid_transactions = 0
+    # Check each transaction for required fields
+    missing_fields_summary = {
+        'credit_debit_fee_vat': 0,
+        'narrative': 0,
+        'transaction_date': 0
+    }
 
-        for idx, txn in enumerate(transactions, 1):
-            # At least one of credit or debit must have value
-            credit = txn.get('credit') or txn.get('creditmoney')
-            debit = txn.get('debit') or txn.get('debitmoney')
-            transactionfee = txn.get('transactionfee')
-            transactionvat= txn.get('transactionvat')
-            has_credit_debit_fee_vat = False
-            if credit or debit or transactionfee or transactionvat:
-                try:
-                    # Check if it's a valid number (not empty string)
-                    if credit and str(credit).strip():
-                        float(str(credit).replace(',', ''))
-                        has_credit_debit_fee_vat = True
-                    if debit and str(debit).strip():
-                        float(str(debit).replace(',', ''))
-                        has_credit_debit_fee_vat = True
-                    if transactionfee and str(transactionfee).strip():
-                        float(str(transactionfee).replace(',', ''))
-                        has_credit_debit_fee_vat = True
-                    if transactionvat and str(transactionvat).strip():
-                        float(str(transactionvat).replace(',', ''))
-                        has_credit_debit_fee_vat = True
-                except (ValueError, TypeError):
-                    pass
+    valid_transactions = 0
 
-            if not has_credit_debit_fee_vat:
-                missing_fields_summary['credit_debit_fee_vat'] += 1
+    for idx, txn in enumerate(transactions, 1):
+        # At least one of credit or debit must have value
+        credit = txn.get('credit') or txn.get('creditmoney')
+        debit = txn.get('debit') or txn.get('debitmoney')
+        transactionfee = txn.get('transactionfee')
+        transactionvat = txn.get('transactionvat')
+        has_credit_debit_fee_vat = False
+        if credit or debit or transactionfee or transactionvat:
+            try:
+                # Check if it's a valid number (not empty string)
+                if credit and str(credit).strip():
+                    float(str(credit).replace(',', ''))
+                    has_credit_debit_fee_vat = True
+                if debit and str(debit).strip():
+                    float(str(debit).replace(',', ''))
+                    has_credit_debit_fee_vat = True
+                if transactionfee and str(transactionfee).strip():
+                    float(str(transactionfee).replace(',', ''))
+                    has_credit_debit_fee_vat = True
+                if transactionvat and str(transactionvat).strip():
+                    float(str(transactionvat).replace(',', ''))
+                    has_credit_debit_fee_vat = True
+            except (ValueError, TypeError):
+                pass
 
-            # Check narrative
-            narrative = txn.get('narrative') or txn.get('detail') or txn.get('description')
-            if not narrative or not str(narrative).strip():
-                missing_fields_summary['narrative'] += 1
+        if not has_credit_debit_fee_vat:
+            missing_fields_summary['credit_debit_fee_vat'] += 1
 
-            # Check transaction date
-            txn_date = txn.get('transactiondate') #or txn.get('valuedate') or txn.get('date')
-            if not txn_date or not str(txn_date).strip():
-                missing_fields_summary['transaction_date'] += 1
+        # Check narrative
+        narrative = txn.get('narrative') or txn.get('detail') or txn.get('description')
+        if not narrative or not str(narrative).strip():
+            missing_fields_summary['narrative'] += 1
 
-            # Count as valid if it has all 4 required fields
-            if has_credit_debit_fee_vat and narrative and str(narrative).strip() and txn_date and str(txn_date).strip():
-                valid_transactions += 1
+        # Check transaction date
+        txn_date = txn.get('transactiondate')
+        if not txn_date or not str(txn_date).strip():
+            missing_fields_summary['transaction_date'] += 1
 
-        # Report summary of missing fields
-        if valid_transactions == 0:
-            errors.append(f"❌ Không có giao dịch hợp lệ nào. Mỗi giao dịch phải có: Transaction Date, Narrative, và Credit/Debit/Fee/VAT")
+        # Count as valid if it has all required fields
+        if has_credit_debit_fee_vat and narrative and str(narrative).strip() and txn_date and str(txn_date).strip():
+            valid_transactions += 1
 
-        if missing_fields_summary['credit_debit_fee_vat'] > 0:
-            errors.append(f"⚠️ Thiếu thông tin Credit/Debit/Fee/VAT cho {missing_fields_summary['credit_debit_fee_vat']}/{len(transactions)} giao dịch")
+    # Sequential error reporting for transaction issues - return first error only
+    if valid_transactions == 0:
+        return False, ["❌ Không có giao dịch hợp lệ nào. Mỗi giao dịch phải có: Transaction Date, Narrative, và Credit/Debit/Fee/VAT"]
 
-        if missing_fields_summary['narrative'] > 0:
-            errors.append(f"⚠️ Thiếu thông tin Narrative (Diễn giải) cho {missing_fields_summary['narrative']}/{len(transactions)} giao dịch")
+    if missing_fields_summary['transaction_date'] > 0:
+        return False, [f"❌ Thiếu thông tin Transaction Date (Ngày giao dịch) cho {missing_fields_summary['transaction_date']}/{len(transactions)} giao dịch"]
 
-        if missing_fields_summary['transaction_date'] > 0:
-            errors.append(f"⚠️ Thiếu thông tin Transaction Date (Ngày giao dịch) cho {missing_fields_summary['transaction_date']}/{len(transactions)} giao dịch")
+    if missing_fields_summary['narrative'] > 0:
+        return False, [f"❌ Thiếu thông tin Narrative (Diễn giải) cho {missing_fields_summary['narrative']}/{len(transactions)} giao dịch"]
 
-    is_valid = len(errors) == 0
+    if missing_fields_summary['credit_debit_fee_vat'] > 0:
+        return False, [f"❌ Thiếu thông tin Credit/Debit/Fee/VAT cho {missing_fields_summary['credit_debit_fee_vat']}/{len(transactions)} giao dịch"]
 
-    return is_valid, errors
+    # All validations passed
+    return True, []
 
 
 def _col_to_index(col_str):
@@ -133,11 +136,12 @@ def _col_to_index(col_str):
 def _get_dataframe_sheets(path, ext):
     ext = ext.lower()
     if ext in ("xls", "xlsx"):
-        xls = pd.read_excel(path, sheet_name=None, dtype=str)
+        # Read without header to preserve all rows and use 1-indexed row numbers correctly
+        xls = pd.read_excel(path, sheet_name=None, dtype=str, header=None)
         # normalize to dict of sheetname -> df
         return xls
     elif ext == 'csv':
-        df = pd.read_csv(path, dtype=str)
+        df = pd.read_csv(path, dtype=str, header=None)
         return {'sheet1': df}
     else:
         # Not a tabular file
@@ -190,6 +194,8 @@ def _find_value_in_df(df, keywords, col_keyword, col_value, row_start, row_end, 
     for r in range(start, end + 1):
         row = df.iloc[r]
         row_text = ' '.join([str(x) for x in row.tolist() if x is not None])
+        # Remove special characters :, -, for better keyword matching
+        # row_text = row_text.replace(':', '').replace(',', '').replace('-', '')
         found = False
         matched_keyword = None
 
@@ -263,9 +269,12 @@ def _find_value_in_df(df, keywords, col_keyword, col_value, row_start, row_end, 
                 # Opening/Closing Balance: extract number after keyword (exclude currency unit)
                 elif ident_lower in ('openingbalance', 'closingbalance'):
                     if matched_keyword:
+
+
                         # Find keyword position in text
                         text_lower = raw_value.lower()
                         kw_idx = text_lower.find(matched_keyword.lower())
+
                         if kw_idx != -1:
                             # Text after keyword
                             after_keyword = raw_value[kw_idx + len(matched_keyword):]
@@ -283,6 +292,74 @@ def _find_value_in_df(df, keywords, col_keyword, col_value, row_start, row_end, 
                                     cleaned = re.sub(r'(VND|USD|EUR|GBP|CAD|CNY|AUD|MYR|IDR|THB|JPY|KRW|SGD|HKD|TWD|PHP|INR|CHF|NZD|SEK|NOK|DKK|PLN|RUB|BRL|MXN|ZAR|TRY|AED|SAR|QAR|KWD)$', '', cleaned, flags=re.I).strip()
                                     if cleaned:
                                         return cleaned
+
+            # SMART EXTRACTION when col_keyword != col_value (different columns)
+            # The value is in a separate column, apply extraction logic on raw_value
+            if not same_column and identify_info and raw_value:
+                ident_lower = str(identify_info).lower().strip()
+
+                # Account Number: extract 4-20 digit pattern from the value column
+                if ident_lower == 'accountno':
+                    # First try: find 4-20 consecutive digits with word boundary
+                    match = re.search(r'\b(\d{4,20})\b', raw_value)
+                    if match:
+                        return match.group(1)
+
+                    # Second try: extract all digits and check length
+                    digits = re.sub(r'\D', '', raw_value)
+                    if 4 <= len(digits) <= 20:
+                        return digits
+
+                    # If no valid account number found, return raw_value as-is
+                    # (it might already be a clean account number)
+                    if raw_value.strip():
+                        return raw_value
+
+                # Currency: extract 3 alphabetic characters (like VND, USD, EUR)
+                elif ident_lower == 'currency':
+                    # List of valid ISO 4217 currency codes (most common ones)
+                    valid_currencies = {
+                        'VND', 'USD', 'EUR', 'GBP', 'CAD', 'CNY', 'AUD', 'MYR',
+                        'IDR', 'THB', 'JPY', 'KRW', 'SGD', 'HKD', 'TWD', 'PHP',
+                        'INR', 'CHF', 'NZD', 'SEK', 'NOK', 'DKK', 'PLN', 'RUB',
+                        'BRL', 'MXN', 'ZAR', 'TRY', 'AED', 'SAR', 'QAR', 'KWD'
+                    }
+
+                    # First: check if raw_value itself is a valid currency code
+                    if raw_value.upper().strip() in valid_currencies:
+                        return raw_value.upper().strip()
+
+                    # Second: find 3 consecutive letters that match a currency code
+                    matches = re.findall(r'\b([A-Za-z]{3})\b', raw_value)
+                    for match in matches:
+                        currency_code = match.upper()
+                        if currency_code in valid_currencies:
+                            return currency_code
+
+                    # If no valid currency found, return None
+                    return None
+
+                # Opening/Closing Balance: extract only numeric value (remove special characters)
+                elif ident_lower in ('openingbalance', 'closingbalance'):
+                    # Remove leading special characters like ": " and extract numeric value
+                    # First, strip leading non-numeric characters (like ": ")
+                    cleaned_value = re.sub(r'^[:\s]+', '', raw_value)
+
+                    # Find numeric pattern in cleaned value
+                    match = re.search(r'([0-9][0-9,\.]*)', cleaned_value)
+                    if match:
+                        raw_num = match.group(1).strip()
+                        # Remove thousand separators (keep only digits)
+                        cleaned = re.sub(r'[,.]', '', raw_num)
+                        if cleaned:
+                            return cleaned
+
+                    # Fallback: extract all digits from raw_value
+                    digits = re.sub(r'\D', '', raw_value)
+                    if digits:
+                        return digits
+
+                    return None
 
             # Return raw value if no smart extraction applied or no match found
             return raw_value
@@ -461,7 +538,7 @@ def parse_and_store_statement(session, file_path, original_filename, ext, compan
                 except Exception:
                     pass
 
-                error_message = "Mẫu sổ phụ không hợp lệ"
+                error_message = "Mẫu sao kê không tồn tài và phải cấu hình thêm"
                 current_app.logger.warning(f"Statement validation failed: {validation_errors}")
 
                 return {

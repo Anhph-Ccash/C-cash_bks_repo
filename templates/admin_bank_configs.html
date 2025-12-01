@@ -6,15 +6,14 @@
 {% block content %}
 <h3>⚙️ {{ _('Cấu hình Ngân hàng') }}</h3>
 
-<!-- Flash Messages -->
+<!-- Flash Messages - Only show the first one -->
 {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
-        {% for category, message in messages %}
+        {% set category, message = messages[0] %}
         <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
             {{ message }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ _('Đóng') }}"></button>
         </div>
-        {% endfor %}
     {% endif %}
 {% endwith %}
 

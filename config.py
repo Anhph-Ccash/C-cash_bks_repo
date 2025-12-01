@@ -1,4 +1,5 @@
 import os
+from urllib.parse import quote_plus
 
 class Config:
     # Read secrets from environment for production (Render will provide DATABASE_URL)
@@ -16,6 +17,17 @@ class Config:
         'DATABASE_URL',
         'postgresql://flaskwebpostgresql_user:nrDeXdaJQ2GA9Bv04ISC2rdNpI7EKhYr@dpg-d47l9824d50c7388ofsg-a.singapore-postgres.render.com/flaskwebpostgresql'
     )
+
+    # AWS RDS Database - Password must be URL encoded due to special characters
+
+    # _DB_PASSWORD = quote_plus('HX>hH$!9qz<bLh#x(hp$Gl1ST)q<')
+    # _DB_HOST = 'flask-database.cdcieg2y8fcu.ap-southeast-1.rds.amazonaws.com'
+    # _DB_NAME = 'postgres'
+
+    # SQLALCHEMY_DATABASE_URI = os.environ.get(
+    #     'DATABASE_URL',
+    #     f'postgresql://postgres:{_DB_PASSWORD}@{_DB_HOST}:5432/{_DB_NAME}'
+    # )
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 

@@ -139,7 +139,10 @@ def read_file_to_text(path, ext):
             return f.read()
 
 def cleanup_file(path):
+    """Safely remove a file, ignoring errors if file doesn't exist."""
     try:
-        os.remove(path)
-    except FileNotFoundError:
+        if path and os.path.exists(path):
+            os.remove(path)
+    except (FileNotFoundError, OSError, PermissionError) as e:
+        # File already deleted or cannot be accessed - ignore
         pass

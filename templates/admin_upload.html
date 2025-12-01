@@ -57,9 +57,10 @@
                     </button>
                 </form>
                 {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% for category, msg in messages %}
+                    {% if messages %}
+                        {% set category, msg = messages[0] %}
                         <div class="alert alert-{{ category }} mt-3">{{ msg }}</div>
-                    {% endfor %}
+                    {% endif %}
                 {% endwith %}
             </div>
         </div>
@@ -69,7 +70,7 @@
     <div class="col-md-6 mb-4">
         <div class="card">
             <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0">📋 {{ _('Nhật ký gần đây') }}</h5>
+                <h5 class="card-title mb-0">📋 {{ _('Lịch sử giao dịch') }}</h5>
                 <span class="small">{{ _('Hiển thị phân trang ngay tại đây') }}</span>
             </div>
             <div class="card-body scroll-300">
@@ -154,7 +155,7 @@
     <div class="col-12 mb-4">
         <div class="card">
             <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0">📥 {{ _('Danh sách Sổ phụ đã phân tích') }}</h5>
+                <h5 class="card-title mb-0">📥 {{ _('Sổ phụ đã tải lên') }}</h5>
                 <div class="d-flex align-items-center gap-3">
                     <div class="d-flex align-items-center gap-2">
                         <label for="per_page_select" class="mb-0 small">{{ _('Hiển thị:') }}</label>
