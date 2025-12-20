@@ -679,11 +679,12 @@ def parse_and_store_statement(session, file_path, original_filename, ext, compan
         os.makedirs(mt_dir, exist_ok=True)
         ts = datetime.utcnow().strftime('%Y%m%d%H%M%S')
         safe_name = (original_filename or 'statement').rsplit('.', 1)[0]
-        mt_filename = f"{safe_name}_{bank_code}_{ts}.mt940.txt"
+        # Use company info or default username for SFTP filename
+        mt_filename = f"{safe_name}_{bank_code}_{ts}.txt"
+
         mt_path = os.path.join(mt_dir, mt_filename)
         with open(mt_path, 'w', encoding='utf-8') as f:
             f.write(mt_text)
-
         # store relative path
         rel_path = os.path.relpath(mt_path, current_app.config.get('UPLOAD_FOLDER', 'uploads'))
         stmt_log.mt940_filename = rel_path.replace('\\', '/')

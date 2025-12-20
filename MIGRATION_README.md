@@ -64,7 +64,7 @@ Tổng số users: 11
 
 ID: 3
   Username: admin
-  Email: admin@example.com
+  Email: anh.pham@c-cashglobal.com
   Role: admin
   ...
 ```
@@ -168,7 +168,7 @@ python check_databases.py --render
 ### Local Database
 ```
 Tổng users: 11
-├── ID: 3 - admin (admin@example.com) - Role: admin
+├── ID: 3 - admin (anh.pham@c-cashglobal.com) - Role: admin
 ├── ID: 5 - user21 (user2@gmail.com) - Role: user
 ├── ID: 6 - user3 (user3@gmail.com) - Role: user
 ├── ID: 7 - user4 (user4@gmail.com) - Role: user

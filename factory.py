@@ -113,7 +113,7 @@ def create_app():
 
             if not existing:
                 # Create default admin user safely if model supports it
-                admin = User(username='admin', email='admin@example.com', role='admin')
+                admin = User(username='admin', email='anh.pham@c-cashglobal.com', role='admin')
                 # try to set password via helper if available, else set password_hash
                 if hasattr(admin, "set_password"):
                     try:

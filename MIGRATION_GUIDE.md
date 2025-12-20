@@ -52,7 +52,7 @@ Tổng số users: 5
 
 ID: 1
   Username: admin
-  Email: admin@example.com
+  Email: anh.pham@c-cashglobal.com
   Role: admin
   Password Hash: pbkdf2:sha256:600000$...
 

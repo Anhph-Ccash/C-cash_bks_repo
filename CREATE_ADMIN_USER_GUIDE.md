@@ -54,7 +54,7 @@ Application đã hỗ trợ tạo user với vai trò **Admin** hoặc **Ngườ
 
 ```
 Tên đăng nhập:    quang.admin
-Email:            quang.admin@example.com
+Email:            quang.anh.pham@c-cashglobal.com
 Mật khẩu:         MySecurePassword2024!
 Vai trò:          Quản trị viên ← QUAN TRỌNG
 Công ty:          Ngân hàng A, Ngân hàng B

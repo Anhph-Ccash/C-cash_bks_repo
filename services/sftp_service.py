@@ -56,9 +56,16 @@ class SFTPService:
             base_name, ext = os.path.splitext(os.path.basename(local_file_path))
 
         # Always use .txt extension for MT940 files
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        remote_filename = f"{base_name}_{timestamp}.txt"
-
+        #timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        remote_filename = f"{company.sftp_username}.NC4.STA.{base_name}.BULKSTA.MT940.txt"
+        #CCASH0127.NC4.STA.693F8ECA30378F005000B0F8113450.BULKSTA.MT940
+        # ''' Các trường bao gồm:
+        # 1. Client database: CCASH0127
+        # 2. NC4 - Mặc định
+        # 3. STA - Mặc định
+        # 4. Unique ID - Ví dụ như DD/MM/YYYY/HH/SS
+        # 5. BULKSTA - Mặc định
+        # 6. MT940 - Mặc định '''
         # Determine remote path - upload directly to /in folder
         remote_path = company.sftp_remote_path or "/in"
         # Ensure path ends with /

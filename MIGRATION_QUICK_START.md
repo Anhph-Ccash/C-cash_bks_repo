@@ -50,7 +50,7 @@ python check_databases.py --render
 
 ### Local Database - **11 Users Ready**
 ```
-3  - admin (admin@example.com) [ADMIN]
+3  - admin (anh.pham@c-cashglobal.com) [ADMIN]
 5  - user21 (user2@gmail.com)
 6  - user3 (user3@gmail.com)
 7  - user4 (user4@gmail.com)

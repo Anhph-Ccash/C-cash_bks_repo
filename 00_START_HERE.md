@@ -69,7 +69,7 @@ Details: All users + password hashes intact
 ```
 
 **Users ready to migrate:**
-- admin (admin@example.com)
+- admin (anh.pham@c-cashglobal.com)
 - user21, user3, user4, user5, user33, user32, Tri01, testuser
 - anhph9, anh.pham
 
@@ -279,7 +279,7 @@ $ python check_databases.py --render
 [✓] Table 'users' OK
     Total users: 11
     Users:
-      [3] admin (admin@example.com) - Role: admin
+      [3] admin (anh.pham@c-cashglobal.com) - Role: admin
       [5] user21 (user2@gmail.com) - Role: user
       ... (more users)
 ```

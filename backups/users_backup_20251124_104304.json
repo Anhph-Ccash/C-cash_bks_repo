@@ -2,7 +2,7 @@
   {
     "id": 3,
     "username": "admin",
-    "email": "admin@example.com",
+    "email": "anh.pham@c-cashglobal.com",
     "password_hash": "scrypt:32768:8:1$Zf8B6eZKp2wshaP4$bcb75b4e731b10485983a048189bc0755b9b2d6a35db35841366db05e4c3b7f673be449328f550a77942329a5d8c5242e244abec7985c6ab6c8071a2e397a60a",
     "role": "admin"
   },

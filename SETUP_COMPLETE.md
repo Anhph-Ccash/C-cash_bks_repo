@@ -80,7 +80,7 @@ Database: FlaskWebPostgreSQL
 **Users to Migrate:**
 ```
 ID  Username      Email                        Role
-3   admin         admin@example.com            admin
+3   admin         anh.pham@c-cashglobal.com            admin
 5   user21        user2@gmail.com              user
 6   user3         user3@gmail.com              user
 7   user4         user4@gmail.com              user

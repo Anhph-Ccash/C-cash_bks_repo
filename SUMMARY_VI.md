@@ -69,7 +69,7 @@ python migrate_users_to_render.py --execute
 ```
 Status: SẴN SÀNG MIGRATE
 Users:  11
-├─ admin (admin@example.com)
+├─ admin (anh.pham@c-cashglobal.com)
 ├─ user21, user3, user4, user5, user33, user32, Tri01, testuser
 ├─ anhph9, anh.pham (admin role)
 └─ All password hashes intact
@@ -357,7 +357,7 @@ $ python check_databases.py --render
 [✓] Table 'users' OK
     Total users: 11
     Users:
-      [3] admin (admin@example.com) - Role: admin
+      [3] admin (anh.pham@c-cashglobal.com) - Role: admin
       [5] user21 (user2@gmail.com) - Role: user
       ... (10 more users)
 
