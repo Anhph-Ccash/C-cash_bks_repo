@@ -59,7 +59,8 @@ def switch_company(company_id):
     if 'user_id' not in session:
         return redirect(url_for('auth.login'))
 
-    from app.models import Company, UserCompany
+    from models import Company, UserCompany
+    User = _get_user_model()
     user = User.query.get(session['user_id'])
 
     # Admin can access all companies, regular users need UserCompany permission

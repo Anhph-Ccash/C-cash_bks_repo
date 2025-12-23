@@ -4,6 +4,7 @@ import pandas as pd
 from datetime import datetime
 from flask import current_app
 
+from models.company import Company
 from models.bank_statement_config import BankStatementConfig
 from models.statement_log import StatementLog
 from models.bank_log import BankLog
@@ -679,8 +680,10 @@ def parse_and_store_statement(session, file_path, original_filename, ext, compan
         os.makedirs(mt_dir, exist_ok=True)
         ts = datetime.utcnow().strftime('%Y%m%d%H%M%S')
         safe_name = (original_filename or 'statement').rsplit('.', 1)[0]
-        # Use company info or default username for SFTP filename
-        mt_filename = f"{safe_name}_{bank_code}_{ts}.txt"
+        # Fetch company info for SFTP username
+        company = session.query(Company).filter_by(id=company_id).first()
+        sftp_username = company.sftp_username if company and getattr(company, 'sftp_username', None) else 'defaultuser'
+        mt_filename = f"{sftp_username}.NC4.STA.{safe_name}_{ts}.BULKSTA.MT940.txt"
 
         mt_path = os.path.join(mt_dir, mt_filename)
         with open(mt_path, 'w', encoding='utf-8') as f:
